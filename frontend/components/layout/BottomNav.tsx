@@ -16,13 +16,13 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 z-50 w-full h-16 border-t border-slate-800 bg-background/80 backdrop-blur-xl md:hidden">
+    <nav className="fixed bottom-0 left-0 z-50 w-full h-16 border-t border-slate-800 bg-background/80 backdrop-blur-xl md:hidden">
       <div className="grid h-full w-full grid-cols-4 items-center justify-center">
         {links.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href || pathname?.startsWith(href + "/");
+          const isActive = pathname === href || (href !== "/dashboard" && pathname?.startsWith(href));
           return (
             <Link
-              key={href}
+              key={label}
               href={href}
               className={clsx(
                 "flex flex-col items-center justify-center gap-1 transition-colors",
@@ -35,6 +35,6 @@ export default function BottomNav() {
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }

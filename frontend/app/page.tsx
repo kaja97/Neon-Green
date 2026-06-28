@@ -1,4 +1,5 @@
 import { Sprout, Sun, Droplets, Leaf } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -14,13 +15,15 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-4 text-sm font-medium text-slate-400">
-              <span>Home</span>
-              <span>Dashboard</span>
-              <span>Marketplace</span>
+              <Link href="/" className="hover:text-white transition-colors">Home</Link>
+              <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
             </div>
-            <button className="bg-primary text-white px-5 py-2 rounded-full font-semibold hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">
+            <Link
+              href="/login"
+              className="bg-primary text-white px-5 py-2 rounded-full font-semibold hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20"
+            >
               Sign In
-            </button>
+            </Link>
           </div>
         </header>
 
@@ -36,12 +39,18 @@ export default function Home() {
             Get personalized advice, track your crops, and increase your yield with hyper-local AI insights tailored exactly to your soil and weather.
           </p>
           <div className="flex justify-center gap-4 pt-4">
-            <button className="bg-primary text-white px-8 py-3 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-xl shadow-emerald-500/30">
+            <Link
+              href="/register"
+              className="bg-primary text-white px-8 py-3 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-xl shadow-emerald-500/30"
+            >
               Start Free Trial
-            </button>
-            <button className="bg-card text-white border border-slate-700 px-8 py-3 rounded-full font-bold text-lg hover:bg-slate-800 transition-colors">
+            </Link>
+            <Link
+              href="/dashboard"
+              className="bg-card text-white border border-slate-700 px-8 py-3 rounded-full font-bold text-lg hover:bg-slate-800 transition-colors"
+            >
               View Demo
-            </button>
+            </Link>
           </div>
         </section>
 

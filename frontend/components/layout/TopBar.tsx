@@ -11,13 +11,13 @@ export default function TopBar() {
           </span>
         </Link>
         <div className="flex items-center gap-4">
-          <button className="relative p-2 text-slate-400 hover:text-white transition-colors">
+          <Link href="/notifications" className="relative p-2 text-slate-400 hover:text-white transition-colors">
             <Bell className="h-6 w-6" />
             <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-background" />
-          </button>
-          <button className="p-1 text-slate-400 hover:text-white transition-colors">
+          </Link>
+          <Link href="/profile" className="p-1 text-slate-400 hover:text-white transition-colors">
             <UserCircle2 className="h-8 w-8" />
-          </button>
+          </Link>
         </div>
       </div>
     </header>
