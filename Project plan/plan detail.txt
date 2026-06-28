@@ -1,0 +1,85 @@
+This is a comprehensive, human-readable master document designed to explain the entire AgriFarm AI vision, architecture, and daily operations to stakeholders, investors, or new team members. You can copy and save this directly as your master text file.
+
+---
+
+# AgriFarm AI: Master Project Blueprint
+
+## 1. Executive Summary & The Vision
+
+**AgriFarm AI** is a personalized, AI-driven agricultural platform designed for smallholder farmers in Sri Lanka (and eventually South Asia). Generic farming advice fails because every farm is different. AgriFarm AI solves this by giving every farmer a personalized AI assistant that understands their exact soil type, local weather, crop stage, and preferred farming method (organic vs. conventional).
+
+Built as a mobile-first platform (Web, Android, and iOS) with local language support (Sinhala, Tamil, English), the app breaks down complex agronomy into simple, visual, daily actionable steps. It connects farmers to modern agricultural science, weather tracking, disease management, and a unified marketplace to buy supplies and sell harvests.
+
+---
+
+## 2. The Core Concept: The "Farming Life Cycle"
+
+The heart of AgriFarm AI is the **Farming Life Cycle Plan**.
+
+When a farmer starts a new crop, the system does not just give them a static calendar. It generates a dynamic, 90-to-120-day intelligent schedule based on standard crop science, then adjusts that schedule *every single day* based on reality.
+
+**The Farming Circle (Visual UI):**
+Farmers track their progress via a visual "Farming Circle" on their dashboard. It divides the crop's life into distinct stages (e.g., Germination -> Seedling -> Vegetative -> Flowering -> Fruiting -> Harvest). At a glance, the farmer knows exactly what stage their crop is in and what critical actions are required that week.
+
+---
+
+## 3. How the App Works: The User Journey
+
+1. **Onboarding & Profiling:** The farmer registers using their phone number. They input their location (GPS), land size, and whether they prefer organic, conventional, or integrated farming.
+2. **Project Creation:** The farmer selects a crop (e.g., Tomatoes) and a start date.
+3. **Smart Generation:** The backend engine instantly builds a complete day-by-day activity plan for the entire season.
+4. **Daily Operations (The Routine):** Every morning at 6:00 AM, the farmer receives a push notification (e.g., *"Watering day: 180L needed. No rain expected."*). They open the app, see their daily task blocks, perform the work, and tap "Mark Done."
+5. **Issue Resolution:** If leaves turn yellow, the farmer snaps a photo and answers three simple questions. The AI diagnoses the disease and provides step-by-step organic or conventional treatments.
+6. **Harvest & Marketplace:** As harvest approaches, the app estimates revenue based on live market prices. The farmer can list their upcoming yield on the integrated Marketplace for buyers to purchase.
+
+---
+
+## 4. Detailed Feature & Service Breakdown
+
+To keep cloud costs exceptionally low (under $0.15 per farmer/month), the platform uses a hybrid approach: **80% of tasks are handled by deterministic (rule-based) engines**, and **20% are handled by the LLM (AI)** for complex reasoning.
+
+### A. Weather-Driven Smart Planner
+
+* **How it works:** Continuously fetches 5-day forecasts for the farmer's exact GPS coordinates.
+* **Features:** Automatically adjusts the farmer's schedule. If 25mm of rain is expected tomorrow, it automatically skips today's watering task. If high winds are expected, it postpones pesticide spraying. It issues urgent push notifications for frost or flood risks.
+
+### B. Soil Analytics & Fertilizer Scheduler
+
+* **How it works:** Farmers upload or manually enter soil test results (pH, Nitrogen, Phosphorus, Potassium).
+* **Features:** The engine calculates exact nutrient gaps based on the specific crop's needs. It then generates prioritized action cards (e.g., *"Your Nitrogen is severely low. Apply 30kg of Urea per acre this week"*). It scales all chemical or organic compost measurements exactly to the farmer's land size.
+
+### C. Disease & Pest Management (Computer Vision + AI)
+
+* **How it works:** A unified diagnostic tool for sick plants.
+* **Features:** The farmer selects visual symptoms (e.g., "brown spots on leaves"). The system first uses a fast, rule-based keyword matcher. If the illness is complex, it routes the symptoms, crop stage, and local weather data to the AI (LLM) for deep diagnosis. It always returns two sets of solutions: one for Organic farmers (e.g., Neem oil) and one for Conventional farmers.
+
+### D. B2B & B2C Integrated Marketplace
+
+* **How it works:** A unified ecosystem connecting Farmers, Vendors, and Buyers.
+* **Features:** * **Input Market:** Farmers can buy fertilizer, seeds, and equipment directly from verified vendors.
+* **Harvest Market:** Farmers can list their crops for pre-order or immediate sale. Because the crop is tracked in the app, buyers can view a "Transparency Report" showing exactly how the crop was grown, what fertilizers were used, and its weather history.
+
+
+
+### E. Market Price & Revenue Service
+
+* **How it works:** Tracks live agricultural market prices across different districts.
+* **Features:** Alerts farmers to price surges or crashes. Provides a revenue calculator (Expected Yield × Current Market Price) so farmers know exactly what their crop is worth before they talk to a middleman.
+
+### F. The AI Assistant (RAG + MCP)
+
+* **How it works:** When standard rules aren't enough, the farmer can chat with their personalized AI.
+* **Features:** The AI does not give generic advice. Using **RAG (Retrieval-Augmented Generation)** and **MCP (Model Context Protocol)**, the AI reads the farmer's private, localized database before answering. If a farmer asks, *"Why are my tomatoes dying?"* the AI already knows it is Day 45 (Flowering Stage), the soil is Nitrogen-deficient, and the farm has experienced 3 days of heavy rain. It provides a hyper-contextual, highly accurate answer.
+
+---
+
+## 5. Technology Stack & Architecture
+
+The platform uses a scalable, modern, API-first architecture designed to work perfectly on low-end mobile devices in rural areas with spotty internet.
+
+* **Mobile App (Frontend):** **Flutter (Dart).** Compiles to native code for both Android and iOS. Highly performant and excellent for building offline-first capabilities so farmers can view their daily tasks even without a cell signal.
+* **Web App / Dashboard:** **Next.js (React) + TailwindCSS.** Used for the admin panel, vendor marketplace management, and web-based farmer access.
+* **Backend Services:** **Python (FastAPI).** A high-performance, asynchronous service mesh that handles API routing, business logic, and RAG/MCP orchestration.
+* **Database:** **PostgreSQL 16.** The primary relational database. Utilizes the **PostGIS** extension for geospatial mapping (tracking farm boundaries and weather zones) and the **pgvector** extension to store AI embeddings for the RAG knowledge base.
+* **Caching & Queues:** **Redis & Celery.** Redis handles rapid weather caching and session management. Celery runs heavy background tasks (like generating a 90-day activity plan when a new project is created, or blasting out 5:00 AM push notifications).
+* **AI Layer:** **Anthropic Claude (or similar LLM)** for complex reasoning, accessed via secure API, strictly routed through the localized MCP server to maintain data privacy and context.
