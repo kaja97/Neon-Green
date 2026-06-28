@@ -7,8 +7,12 @@
 ## Entity Relationship Overview
 
 ```
-accounts (1) ──────────────────── (1) farmer_profiles
-                                          │
+                                  ┌── (1) farmer_profiles ── (many) projects
+                                  │
+accounts (1) ─────────────────────┼── (1) vendor_profiles ── (many) vendor_products
+                                  │
+                                  └── (1) buyer_profiles  ── (many) orders
+
                   ┌───────────────────────┼──────────────────────┐
                   │                       │                      │
          farmer_locations        farmer_land_details      farmer_livestock
@@ -46,11 +50,14 @@ notifications (links to: farmer, project, activity, issue, alert)
 farmer_rag_documents ──── farmer_rag_chunks (pgvector)
 ai_conversations ──── ai_query_logs
 market_prices ──── market_trends
+
+vendor_products (agri-inputs) ──── orders (B2B/B2C)
+harvest_listings (crop sales) ──── order_items
 ```
 
 ---
 
-## Section 1: Account & Identity Tables
+## Section 1: Universal Identity & Account Tables
 
 ### `accounts`
 Core authentication record. One per user.
@@ -71,7 +78,7 @@ Core authentication record. One per user.
 ---
 
 ### `farmer_profiles`
-Personal details for each farmer. **1-to-1 with accounts.**
+Personal details for each farmer. **1-to-1 with accounts.** Used for managing crops and using the RAG AI.
 
 | Column | Type | Notes |
 |--------|------|-------|
@@ -83,8 +90,39 @@ Personal details for each farmer. **1-to-1 with accounts.**
 | `primary_language` | VARCHAR(10) | `en`, `si`, `ta` |
 | `experience_years` | INTEGER | Default 0 |
 | `education_level` | VARCHAR(50) | Optional |
+| `farming_method` | VARCHAR(50) | e.g. `organic`, `conventional` |
 | `avatar_url` | TEXT | S3 URL |
 | `bio` | TEXT | Short farm description |
+
+---
+
+### `vendor_profiles`
+For sellers of agri-inputs (Fertilizer, Equipment, Seeds). **1-to-1 with accounts.**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `account_id` | UUID FK → accounts | CASCADE DELETE |
+| `business_name` | VARCHAR(255) | Required |
+| `tax_id` | VARCHAR(100) | |
+| `warehouse_location` | TEXT | |
+| `contact_phone` | VARCHAR(20) | |
+| `rating` | DECIMAL(3,2) | 0.0 - 5.0 |
+| `is_verified` | BOOLEAN | Verified business |
+
+---
+
+### `buyer_profiles`
+For purchasing harvest outputs (Individuals, Retailers, Wholesalers). **1-to-1 with accounts.**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `account_id` | UUID FK → accounts | CASCADE DELETE |
+| `full_name` | VARCHAR(255) | |
+| `buyer_type` | VARCHAR(50) | `Individual`, `Retailer`, `Wholesaler` |
+| `delivery_address` | TEXT | |
+| `contact_phone` | VARCHAR(20) | |
 
 ---
 
@@ -742,6 +780,73 @@ CREATE INDEX idx_weather_cache_location_date ON weather_cache(location_key, fore
 CREATE INDEX idx_plants_name_fts ON plants USING gin(to_tsvector('english', common_name || ' ' || COALESCE(scientific_name, '')));
 CREATE INDEX idx_diseases_name_fts ON plant_diseases USING gin(to_tsvector('english', disease_name || ' ' || COALESCE(symptoms, '')));
 ```
+
+---
+
+## Section 11: Marketplace Tables (B2B & B2C)
+
+### `vendor_products`
+The Agri-Input Market (Vendors selling to Farmers).
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `vendor_profile_id` | UUID FK → vendor_profiles | |
+| `name` | VARCHAR(255) | e.g., "Organic Compost 50kg" |
+| `type` | VARCHAR(50) | `Fertilizer`, `Seed`, `Equipment`, `Tool` |
+| `description` | TEXT | |
+| `price` | DECIMAL(10,2) | |
+| `currency` | VARCHAR(10) | Default LKR |
+| `stock_quantity` | INTEGER | |
+| `image_url` | TEXT | |
+| `created_at` | TIMESTAMP | |
+
+---
+
+### `harvest_listings`
+The Harvest Market (Farmers selling to Buyers). Links directly to the farming project so buyers know exactly how it was grown!
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `project_id` | UUID FK → projects | Links to RAG-tracked history, weather, soil data |
+| `farmer_profile_id` | UUID FK → farmer_profiles | |
+| `yield_amount` | DECIMAL(10,2) | Available quantity |
+| `unit` | VARCHAR(20) | kg, tons |
+| `price_per_kg` | DECIMAL(10,2) | |
+| `status` | VARCHAR(50) | `Pre-order`, `Harvested`, `Sold Out` |
+| `available_date` | DATE | Expected or actual harvest date |
+| `created_at` | TIMESTAMP | |
+
+---
+
+### `orders`
+Master order record for transactions (both input and harvest markets).
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `buyer_profile_id` | UUID FK → buyer_profiles | Optional (if bought by buyer) |
+| `farmer_profile_id` | UUID FK → farmer_profiles | Optional (if farmer bought input) |
+| `total_price` | DECIMAL(10,2) | |
+| `status` | VARCHAR(50) | `Pending`, `Paid`, `Shipped`, `Delivered`, `Cancelled` |
+| `delivery_address` | TEXT | |
+| `created_at` | TIMESTAMP | |
+
+---
+
+### `order_items`
+Line items for an order.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `order_id` | UUID FK → orders | |
+| `vendor_product_id` | UUID FK → vendor_products | Nullable |
+| `harvest_listing_id` | UUID FK → harvest_listings | Nullable |
+| `quantity` | DECIMAL(10,2) | |
+| `unit_price` | DECIMAL(10,2) | |
+| `total_price` | DECIMAL(10,2) | |
 
 ---
 

@@ -369,6 +369,23 @@
 
 ---
 
+## PHASE 12 — Marketplace & Universal Identity (B2B & B2C)
+**Duration:** Weeks 18–19
+
+### Backend & Database
+- [ ] Refactor `accounts` to support `farmer_profiles`, `vendor_profiles`, `buyer_profiles`
+- [ ] Create `vendor_products`, `harvest_listings`, `orders`, and `order_items` tables
+- [ ] Implement Marketplace Service (`/backend/services/marketplace.py`)
+- [ ] Expose API routes (`/backend/api/routers/marketplace.py`)
+
+### Frontend
+- [ ] Universal Identity switcher in TopBar (switch between Farmer, Vendor, Buyer mode)
+- [ ] Vendor Dashboard: list agri-inputs, manage stock
+- [ ] Buyer Dashboard: browse marketplace, place orders
+- [ ] Harvest listing creation flow for farmers
+
+---
+
 ## API Keys & Environment Variables Checklist
 
 ```bash
