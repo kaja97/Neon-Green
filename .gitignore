@@ -79,3 +79,4 @@ Thumbs.db
 # ── Temp / scaffolding leftovers ──
 frontend_temp/
 frontend/node_modules/
+.env.example
