@@ -21,6 +21,7 @@
 | [`09_IMPLEMENTATION_ROADMAP.md`](./09_IMPLEMENTATION_ROADMAP.md) | Phase-by-phase build plan (17 weeks), tasks, deliverables |
 | [`10_DATA_SEED_GUIDE.md`](./10_DATA_SEED_GUIDE.md) | Master data seeding — crops, stages, nutrients, diseases |
 | [`11_MARKETPLACE_EXTENSION.md`](./11_MARKETPLACE_EXTENSION.md) | B2B & B2C Marketplace and Universal Identity Module |
+| [`12_MASTER_BLUEPRINT.md`](./12_MASTER_BLUEPRINT.md) | Rigorous architecture, edge cases, and testing blueprint |
 
 ---
 
