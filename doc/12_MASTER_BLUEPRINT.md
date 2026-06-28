@@ -1,140 +1,249 @@
-# AgriFarm AI — Master Implementation Blueprint
+# AgriFarm AI — Master Blueprint (Architecture, Edge Cases & Testing)
 
-This document serves as the **Enhanced Master Blueprint** for the AgriFarm AI ecosystem. It synthesizes the database models, microservices architecture, AI integrations, and marketplace ecosystem into a rigorous, step-by-step guide optimized for AI-assisted code generation.
-
----
-
-## 1. Architecture & Tech Stack
-
-### Deep Architecture Pattern
-The project uses a **Modular Monolith** pattern that can easily scale into microservices. 
-- **API Gateway (NGINX/FastAPI):** Handles JWT validation, rate limiting, and routing.
-- **Service Layer (FastAPI):** Isolated domains (Auth, Projects, Weather, Market, AI, Marketplace).
-- **Data Layer (PostgreSQL 16):** Single DB with bounded contexts (logical separation of tables by domain). Uses `pgvector` for AI embeddings and `pg_trgm` for fuzzy search.
-- **Async Workers (Celery + Redis):** Handles heavy tasks (Life Cycle generation, RAG chunking, Weather polling).
-- **Client (Next.js PWA):** Mobile-first, offline-capable frontend.
-
-### Ideal Tech Stack & Libraries
-* **Backend:**
-  - Framework: `FastAPI` (Python 3.11+)
-  - ORM: `SQLAlchemy 2.0` (async engine) + `Alembic` (migrations)
-  - Validation: `Pydantic v2`
-  - Background Tasks: `Celery` with `Redis` broker
-  - AI/RAG: `LangChain` (for chunking), `mcp` (Model Context Protocol), `anthropic`, `openai` (for embeddings)
-* **Frontend:**
-  - Framework: `Next.js 14` (App Router)
-  - Language: `TypeScript`
-  - Styling: `Tailwind CSS` + `shadcn/ui`
-  - State & Data Fetching: `Zustand` (client state) + `@tanstack/react-query` (server state/caching)
-  - Charts: `Recharts`
-  - PWA: `next-pwa`
-* **Infrastructure:**
-  - Deployment: `Docker` + `Docker Compose`
-  - Cloud Storage: `AWS S3` or `MinIO` (for image uploads)
-  - CI/CD: `GitHub Actions`
+## Overview
+This document serves as the technical reference for edge cases, error handling, component logic, and testing strategy. It supplements the other plan documents with implementation-level detail.
 
 ---
 
-## 2. Phased Implementation Roadmap
+## 1. Architecture Decision Records
 
-### Phase 1: Core Foundation & MVP (Weeks 1-4)
-* **Milestone 1.1:** Setup Docker, PostgreSQL, Redis, and FastAPI boilerplate.
-* **Milestone 1.2:** Database schema migrations using Alembic (Auth, Profiles, Plants, Master Data). Seed the database with 8 priority crops.
-* **Milestone 1.3:** Build Universal Identity (Auth Service). JWT login, Registration for Farmer profiles.
-* **Milestone 1.4:** Build Project CRUD. A farmer can create a project linked to a piece of land and a crop.
+### ADR-1: Modular Monolith over Microservices
+**Decision:** Start with a FastAPI modular monolith.
+**Reasoning:** 1-3 developers building v1.0. Microservices add deployment complexity, inter-service communication overhead, and distributed debugging challenges. A modular monolith with clean module boundaries can be extracted to microservices later if traffic demands it.
+**Future migration:** Each `backend/modules/<name>/` folder maps 1:1 to a future microservice.
 
-### Phase 2: Intelligence & Guidance Engine (Weeks 5-8)
-* **Milestone 2.1:** Implement the Activity Planner (Deterministic Engine). Generate a 90-day task list based on planting date and plant stages.
-* **Milestone 2.2:** Build the Next.js Frontend Shell. Mobile layout, Bottom Nav, Project Dashboard, and the visual "Farming Circle".
-* **Milestone 2.3:** Implement OpenWeatherMap API integration. Build Celery jobs to fetch weather and adjust daily activities (e.g., skip watering if raining).
+### ADR-2: Free AI Only (Google Gemini + Gemma)
+**Decision:** Use exclusively free AI APIs. No paid API keys.
+**Reasoning:** Target users are smallholder farmers in Sri Lanka. The platform must run at near-zero cost. Google AI Studio free tier (Gemini 2.0 Flash) provides 15 RPM and 1,500 RPD — sufficient for 100-300 active farmers.
+**Fallback:** If free tier is exhausted, deterministic summary generation handles remaining queries.
 
-### Phase 3: Diagnostic & Analytical Systems (Weeks 9-11)
-* **Milestone 3.1:** Soil Analysis Service. Algorithms to compute nutrient gaps and recommend specific fertilizers.
-* **Milestone 3.2:** Disease & Pest Matching Engine. Keyword-based symptom matching mapped to organic/conventional solutions.
-* **Milestone 3.3:** Market Prices. Web scraping or API integration for crop prices, computing 30-day trends.
+### ADR-3: Flattened Context over RAG
+**Decision:** Send flattened project data as direct context to the AI instead of building a full RAG pipeline.
+**Reasoning:** A single farming project's relevant data is ~2,000 tokens when flattened. This fits trivially in Gemini's 1M token context window. RAG adds complexity (embedding pipeline, vector search, chunk relevance scoring) without benefit at this data scale. RAG is planned for v3.0 when historical data spans multiple seasons.
 
-### Phase 4: AI & RAG Ecosystem (Weeks 12-14)
-* **Milestone 4.1:** RAG Ingestion Pipeline. Celery tasks to chunk and embed project history, soil tests, and plant data into `pgvector`.
-* **Milestone 4.2:** Build the FarmerMCPServer. Expose weather, tasks, and market tools to the LLM.
-* **Milestone 4.3:** AI Chat Interface in Next.js. Implement the intent classifier to route deterministic queries away from the LLM to save costs.
-
-### Phase 5: B2B/B2C Marketplace Ecosystem (Weeks 15-17)
-* **Milestone 5.1:** Identity Expansion. Add Vendor and Buyer profiles linked to the core Account.
-* **Milestone 5.2:** Agri-Input Market. Allow vendors to list fertilizers/tools. Buyers/Farmers can purchase.
-* **Milestone 5.3:** Harvest Market. Farmers convert completed projects into `HarvestListings`, linking crop provenance (RAG history) for premium pricing.
-
-### Phase 6: Scaling & Hardening (Week 18+)
-* **Milestone 6.1:** Offline PWA implementation (service workers caching daily tasks).
-* **Milestone 6.2:** Comprehensive E2E Testing and CI/CD pipelines.
+### ADR-4: Web App First, Flutter Later
+**Decision:** Build Next.js PWA first. Flutter mobile apps in v2.0.
+**Reasoning:** PWA provides near-native experience with faster development. It works on all devices immediately. Flutter apps will share the same API and add native features (camera, GPS, FCM push) in v2.0.
 
 ---
 
-## 3. Detailed Component Breakdown
+## 2. Detailed Component Logic
 
-### A. Activity Planner Engine (Deterministic)
-* **Logic:** Triggered on Project Creation. Queries `plant_stages`, `plant_water_requirements`, and `plant_fertilizer_recommendations`.
-* **Input:** `project_id`, `planting_date`, `area`, `farming_method_id`.
-* **Output:** Bulk insert 50-100 `farming_activities` into the DB.
-* **Error Handling:** If `plant_id` is missing stage data, fallback to generic 3-stage crop template. Log warning to Sentry.
+### A. Activity Planner Engine
+- **Trigger:** `POST /projects` → Celery task `generate_season_plan(project_id)`
+- **Input:** project_id, planting_date, plant_id, area, farming_method_id
+- **Process:** Queries `plant_stages`, `plant_water_requirements`, `plant_fertilizer_recommendations`. Generates activities per stage.
+- **Output:** 50-100 `farming_activities` records bulk-inserted.
+- **Error Handling:** If plant is missing stage data, create a generic 3-stage plan (Planting → Growing → Harvest) and log a warning. The project is still usable — just with a simpler plan.
 
-### B. Weather Adjustment Job (Celery Beat)
-* **Logic:** Runs at 5:00 AM daily. Fetches 5-day forecast. Evaluates `farming_activities` for today and tomorrow.
-* **Input:** Active `location` coordinates.
-* **Output:** Updates `activity.status = 'skipped'` or `'rescheduled'`. Creates `weather_alerts`.
-* **Error Handling:** If Weather API times out, fallback to Redis cache. If cache expired, do NOT skip any watering tasks (fail safe = overwater rather than drought).
+### B. Weather Adjustment Job
+- **Trigger:** Celery Beat at 5:00 AM daily
+- **Input:** All active project locations
+- **Process:** Fetch 5-day forecast → evaluate today's pending activities → apply deterministic rules
+- **Output:** Activities marked `skipped` or `rescheduled`. Weather alerts created.
+- **Error Handling:** If OpenWeatherMap API is down or rate-limited:
+  1. Check Redis cache (up to 3 hours old) — use if available
+  2. If cache also empty — do NOT modify any activities (fail-safe: better to over-water than drought)
+  3. Log the API failure, retry in 30 minutes
 
-### C. Disease Matching Engine
-* **Logic:** Farmer submits symptoms and affected parts. Uses Postgres `to_tsvector` for keyword matching against `plant_diseases`.
-* **Input:** `plant_id`, `symptoms_text`, `affected_parts_list`.
-* **Output:** Matched disease IDs, confidence score, and associated solutions (filtered by project's farming method).
-* **Error Handling:** If no DB match > 60% confidence, route text and images to Claude LLM for fallback analysis.
+### C. Soil Recommendation Engine
+- **Trigger:** `POST /soil/tests` → synchronous calculation
+- **Input:** Soil test results (pH, N, P, K, etc.) + project's plant and current stage
+- **Process:** Compare actual values against optimal ranges from `plant_nutrient_requirements`. Calculate gap.
+- **Output:** List of `soil_recommendations` with product name, quantity per acre, priority
+- **Error Handling:** If optimal values are missing for this plant, return a generic recommendation set and flag for admin review.
 
-### D. Marketplace Transaction Engine
-* **Logic:** Handles orders bridging profiles. Deducts `stock_quantity` or `yield_amount`.
-* **Input:** `buyer_id`, `items` (listing_ids, quantities).
-* **Output:** Generated `Order` and `OrderItem` records.
-* **Error Handling:** Concurrency issues (two buyers purchasing last stock). Must use SQL `SELECT ... FOR UPDATE` (row-level locking) when checking and updating quantities.
+### D. AI Summary Service
+- **Trigger:** Manual (farmer taps "Refresh AI") or Celery Beat (weekly Sunday 6AM)
+- **Input:** project_id → `build_project_context()` → flattened JSON
+- **Process:** Send to Google AI Studio (Gemini 2.0 Flash) with system prompt
+- **Output:** Natural language summary + parsed insights → database updates
+- **Error Handling:**
+  - `ResourceExhausted` (rate limit) → return deterministic summary
+  - `GoogleAPIError` → return cached summary or deterministic fallback
+  - AI returns unsafe/hallucinated content → system prompt includes strict guardrails
+
+### E. Disease Matching Engine
+- **Trigger:** `POST /issues` → search `plant_diseases` via full-text search
+- **Input:** symptoms text, affected parts, plant_id
+- **Process:** PostgreSQL `ts_rank` scoring against symptom keywords
+- **Output:** Matched diseases with confidence scores + filtered solutions
+- **Error Handling:** If no match exceeds confidence threshold (0.1 ts_rank):
+  1. Route to Google Gemini for AI diagnosis
+  2. AI response includes treatment steps
+  3. System creates a `project_issue` record with `source: "ai_diagnosis"`
 
 ---
 
-## 4. Edge Cases & Error Handling
+## 3. Edge Cases & Error Handling Table
 
-| Component | Potential Failure Point | Explicit Recovery Protocol |
-|-----------|-------------------------|---------------------------|
-| **Auth/Identity** | Duplicate phone/email during registration | Return generic 400. Suggest login or password reset. |
-| **Weather API** | Rate limiting (1000 calls/day exceeded) | Backoff algorithm. Serve last known Redis cache. Warn UI: "Weather data is 12h old". |
-| **LLM / AI Chat** | Hallucinations on chemical dosages | **CRITICAL:** System prompt STRICTLY dictates pulling dosages only from MCP Tools. UI disclaimer on all AI advice. |
-| **RAG Embedding** | OpenAI API timeout during chunking | Celery task exponential backoff (`max_retries=5`). Mark document status as `indexing_failed`. |
-| **Marketplace** | Farmer sells harvest that is still marked "Active" | Block listing. Require project status = `Harvested` before `HarvestListing` can be created. |
-| **Offline UI** | Farmer marks task done without internet | Zustand stores mutation locally. React Query syncs to backend upon network reconnection using background sync API. |
+| Component | Edge Case | Recovery |
+|-----------|-----------|----------|
+| **Registration** | Duplicate email/phone | 409 Conflict. Generic message (no user enumeration). |
+| **JWT** | Access token expired | 401 with `token_expired` code. Frontend auto-refreshes via `/auth/refresh`. |
+| **JWT** | Refresh token revoked | 401. Force full re-login. |
+| **Project creation** | Plant has no stage data | Generate generic 3-stage plan. Log warning for admin. |
+| **Project creation** | Location has no GPS coordinates | Block creation. Require GPS coordinates. |
+| **Activity generation** | Celery task fails mid-generation | Celery retry (3 attempts, exponential backoff). Project status shows "plan_generation_failed". |
+| **Weather API** | OpenWeatherMap down | Serve Redis cache. If cache expired, don't modify activities. |
+| **Weather API** | Free tier exhausted (1000/day) | Queue remaining locations. Process in next cycle. |
+| **AI API** | Google AI Studio rate limit (15 RPM) | Queue request, retry in 5s. Show "Generating..." in UI. |
+| **AI API** | Google free tier daily limit | Return deterministic summary. Show "AI summary temporarily unavailable". |
+| **AI API** | Gemini returns hallucinated dosage | System prompt forbids dosage recommendations without DB source. Review before applying to DB. |
+| **Soil test** | All nutrient values are zero | Reject submission. Validation: at least pH must be > 0. |
+| **Disease match** | Farmer enters gibberish symptoms | Zero results. Suggest "Try describing what you see: leaf color, spots, wilting". |
+| **File upload** | Image > 5MB | 413 error. Compress client-side before upload. |
+| **Offline PWA** | Farmer marks task done without internet | Zustand stores mutation. React Query syncs on reconnection. |
+| **Concurrent access** | Two farmers creating projects simultaneously | No conflict — separate project records per farmer. |
 
 ---
 
-## 5. Verification & Testing Plan
+## 4. Testing Strategy
 
-### A. Unit Testing (`pytest`)
-* **Focus:** Deterministic engines.
-* **Test Cases:**
-  - Mock a 1-acre tomato farm. Run Activity Planner. Assert exact number of watering and fertilizing tasks are generated.
-  - Test the Soil Analysis logic: Input pH 5.5, assert output recommends exact kg of lime.
-  - Test Intent Classifier: Pass string "What is the price of tomatoes", assert routing bypasses LLM.
+### A. Unit Tests (`pytest`)
 
-### B. Integration Testing (`pytest` + `testcontainers`)
-* **Focus:** Database constraints and API routing.
-* **Test Cases:**
-  - Attempt to delete a Farmer Profile. Assert Cascade Delete removes all associated Projects and Activities.
-  - Marketplace concurrency: Simulate 3 concurrent API calls buying the same `HarvestListing`. Assert only 1 succeeds, others receive 409 Conflict.
+```python
+# Test activity planner generates correct count
+def test_generate_tomato_plan():
+    project = create_mock_project(plant="Tomato", area=1.0, method="organic")
+    activities = generate_season_plan(project.id)
+    assert len(activities) >= 50  # Minimum for 90-day crop
+    assert any(a.activity_type == "watering" for a in activities)
+    assert any(a.activity_type == "fertilizing" for a in activities)
+    assert any(a.activity_type == "monitoring" for a in activities)
+    # Organic project should not have conventional fertilizer
+    for a in activities:
+        if a.activity_type == "fertilizing":
+            assert "Urea" not in a.title  # Urea is conventional
 
-### C. AI / RAG Testing
-* **Focus:** Retrieval accuracy and cost control.
-* **Test Cases:**
-  - Create a golden dataset of 50 farmer questions.
-  - Run retrieval pipeline. Assert top-3 chunks contain the actual answer 95% of the time.
-  - Assert the MCP Server correctly blocks queries exceeding the `DAILY_TOKEN_LIMIT`.
+# Test soil calculator
+def test_soil_low_nitrogen():
+    results = compute_recommendations(
+        soil_ph=6.2, nitrogen_ppm=50, phosphorus_ppm=45, potassium_ppm=185,
+        plant="Tomato", stage="Vegetative", method="organic"
+    )
+    nitrogen_rec = next(r for r in results if r["nutrient"] == "Nitrogen")
+    assert nitrogen_rec["severity"] in ["moderate", "severe"]
+    assert "compost" in nitrogen_rec["action"].lower()  # Organic solution
 
-### D. E2E Testing (`Playwright`)
-* **Focus:** Critical User Journeys (CUJs).
-* **Test Cases:**
-  1. Registration -> Add Land -> Create Project -> View Dashboard.
-  2. View Dashboard -> Tap Activity -> Mark as Done -> Verify Progress Ring updates.
-  3. Switch Profile to Buyer -> Browse Harvests -> Add to Cart -> Checkout.
+# Test intent classifier routes correctly
+def test_intent_weather():
+    assert classify_intent("Will it rain tomorrow?") == "weather_info"
+    assert classify_intent("What's the price of tomatoes?") == "market_price"
+    assert classify_intent("Why are my leaves curling?") == "ai_required"
+
+# Test weather adjustment
+def test_skip_watering_if_rain():
+    activity = mock_activity(type="watering", status="pending")
+    weather = mock_weather(rain_mm=15)
+    adjust_activity(activity, weather)
+    assert activity.status == "skipped"
+    assert "rain" in activity.skipped_reason.lower()
+```
+
+### B. Integration Tests (`pytest` + Docker PostgreSQL)
+
+```python
+# Full project creation flow
+async def test_create_project_flow():
+    # Register farmer
+    response = await client.post("/auth/register", json={...})
+    token = response.json()["data"]["access_token"]
+
+    # Create project
+    response = await client.post("/projects", json={
+        "plant_id": tomato_id,
+        "location_id": location_id,
+        "planting_date": "2025-03-01",
+        "area": 1.0
+    }, headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 201
+    project_id = response.json()["data"]["id"]
+
+    # Wait for Celery task (or run synchronously in test)
+    await generate_season_plan(project_id)
+
+    # Verify plan generated
+    response = await client.get(f"/planner/{project_id}/today",
+                                headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert len(response.json()["data"]) > 0
+
+# Dashboard aggregation returns all blocks
+async def test_dashboard_complete():
+    response = await client.get(f"/projects/{project_id}/dashboard",
+                                headers={"Authorization": f"Bearer {token}"})
+    data = response.json()["data"]
+    assert "farming_circle" in data
+    assert "todays_activities" in data
+    assert "weather" in data
+    assert "ai_summary" in data
+```
+
+### C. AI Integration Tests
+
+```python
+# Test flattened context builder
+def test_build_context_complete():
+    context = build_project_context(project_id)
+    assert "project" in context
+    assert "current_stage" in context
+    assert "weather" in context
+    assert "soil" in context
+    assert "recent_activities" in context
+    assert context["project"]["crop_name"] == "Tomato"
+
+# Test AI rate limiting
+async def test_ai_rate_limit():
+    for i in range(10):
+        await client.post(f"/ai/summary/{project_id}")  # Use up daily quota
+    response = await client.post(f"/ai/summary/{project_id}")
+    assert response.status_code == 429  # Rate limited
+
+# Test deterministic fallback when AI unavailable
+async def test_ai_fallback(mock_gemini_unavailable):
+    response = await client.post(f"/ai/summary/{project_id}")
+    assert response.status_code == 200
+    assert response.json()["data"]["source"] == "deterministic_fallback"
+```
+
+### D. E2E Tests (Playwright)
+
+```python
+# Critical User Journey 1: Full farmer flow
+def test_farmer_journey(page):
+    page.goto("/register")
+    page.fill("#email", "farmer@test.com")
+    page.fill("#password", "secure123")
+    page.fill("#full_name", "Test Farmer")
+    page.click("button[type=submit]")
+
+    # Create project
+    page.click("text=New Project")
+    page.click("text=Tomato")            # Select crop
+    page.click("text=Home Farm")          # Select location
+    page.click("text=Organic Farming")    # Select method
+    page.fill("#area", "1")
+    page.click("text=Create Project")
+
+    # Verify dashboard loads
+    expect(page.locator(".farming-circle")).to_be_visible()
+    expect(page.locator(".activity-card")).to_have_count_greater_than(0)
+
+    # Mark task done
+    page.click(".activity-card >> text=Done")
+    expect(page.locator(".activity-card").first).to_have_text("✓ done")
+```
+
+---
+
+## 5. Performance Targets
+
+| Metric | Target | How |
+|--------|--------|-----|
+| API response time (non-AI) | < 200ms | Database indexes, Redis caching, async queries |
+| AI response time | < 5 seconds | Gemini 2.0 Flash is fast; context is small (~2K tokens) |
+| Dashboard load | < 1 second | Single aggregated endpoint, server-side caching |
+| Activity plan generation | < 10 seconds | Bulk insert, runs in background (Celery) |
+| PWA first load | < 3 seconds | Next.js SSR, Tailwind CSS purging, image optimization |
+| Offline access | Instant | Service Worker caches daily plan |

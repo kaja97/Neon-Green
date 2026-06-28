@@ -1,644 +1,528 @@
 # AgriFarm AI — Backend Services Plan
 
-## Architecture: 12 FastAPI Microservices
+## Architecture: FastAPI Modular Monolith
 
-All services are Python FastAPI apps, containerized with Docker. The API Gateway handles routing, JWT auth middleware, and rate limiting.
+All services are Python modules inside a single FastAPI application. Each module has its own `router.py`, `service.py`, `models.py`, and `schemas.py`. They share the same database and can call each other's service layers directly.
+
+```
+backend/
+├── main.py                    # FastAPI app, mounts all routers
+├── database.py                # SQLAlchemy engine, session factory
+├── config.py                  # Environment config (Pydantic BaseSettings)
+├── dependencies.py            # Shared deps: get_db, get_current_user
+├── modules/
+│   ├── auth/
+│   │   ├── router.py          # POST /auth/register, /auth/login, /auth/refresh
+│   │   ├── service.py         # Hash passwords, create JWT, validate tokens
+│   │   ├── models.py          # Account SQLAlchemy model
+│   │   └── schemas.py         # Pydantic: RegisterRequest, LoginRequest, TokenResponse
+│   ├── farmer/
+│   │   ├── router.py
+│   │   ├── service.py
+│   │   ├── models.py          # FarmerProfile, FarmerLocation, FarmerLandDetail, FarmerLivestock
+│   │   └── schemas.py
+│   ├── project/
+│   │   ├── router.py
+│   │   ├── service.py
+│   │   ├── models.py          # Project, ProjectService
+│   │   └── schemas.py
+│   ├── weather/
+│   │   ├── router.py
+│   │   ├── service.py         # OpenWeatherMap free API integration
+│   │   ├── models.py          # WeatherCache, WeatherAlert
+│   │   └── schemas.py
+│   ├── soil/
+│   │   ├── router.py
+│   │   ├── service.py         # Nutrient gap calculator (deterministic)
+│   │   ├── models.py          # SoilTest, SoilNutrientResult, SoilRecommendation
+│   │   └── schemas.py
+│   ├── planner/
+│   │   ├── router.py
+│   │   ├── service.py         # Life cycle engine, daily task generator
+│   │   ├── models.py          # ActivityPlan, FarmingActivity, ActivityDetail
+│   │   └── schemas.py
+│   ├── disease/
+│   │   ├── router.py
+│   │   ├── service.py         # Keyword matcher + AI fallback
+│   │   ├── models.py          # ProjectIssue
+│   │   └── schemas.py
+│   ├── market/
+│   │   ├── router.py
+│   │   ├── service.py
+│   │   ├── models.py          # MarketPrice, MarketTrend
+│   │   └── schemas.py
+│   ├── ai/
+│   │   ├── router.py          # POST /ai/summary, POST /ai/chat
+│   │   ├── service.py         # Context flattening + Google Gemini call
+│   │   ├── context_builder.py # build_project_context()
+│   │   ├── prompts.py         # All system prompts as constants
+│   │   └── schemas.py
+│   └── notification/
+│       ├── router.py
+│       ├── service.py
+│       ├── models.py          # Notification
+│       └── schemas.py
+├── tasks/                     # Celery background tasks
+│   ├── weather_tasks.py
+│   ├── planner_tasks.py
+│   ├── notification_tasks.py
+│   └── ai_tasks.py            # Weekly AI summary generation
+└── seed/                      # Database seed data
+    ├── plants.py
+    ├── stages.py
+    └── diseases.py
+```
 
 ---
 
-## SERVICE 1: Auth Service
-**Port:** 8001 | **Path prefix:** `/auth`
+## SERVICE 1: Auth Module
 
-### Purpose
-Registration, login, JWT token lifecycle, password reset.
+**Path:** `/auth`
 
 ### Endpoints
-```
-POST /auth/register          → Create account + farmer_profile stub
-POST /auth/login             → Return JWT access + refresh token
-POST /auth/refresh           → Refresh access token
-POST /auth/logout            → Invalidate refresh token
-POST /auth/forgot-password   → Send OTP via email/SMS
-POST /auth/verify-otp        → Validate OTP, set new password
-GET  /auth/verify-email/{token}
-```
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| POST | `/auth/register` | Create account + farmer profile | Public |
+| POST | `/auth/login` | Email/phone + password → JWT pair | Public |
+| POST | `/auth/refresh` | Refresh token → new access token | Refresh token |
+| GET | `/auth/me` | Get current user info | Bearer |
 
 ### Logic
-- **Password:** bcrypt hashing (cost factor 12)
-- **JWT:** RS256 signed (private/public key pair)
-- **Access token:** 15 min TTL
-- **Refresh token:** 30 days, stored in Redis (key: `refresh:{farmer_id}:{jti}`)
-- **OTP:** 6-digit, 10 min TTL, stored in Redis
+```python
+# Registration flow:
+# 1. Validate email/phone uniqueness
+# 2. Hash password with bcrypt
+# 3. Create Account record
+# 4. Create FarmerProfile record (default role)
+# 5. Return JWT access + refresh tokens
+
+# JWT Strategy:
+# Access token: 15 minutes, RS256 signed
+# Refresh token: 30 days, stored in Redis for revocation
+# On refresh: validate refresh token exists in Redis, issue new pair
+```
+
+### Error Handling
+| Error | Response | Recovery |
+|-------|----------|----------|
+| Duplicate email | 409 Conflict | Suggest login or password reset |
+| Invalid credentials | 401 Unauthorized | Generic message (no user enumeration) |
+| Expired access token | 401 + `token_expired` code | Frontend auto-refreshes |
+| Revoked refresh token | 401 | Force re-login |
 
 ---
 
-## SERVICE 2: Farmer Profile Service
-**Port:** 8002 | **Path prefix:** `/farmer`
+## SERVICE 2: Farmer Module
 
-### Purpose
-CRUD for farmer profile, land details, locations, and livestock.
+**Path:** `/farmer`
 
 ### Endpoints
-```
-GET    /farmer/me                      → Full profile (profile + locations + land + livestock)
-PUT    /farmer/me                      → Update profile
-POST   /farmer/locations               → Add a location
-GET    /farmer/locations               → List locations
-PUT    /farmer/locations/{id}          → Update location
-DELETE /farmer/locations/{id}          → Remove location
-POST   /farmer/land                    → Add land details
-GET    /farmer/land                    → List land details
-PUT    /farmer/land/{id}               → Update land
-DELETE /farmer/land/{id}              → Remove land
-POST   /farmer/livestock               → Add livestock
-GET    /farmer/livestock               → List livestock
-PUT    /farmer/livestock/{id}          → Update livestock
-DELETE /farmer/livestock/{id}          → Remove livestock
-```
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/farmer/profile` | Get own profile | Bearer |
+| PUT | `/farmer/profile` | Update profile | Bearer |
+| POST | `/farmer/locations` | Add a farm location | Bearer |
+| GET | `/farmer/locations` | List all locations | Bearer |
+| PUT | `/farmer/locations/{id}` | Update location | Bearer |
+| POST | `/farmer/land` | Add land details | Bearer |
+| GET | `/farmer/land` | List all land details | Bearer |
 
 ### Logic
-- On profile update → trigger background job to update RAG documents
-- On location add → geocode address to lat/lng (Google Maps or Nominatim)
-- Avatar upload → store in S3, save URL in `farmer_profiles.avatar_url`
+- Profile stores: name, language, experience, preferred farming method
+- Location stores: GPS coordinates, address, timezone (for weather + notifications)
+- Land details: area, soil type, water source, irrigation type
+- Location `is_primary` flag determines default location for new projects
 
 ---
 
-## SERVICE 3: Project Service
-**Port:** 8003 | **Path prefix:** `/projects`
+## SERVICE 3: Project Module ⭐ (Core Feature — Build First)
 
-### Purpose
-Create/manage farming projects, activate services, return dashboard aggregate data.
+**Path:** `/projects`
 
 ### Endpoints
-```
-GET    /projects                         → List all projects (with stage + progress + alerts)
-POST   /projects                         → Create new project
-GET    /projects/{id}                    → Full project details
-PUT    /projects/{id}                    → Update project
-DELETE /projects/{id}                    → Soft archive project
-GET    /projects/{id}/dashboard          → Full dashboard aggregate
-POST   /projects/{id}/services           → Enable a service for this project
-PUT    /projects/{id}/services/{type}    → Configure service settings
-DELETE /projects/{id}/services/{type}    → Disable a service
-GET    /projects/{id}/stage              → Current stage info + progress
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| POST | `/projects` | Create new farming project | Bearer |
+| GET | `/projects` | List all farmer's projects | Bearer |
+| GET | `/projects/{id}` | Get project detail + dashboard data | Bearer |
+| PUT | `/projects/{id}` | Update project | Bearer |
+| PATCH | `/projects/{id}/status` | Change status (active → harvested) | Bearer |
+| GET | `/projects/{id}/dashboard` | Aggregated dashboard (all blocks) | Bearer |
+
+### Project Creation Flow (The Most Critical Flow)
+```python
+async def create_project(data: ProjectCreateRequest, farmer_id: str):
+    # 1. Validate plant_id exists in master catalogue
+    plant = db.get(Plant, data.plant_id)
+    if not plant:
+        raise HTTPException(404, "Crop not found")
+
+    # 2. Validate location and land detail
+    location = db.get(FarmerLocation, data.location_id)
+    land = db.get(FarmerLandDetail, data.land_detail_id)
+
+    # 3. Create project record
+    project = Project(
+        farmer_id=farmer_id,
+        plant_id=data.plant_id,
+        location_id=data.location_id,
+        land_detail_id=data.land_detail_id,
+        farming_method_id=data.farming_method_id,
+        area=data.area,
+        area_unit=data.area_unit,
+        planting_date=data.planting_date,
+        expected_harvest_date=data.planting_date + timedelta(days=plant.growth_duration_days),
+        status="active"
+    )
+    db.add(project)
+    db.flush()
+
+    # 4. TRIGGER: Generate full-season activity plan (Celery background task)
+    generate_season_plan.delay(project.id)
+
+    # 5. TRIGGER: Fetch initial weather data
+    refresh_weather_for_location.delay(location.latitude, location.longitude)
+
+    db.commit()
+    return project
 ```
 
-### Dashboard Response Shape
-```json
-{
-  "project": { "id": "...", "name": "Tomato Farm", "area": 1.0 },
-  "current_stage": {
-    "name": "Flowering",
-    "stage_order": 4,
-    "day_in_stage": 8,
-    "days_since_planting": 45,
-    "total_days": 90,
-    "progress_pct": 50,
-    "key_indicators": "...",
-    "watch_for": "..."
-  },
-  "todays_activities": [
-    { "id": "...", "title": "Water 180L", "type": "watering", "priority": 2, "status": "pending" }
-  ],
-  "upcoming_activities": [...],
-  "active_alerts": [...],
-  "open_issues_count": 1,
-  "weather_summary": { "today": "Sunny 32°C", "rain_in_days": 3 },
-  "soil_summary": { "ph": 6.2, "nitrogen_status": "LOW", "last_test": "2025-05-28" },
-  "market_summary": { "price": 180, "unit": "kg", "trend": "rising" },
-  "service_blocks": ["weather", "soil", "activity_plan", "disease_watch", "market", "ai_chat"]
-}
-```
+### Dashboard Aggregation Endpoint
+**`GET /projects/{id}/dashboard`** — Returns ALL data blocks in one call:
 
-### Logic
-- On project creation:
-  - Trigger `generate_season_plan(project_id)` via Celery
-  - Trigger `seed_rag_documents(project_id)` via Celery
-  - Compute and set `expected_harvest_date` from `planting_date + plant.growth_duration_days`
+```python
+async def get_dashboard(project_id: str):
+    return {
+        "project": get_project_detail(project_id),
+        "current_stage": get_current_stage(project_id),
+        "farming_circle": get_all_stages_with_progress(project_id),
+        "todays_activities": get_todays_activities(project_id),
+        "upcoming_activities": get_upcoming_activities(project_id, days=7),
+        "weather": get_5day_forecast(project_id),
+        "weather_alerts": get_active_weather_alerts(project_id),
+        "soil_status": get_latest_soil_summary(project_id),
+        "active_issues": get_open_issues(project_id),
+        "market_price": get_latest_price(project_id),
+        "notifications": get_unread_notifications(project_id),
+        "ai_summary": get_latest_ai_summary(project_id)  # Cached AI summary
+    }
+```
 
 ---
 
-## SERVICE 4: Weather Service
-**Port:** 8004 | **Path prefix:** `/weather`
+## SERVICE 4: Weather Module
 
-### Purpose
-Fetch weather forecasts, cache them, generate farm-specific weather actions and alerts.
+**Path:** `/weather`
 
-### Endpoints
-```
-GET  /weather/project/{project_id}         → 5-day forecast + farm actions + alerts
-GET  /weather/project/{project_id}/alerts  → Active weather alerts
-POST /weather/alerts/{alert_id}/acknowledge → Mark alert as seen
-```
-
-### Weather Action Logic (DETERMINISTIC — no LLM)
-```python
-def generate_weather_actions(forecast_days, project):
-    actions = []
-    for day in forecast_days:
-        # Watering skip
-        if day['rainfall_mm'] > 10:
-            actions.append({
-                'date': day['date'],
-                'action_type': 'skip_watering',
-                'reason': f"Rain {day['rainfall_mm']}mm expected",
-                'priority': 'info'
-            })
-        # Spraying postpone
-        if day['wind_speed_kmh'] > 20:
-            actions.append({
-                'date': day['date'],
-                'action_type': 'postpone_spraying',
-                'reason': "High wind — spray won't be effective",
-                'priority': 'warning'
-            })
-        # Disease risk alert
-        if day['humidity_pct'] > 85 and day['temp_max'] > 28:
-            actions.append({
-                'date': day['date'],
-                'action_type': 'disease_risk',
-                'reason': "High humidity + heat — fungal disease risk",
-                'priority': 'urgent'
-            })
-        # Frost alert
-        if day['temp_min'] < 5:
-            actions.append({
-                'date': day['date'],
-                'action_type': 'frost_warning',
-                'reason': f"Frost risk — temp drops to {day['temp_min']}°C",
-                'priority': 'critical'
-            })
-    return actions
-```
-
-### Cache Strategy
-- Fetch from OpenWeatherMap (free tier: 1000 calls/day)
-- Store in Redis: 3-hour TTL (key: `weather:{lat_3dp},{lng_3dp}`)
-- Also persist in `weather_cache` table for historical analysis
-- Celery Beat: refresh every 3 hours for all active project locations
-
----
-
-## SERVICE 5: Soil Analysis Service
-**Port:** 8005 | **Path prefix:** `/soil`
-
-### Purpose
-Accept soil test inputs, compute nutrient gap analysis, generate prioritized fertilizer recommendations.
+### External API: OpenWeatherMap Free Tier
+- **Free tier:** 1,000 calls/day, 5-day forecast
+- **Endpoint:** `api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}`
 
 ### Endpoints
-```
-POST /soil/tests                            → Submit test data, get instant recommendations
-GET  /soil/tests/project/{project_id}       → All tests for a project
-GET  /soil/tests/{test_id}                  → Single test + results + recommendations
-GET  /soil/tests/{test_id}/recommendations  → Prioritized recommendations list
-POST /soil/analyze                          → Quick analysis without saving
-```
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/weather/{project_id}` | Get 5-day forecast for project location | Bearer |
+| GET | `/weather/{project_id}/alerts` | Get active weather alerts | Bearer |
 
-### Soil Analysis Logic (DETERMINISTIC — no LLM)
-
+### Caching Strategy
 ```python
-OPTIMAL_RANGES_BY_CROP = {
-    'tomato': {
-        'ph':              (6.0, 6.8),
-        'nitrogen_ppm':    (150, 250),
-        'phosphorus_ppm':  (30,  60),
-        'potassium_ppm':   (150, 250),
-        'calcium_ppm':     (200, 400),
-        'magnesium_ppm':   (50,  100),
-        'organic_matter':  (2.5, 5.0),  # percent
-    },
-    # ... per crop from plant_nutrient_requirements table
-}
+# 1. Round GPS coordinates to 3 decimal places (~111m precision)
+# 2. Create cache key: "weather:{lat_3dp},{lng_3dp}"
+# 3. Cache TTL: 3 hours (matches refresh_weather_cache Celery job)
+# 4. If cache miss, call OpenWeatherMap API
+# 5. Parse response, store in weather_cache table AND Redis
 
-def analyze_soil(soil_results, plant, project, farming_method):
-    optimal = OPTIMAL_RANGES_BY_CROP[plant.common_name.lower()]
-    recommendations = []
-    
-    # pH correction
-    if soil_results.ph < optimal['ph'][0]:
-        deficit = optimal['ph'][0] - soil_results.ph
-        lime_kg_per_acre = deficit * 1500  # industry standard formula
-        qty = lime_kg_per_acre * project.area
-        recommendations.append({
-            'type': 'pH_correction',
-            'nutrient': 'pH',
-            'current': soil_results.ph,
-            'optimal': f"{optimal['ph'][0]}–{optimal['ph'][1]}",
-            'severity': 'severe' if deficit > 0.5 else 'moderate',
-            'action': f"Apply {qty:.0f}kg agricultural lime per {project.area} {project.area_unit}",
-            'product': 'Agricultural Lime (CaCO₃)',
-            'priority': 1 if deficit > 0.5 else 2
-        })
-    
-    # Nutrient gap calculations
-    for nutrient in ['nitrogen_ppm', 'phosphorus_ppm', 'potassium_ppm']:
-        actual = getattr(soil_results, nutrient)
-        low, high = optimal[nutrient]
-        if actual < low:
-            gap_pct = ((low - actual) / low) * 100
-            severity = 'severe' if gap_pct > 50 else 'moderate' if gap_pct > 25 else 'mild'
-            product, qty = get_fertilizer_recommendation(nutrient, gap_pct, farming_method, project.area)
-            recommendations.append({
-                'type': 'fertilizer',
-                'nutrient': nutrient,
-                'severity': severity,
-                'action': f"Apply {qty:.1f}kg {product}",
-                'product': product,
-                'priority': 1 if severity == 'severe' else 2
-            })
-    
-    return sorted(recommendations, key=lambda r: r['priority'])
+# Redis key format: "weather:7.873,80.771"
+# TTL: 10800 seconds (3 hours)
 ```
 
-### RAG Trigger
-After analysis → generate summary text → ingest into farmer's RAG knowledge base
-
----
-
-## SERVICE 6: Activity Planner Service
-**Port:** 8006 | **Path prefix:** `/planner`
-
-### Purpose
-Generate the full-season activity plan, serve daily/weekly task views, handle status updates.
-
-### Endpoints
-```
-POST /planner/generate/{project_id}         → (Re)generate full season plan (background)
-GET  /planner/plan/{project_id}             → Full plan by week
-GET  /planner/today/{project_id}            → Today's activities with full details
-GET  /planner/week/{project_id}             → 7-day view
-PUT  /planner/activities/{activity_id}      → Mark done / skip / note
-POST /planner/activities/{activity_id}/reschedule → Move to different date
-POST /planner/adjust/{project_id}           → Re-run weather adjustment on next 7 days
-```
-
-### Plan Generation Logic (DETERMINISTIC — no LLM)
-
+### Weather → Activity Adjustment Logic (Deterministic)
 ```python
-def generate_season_plan(project_id):
-    project   = get_project(project_id)
-    plant     = project.plant
-    stages    = get_plant_stages(plant.id)
-    method_id = project.farming_method_id
-    activities = []
-
-    for stage in sorted(stages, key=lambda s: s.stage_order):
-        stage_start = project.planting_date + timedelta(days=stage.start_day)
-        stage_end   = project.planting_date + timedelta(days=stage.end_day)
-
-        # 1. Watering schedule
-        water_req = get_water_requirements(plant.id, stage.id)
-        for date in date_range(stage_start, stage_end, step=water_req.irrigation_frequency_days):
-            litres = water_mm_to_litres(water_req.water_mm_per_day, project.area)
-            activities.append(Activity(
-                type='watering',
-                title=f"Water plants — {litres:.0f}L",
-                scheduled_date=date,
-                priority=2,
-                details={'water_liters': litres, 'method': project.irrigation_type}
-            ))
-
-        # 2. Fertilizer schedule
-        ferts = get_fertilizer_recommendations(plant.id, stage.id, method_id)
-        for fert in ferts:
-            fert_date = parse_timing(fert.timing_note, stage_start, stage_end)
-            qty = fert.quantity_per_acre * project.area
-            activities.append(Activity(
-                type='fertilizing',
-                title=f"Apply {fert.fertilizer_type} — {qty:.1f}{fert.unit}",
-                scheduled_date=fert_date,
-                priority=2,
-                details={
-                    'product': fert.fertilizer_type,
-                    'quantity': qty, 'unit': fert.unit,
-                    'method': fert.application_method
-                }
-            ))
-
-        # 3. Stage monitoring
-        activities.append(Activity(
-            type='monitoring',
-            title=f"Begin {stage.stage_name} stage care",
-            scheduled_date=stage_start,
-            priority=1,
-            description=f"{stage.critical_actions}\n\nWatch for: {stage.watch_for}"
-        ))
-
-    # Bulk insert all activities
-    bulk_create_activities(project_id, activities)
-```
-
-### Daily Weather Adjustment (Celery task — 5 AM)
-```python
-def adjust_plan_for_weather(project_id):
-    forecast   = get_weather_forecast(project.location)
-    activities = get_pending_activities(project_id, days=7)
+def adjust_activities_for_weather(project_id: str):
+    """
+    Called by Celery at 5:00 AM daily.
+    Adjusts today's activities based on weather forecast.
+    """
+    forecast = get_todays_weather(project_id)
+    activities = get_todays_pending_activities(project_id)
 
     for activity in activities:
-        day_fc = forecast.get(activity.scheduled_date)
-        if not day_fc:
-            continue
+        # Rule 1: Skip watering if rain > 5mm expected
+        if activity.activity_type == "watering" and forecast.rain_mm > 5:
+            activity.status = "skipped"
+            activity.skipped_reason = f"Rain expected: {forecast.rain_mm}mm"
 
-        if activity.activity_type == 'watering' and day_fc['rainfall_mm'] > 10:
-            skip_activity(activity.id, reason=f"Rain {day_fc['rainfall_mm']}mm expected")
+        # Rule 2: Postpone spraying if wind > 20km/h
+        if activity.activity_type == "spraying" and forecast.wind_speed > 20:
+            activity.status = "rescheduled"
+            activity.scheduled_date += timedelta(days=1)
 
-        elif activity.activity_type == 'spraying' and day_fc['wind_speed_kmh'] > 20:
-            reschedule_activity(activity.id, days=1, reason="High wind — rescheduled")
+        # Rule 3: Skip fertilizer if heavy rain > 25mm (nutrient washout)
+        if activity.activity_type == "fertilizing" and forecast.rain_mm > 25:
+            activity.status = "rescheduled"
+            activity.skipped_reason = "Heavy rain expected - fertilizer would wash away"
+
+    # Create weather alerts for dangerous conditions
+    if forecast.rain_mm > 50:
+        create_weather_alert(project_id, "flood_risk", "critical")
+    if forecast.temp_min < 10:
+        create_weather_alert(project_id, "frost_risk", "warning")
+    if forecast.humidity > 90 and forecast.temp_max > 25:
+        create_weather_alert(project_id, "disease_risk_high_humidity", "warning")
 ```
 
 ---
 
-## SERVICE 7: Disease & Pest Detection Service
-**Port:** 8007 | **Path prefix:** `/disease`, `/pest`, `/issues`
+## SERVICE 5: Soil Module
 
-### Purpose
-Disease/pest lookup, issue reporting, AI-assisted diagnosis, solution delivery.
+**Path:** `/soil`
 
 ### Endpoints
-```
-POST /issues/report                         → Submit a problem report
-GET  /issues/project/{project_id}           → All issues for project
-GET  /issues/{issue_id}                     → Issue + diagnosis + solutions
-PUT  /issues/{issue_id}                     → Update resolution status
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| POST | `/soil/tests` | Submit a soil test result | Bearer |
+| GET | `/soil/tests/{project_id}` | Get all soil tests for project | Bearer |
+| GET | `/soil/recommendations/{project_id}` | Get computed recommendations | Bearer |
 
-GET  /disease/watch/{project_id}            → Disease risk calendar
-GET  /disease/search?plant_id=&symptoms=    → Search by keyword
-GET  /disease/{disease_id}/solutions        → Solutions by farming method
-
-GET  /pest/{pest_id}/solutions              → Pest solutions by method
-```
-
-### Diagnosis Flow
-```
-1. KEYWORD MATCH (deterministic):
-   Query plant_diseases WHERE plant_id = project.plant_id
-   Filter by affected_parts overlap with farmer's report
-   Score each by symptom keyword overlap
-
-   IF best_match_score > 0.70 → return diagnosis (no LLM needed)
-
-2. LLM FALLBACK (only if low confidence or image uploaded):
-   Build context: plant, stage, symptoms, affected_parts, stage risk list
-   Call Claude API → structured JSON response:
-     { matched_disease: "...", confidence: 0.85, reasoning: "..." }
-
-3. SOLUTION FETCH (deterministic):
-   Query disease_solutions / pest_solutions
-   Filter by project.farming_method_id
-   Sort by effectiveness DESC
-```
-
-### Disease Risk Calendar (Deterministic)
+### Soil Recommendation Engine (100% Deterministic)
 ```python
-def generate_disease_watch_calendar(project, forecast):
-    risk_calendar = []
-    for stage in project.plant.stages:
-        stage_diseases = get_diseases_common_to_stage(project.plant_id, stage.id)
-        for disease in stage_diseases:
-            for day in forecast.days:
-                if weather_matches_spread_conditions(disease.spread_conditions, day):
-                    risk_calendar.append({
-                        'date': day.date,
-                        'disease_name': disease.disease_name,
-                        'risk_level': compute_risk_level(disease, day),
-                        'prevention_action': get_prevention_tip(disease, project.farming_method)
-                    })
-    return risk_calendar
+def compute_soil_recommendations(soil_test_id: str, project_id: str):
+    """
+    Compare actual soil values against crop-specific optimal ranges.
+    Generate specific fertilizer recommendations.
+    """
+    soil = get_soil_results(soil_test_id)
+    project = get_project(project_id)
+    plant = project.plant
+    stage = get_current_stage(project)
+    crop_needs = get_nutrient_requirements(plant.id, stage.id)
+    is_organic = project.farming_method.code == "organic"
+
+    recommendations = []
+
+    # pH correction
+    if soil.ph < plant.optimal_ph_min:
+        recommendations.append({
+            "type": "pH_correction",
+            "nutrient": "pH",
+            "current": soil.ph,
+            "optimal": plant.optimal_ph_min,
+            "severity": "severe" if (plant.optimal_ph_min - soil.ph) > 1.0 else "mild",
+            "action": "Apply agricultural lime" if not is_organic else "Apply wood ash or dolomite",
+            "quantity_per_acre": round((plant.optimal_ph_min - soil.ph) * 500, 1),  # kg
+            "unit": "kg"
+        })
+
+    # Nitrogen check
+    if soil.nitrogen_ppm < crop_needs.nitrogen_kg_per_acre * 2.24:  # Convert
+        product = "Compost or blood meal" if is_organic else "Urea (46-0-0)"
+        recommendations.append({
+            "type": "fertilizer",
+            "nutrient": "Nitrogen",
+            "current": soil.nitrogen_ppm,
+            "optimal": crop_needs.nitrogen_kg_per_acre * 2.24,
+            "severity": calculate_severity(soil.nitrogen_ppm, crop_needs.nitrogen_kg_per_acre * 2.24),
+            "action": f"Apply {product}",
+            "quantity_per_acre": round(crop_needs.nitrogen_kg_per_acre - (soil.nitrogen_ppm / 2.24), 1),
+            "unit": "kg"
+        })
+
+    # Repeat for Phosphorus, Potassium, etc.
+    # ...
+
+    return recommendations
 ```
 
 ---
 
-## SERVICE 8: Market Price Service
-**Port:** 8008 | **Path prefix:** `/market`
+## SERVICE 6: Activity Planner ⭐ (Critical Engine)
 
-### Purpose
-Store, retrieve, and analyze crop market prices. Generate price alerts.
+**Path:** `/planner`
 
 ### Endpoints
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/planner/{project_id}/activities` | List all activities | Bearer |
+| GET | `/planner/{project_id}/today` | Today's activities | Bearer |
+| PATCH | `/planner/activities/{id}/complete` | Mark activity done | Bearer |
+| PATCH | `/planner/activities/{id}/skip` | Skip with reason | Bearer |
+
+### Full-Season Plan Generator (Deterministic Engine)
+```python
+def generate_season_plan(project_id: str):
+    """
+    Called on project creation. Generates 50-100+ activities
+    for the entire growing season based on:
+    - Plant stages (from plant_stages table)
+    - Water requirements per stage
+    - Fertilizer schedule per stage
+    - Disease watch calendar per stage
+    """
+    project = get_project(project_id)
+    plant = project.plant
+    stages = get_plant_stages(plant.id)  # Ordered by stage_order
+    area = float(project.area)
+    farming_method = project.farming_method.code
+    planting_date = project.planting_date
+
+    activities = []
+
+    for stage in stages:
+        stage_start = planting_date + timedelta(days=stage.start_day)
+        stage_end = planting_date + timedelta(days=stage.end_day)
+        stage_days = stage.end_day - stage.start_day
+
+        # 1. Generate watering activities
+        water = get_water_requirements(plant.id, stage.id)
+        if water:
+            interval = water.irrigation_frequency_days or 2
+            for day_offset in range(0, stage_days, interval):
+                activity_date = stage_start + timedelta(days=day_offset)
+                daily_water = float(water.water_mm_per_day) * area * 4.047  # mm*acres → liters
+                activities.append(FarmingActivity(
+                    project_id=project_id,
+                    stage_id=stage.id,
+                    activity_type="watering",
+                    title=f"Water plants — {round(daily_water)}L",
+                    description=f"Irrigate via {project.land_detail.irrigation_type or 'manual'}",
+                    scheduled_date=activity_date,
+                    scheduled_time=time(6, 0),  # Morning
+                    priority=2
+                ))
+
+        # 2. Generate fertilizer activities
+        fert_recs = get_fertilizer_recommendations(plant.id, stage.id)
+        for fert in fert_recs:
+            if farming_method == "organic" and not fert.is_organic:
+                continue
+            if farming_method == "inorganic" and fert.is_organic:
+                continue
+            # Apply at start of each stage
+            qty = float(fert.quantity_per_acre) * area
+            activities.append(FarmingActivity(
+                project_id=project_id,
+                stage_id=stage.id,
+                activity_type="fertilizing",
+                title=f"Apply {fert.fertilizer_type} — {round(qty, 1)} {fert.unit}",
+                description=f"Method: {fert.application_method}. {fert.timing_note or ''}",
+                scheduled_date=stage_start + timedelta(days=2),
+                scheduled_time=time(7, 0),
+                priority=1
+            ))
+
+        # 3. Generate monitoring activities (weekly per stage)
+        for week in range(0, stage_days, 7):
+            activities.append(FarmingActivity(
+                project_id=project_id,
+                stage_id=stage.id,
+                activity_type="monitoring",
+                title=f"Check for: {stage.watch_for or 'general health'}",
+                description=stage.key_indicators or "Inspect plants visually",
+                scheduled_date=stage_start + timedelta(days=week),
+                scheduled_time=time(8, 0),
+                priority=3
+            ))
+
+    # Bulk insert all activities
+    db.bulk_save_objects(activities)
+    db.commit()
 ```
-GET /market/project/{project_id}        → Current price + trend + revenue estimate
-GET /market/prices/{plant_id}           → Prices by district
-GET /market/trends/{plant_id}           → 30-day trend data
-POST /market/admin/prices               → Admin endpoint to add price records
+
+---
+
+## SERVICE 7: Disease Module
+
+**Path:** `/disease`, `/issues`
+
+### Endpoints
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| POST | `/issues` | Report a problem | Bearer |
+| GET | `/issues/{project_id}` | List issues for project | Bearer |
+| GET | `/disease/search` | Search diseases by symptoms | Bearer |
+| GET | `/disease/{id}/solutions` | Get treatment solutions | Bearer |
+
+### Disease Matching Logic
+```python
+def match_disease(plant_id: str, symptoms_text: str, affected_parts: list):
+    """
+    Step 1: Try deterministic keyword matching (PostgreSQL full-text search)
+    Step 2: If low confidence, route to Google Gemini free API
+    """
+    # Full-text search against plant_diseases
+    results = db.execute(text("""
+        SELECT id, disease_name, symptoms, severity,
+               ts_rank(to_tsvector('english', symptoms || ' ' || visual_symptoms),
+                       plainto_tsquery('english', :query)) as rank
+        FROM plant_diseases
+        WHERE (plant_id = :plant_id OR plant_id IS NULL)
+          AND to_tsvector('english', symptoms || ' ' || visual_symptoms) @@
+              plainto_tsquery('english', :query)
+        ORDER BY rank DESC
+        LIMIT 5
+    """), {"plant_id": plant_id, "query": symptoms_text})
+
+    matches = results.fetchall()
+
+    if matches and matches[0].rank > 0.1:
+        # High confidence — return DB match + solutions
+        disease = matches[0]
+        solutions = get_solutions(disease.id)
+        return {"source": "database", "disease": disease, "solutions": solutions}
+
+    # Low confidence — call Google Gemini for diagnosis
+    context = build_project_context(project_id)
+    diagnosis = await gemini_diagnose(symptoms_text, affected_parts, context)
+    return {"source": "ai_gemini", "diagnosis": diagnosis}
 ```
+
+---
+
+## SERVICE 8: Market Module
+
+**Path:** `/market`
+
+### Endpoints
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/market/prices/{plant_id}` | Get current prices | Bearer |
+| GET | `/market/trends/{plant_id}` | Get 30-day trend | Bearer |
+| POST | `/market/admin/prices` | Admin: add price data | Admin |
+
+---
+
+## SERVICE 9: AI Summary Module ⭐
+
+**Path:** `/ai`
+
+### Endpoints
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/ai/summary/{project_id}` | Get latest cached AI summary | Bearer |
+| POST | `/ai/summary/{project_id}` | Generate new AI summary | Bearer |
+| POST | `/ai/chat` | Ask a question (with project context) | Bearer |
 
 ### Logic
-- Celery task: fetch prices daily from Sri Lanka Agri API or manual admin entry
-- Weekly: compute `market_trends` records (avg, min, max, direction, % change)
-- Alert: if price drops > 15% or rises > 20% → create notification for farmer
-- Revenue estimate: `yield_kg_per_acre * project.area * current_price`
+See [07_AI_RAG_MCP.md](07_AI_RAG_MCP.md) for complete implementation.
 
 ---
 
-## SERVICE 9: RAG Service
-**Port:** 8009 | **Path prefix:** `/rag`
+## SERVICE 10: Notification Module
 
-### Purpose
-Per-farmer knowledge base — document ingestion, embedding, and semantic retrieval.
+**Path:** `/notifications`
 
 ### Endpoints
-```
-POST /rag/ingest/{farmer_id}            → Ingest a document (admin/internal)
-POST /rag/ingest/project/{project_id}  → Seed all docs for a new project
-GET  /rag/status/{farmer_id}           → RAG index status
-GET  /rag/search/{farmer_id}?q=...     → Debug semantic search
-```
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/notifications` | Get farmer's notifications | Bearer |
+| PATCH | `/notifications/{id}/read` | Mark as read | Bearer |
+| POST | `/notifications/subscribe` | Register push subscription | Bearer |
 
-### Ingestion Pipeline
-```python
-async def ingest_document(farmer_id, project_id, doc_type, title, content, metadata):
-    # 1. Store document
-    doc = await create_farmer_rag_document(
-        farmer_id, project_id, doc_type, title, content, metadata
-    )
-
-    # 2. Chunk (500-token chunks, 50-token overlap)
-    chunks = text_splitter.split_text(content)
-
-    # 3. Embed (batched API call)
-    embeddings = await openai_client.embeddings.create(
-        input=chunks,
-        model="text-embedding-3-small"
-    )
-
-    # 4. Store in pgvector
-    for i, (chunk, embedding) in enumerate(zip(chunks, embeddings.data)):
-        await create_rag_chunk(doc.id, farmer_id, i, chunk, embedding.embedding, metadata)
-
-    await mark_document_indexed(doc.id)
-```
-
-### Retrieval
-```python
-async def retrieve_context(farmer_id, query, project_id=None, top_k=5):
-    query_embedding = await embed_text(query)
-
-    chunks = await db.execute("""
-        SELECT content, metadata_json,
-               1 - (embedding <=> $1) AS similarity
-        FROM farmer_rag_chunks
-        WHERE farmer_id = $2
-          AND ($3::uuid IS NULL OR metadata_json->>'project_id' = $3::text)
-        ORDER BY embedding <=> $1
-        LIMIT $4
-    """, query_embedding, farmer_id, project_id, top_k)
-
-    return chunks
-```
-
-### Auto-Generated Documents
-| Trigger | Document Created |
-|---------|-----------------|
-| Project created | Full plant guide (stages, care, nutrient needs) |
-| Soil test submitted | Soil analysis + gap recommendations |
-| Activity marked done | Activity log entry |
-| Issue resolved | Problem + solution applied |
-| Market data fetched | Weekly price summary |
-| Monthly | Weather pattern summary |
-
----
-
-## SERVICE 10: MCP Server
-**Port:** 8010 | **Path prefix:** `/mcp`
-
-### Purpose
-Per-farmer virtual MCP server. Routes tool calls from LLM to correct backend services.
-
-### Tools Exposed
-| Tool Name | Description | Routes To |
-|-----------|-------------|-----------|
-| `get_current_weather` | Today's weather + 5-day forecast | Weather Service |
-| `get_todays_activities` | Today's scheduled tasks | Planner Service |
-| `get_soil_status` | Latest soil test + recommendations | Soil Service |
-| `get_market_prices` | Current crop prices | Market Service |
-| `get_disease_solutions` | Treatments for a disease | Disease Service |
-| `search_knowledge` | Semantic search of farmer's RAG | RAG Service |
-| `save_note` | Store observation in knowledge base | RAG Service |
-
-### MCP Session Lifecycle
-```
-Farmer opens AI Chat
-    ↓
-Initialize FarmerMCPServer(farmer_id, project_id)
-    → Load farmer profile
-    → Load current project + stage
-    → Register all tools
-    ↓
-LLM receives system prompt with farmer context
-LLM calls tools as needed via MCP
-MCP routes → correct service → returns structured data
-LLM assembles personalized response
-Session closes
-```
-
----
-
-## SERVICE 11: AI Assistant Service
-**Port:** 8011 | **Path prefix:** `/ai`
-
-### Purpose
-Handle farmer chat, complex reasoning, disease diagnosis, and summaries.
-
-### Endpoints
-```
-POST /ai/chat                          → Send message, get AI response
-GET  /ai/conversations/{project_id}   → Conversation history list
-GET  /ai/conversations/{id}/messages  → Full message thread
-POST /ai/diagnose/{issue_id}          → AI disease diagnosis
-POST /ai/insights/{project_id}        → Proactive AI insights
-POST /ai/summarize/{project_id}       → End-of-week/season summary
-```
-
-### Cost-Efficient Chat Flow
-```python
-async def process_chat(farmer_id, project_id, message, conversation_id):
-    # STEP 1: Try deterministic intent first
-    intent = classify_intent(message)
-    if intent == 'watering_schedule':
-        return planner.get_watering_details(project_id)
-    if intent == 'weather_today':
-        return weather.get_today_summary(project_id)
-    if intent == 'market_price':
-        return market.get_latest_prices(project_id)
-    if intent == 'harvest_date':
-        return project.get_harvest_estimate(project_id)
-
-    # STEP 2: Check AI budget
-    if not await check_daily_budget(farmer_id):
-        return {"message": "Daily AI limit reached. Ask specific questions for instant answers."}
-
-    # STEP 3: RAG retrieval
-    context_chunks = await rag.retrieve_context(farmer_id, message, project_id, top_k=5)
-
-    # STEP 4: Build system prompt with full farmer context
-    system = build_system_prompt(farmer_profile, project, current_stage, weather_today, context_chunks)
-
-    # STEP 5: Call Claude
-    response = await anthropic_client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=800,
-        system=system,
-        messages=trim_conversation(conversation_history) + [{"role": "user", "content": message}]
-    )
-
-    # STEP 6: Log token usage
-    await log_ai_query(farmer_id, project_id, response.usage)
-
-    return {"message": response.content[0].text, "conversation_id": conversation_id}
-```
-
----
-
-## SERVICE 12: Notification Service
-**Port:** 8012 | **Path prefix:** `/notifications`
-
-### Purpose
-Serve, manage, and dispatch push notifications. Scheduled via Celery Beat.
-
-### Endpoints
-```
-GET    /notifications                    → List farmer's notifications
-GET    /notifications/count              → Unread count
-PUT    /notifications/{id}/read         → Mark as read
-POST   /notifications/mark-all-read     → Mark all read
-POST   /notifications/push-token        → Register device for push
-DELETE /notifications/push-token        → Unregister device
-```
-
-### Celery Beat Schedule
-```python
-# 5:00 AM — Adjust activities for weather, create today's notification records
-@celery.task
-def daily_plan_and_notifications():
-    for project in get_active_projects():
-        adjust_plan_for_weather(project.id)
-        activities = get_todays_activities(project.id)
-        for act in activities:
-            create_notification(
-                farmer_id=project.farmer_id,
-                project_id=project.id,
-                activity_id=act.id,
-                type='activity_reminder',
-                title=act.title,
-                message=build_message(act),
-                deep_link=f"/projects/{project.id}?scroll=activity_plan&highlight={act.id}",
-                scheduled_for=6am_in_farmer_timezone(project.location.timezone)
-            )
-
-# 6:00 AM — Send push notifications that are due
-@celery.task
-def dispatch_push_notifications():
-    due = get_notifications_due_for_push(now())
-    for notif in due:
-        if push_token := get_farmer_push_token(notif.farmer_id):
-            web_push(push_token, notif.title, notif.message)
-            mark_notification_pushed(notif.id)
-
-# Every 3 hours — Check weather and push urgent alerts
-@celery.task
-def check_weather_alerts():
-    for project in get_active_projects():
-        alerts = weather_service.check_for_new_alerts(project)
-        for alert in alerts:
-            push_urgent_notification(project.farmer_id, alert)
-```
+### Notification Types
+| Type | Trigger | Content Example |
+|------|---------|-----------------|
+| `activity_reminder` | Daily 5:30 AM job | "Water plants today — 180L needed" |
+| `weather_alert` | Weather check detects storm | "Heavy rain tomorrow! Postpone fertilizer" |
+| `disease_risk` | High humidity + warm temp | "Blight risk high — inspect leaves today" |
+| `market_alert` | Price changes > 15% | "Tomato price rose 18% in Colombo!" |
+| `ai_insight` | Weekly AI summary generated | "Your weekly crop health report is ready" |

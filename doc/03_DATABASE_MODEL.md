@@ -49,6 +49,7 @@ notifications (links to: farmer, project, activity, issue, alert)
 
 farmer_rag_documents ──── farmer_rag_chunks (pgvector)
 ai_conversations ──── ai_query_logs
+ai_project_summaries (cached Gemini AI summaries per project)
 market_prices ──── market_trends
 
 vendor_products (agri-inputs) ──── orders (B2B/B2C)
@@ -705,7 +706,7 @@ Vector chunks from RAG documents. Uses pgvector for similarity search.
 | `farmer_id` | UUID FK → farmer_profiles | Denormalized for faster filtering |
 | `chunk_index` | INTEGER | Chunk position in document |
 | `content` | TEXT | Chunk text (500 tokens) |
-| `embedding` | `vector(1536)` | OpenAI text-embedding-3-small |
+| `embedding` | `vector(768)` | Gemini Embedding API (free tier) — future |
 | `token_count` | INTEGER | |
 | `metadata_json` | JSONB | Searchable metadata |
 
@@ -743,8 +744,27 @@ Token usage and cost tracking per AI call.
 | `input_tokens` | INTEGER | |
 | `output_tokens` | INTEGER | |
 | `cost_usd` | DECIMAL(10,6) | |
-| `model_used` | VARCHAR(100) | claude-sonnet-4-6 |
+| `model_used` | VARCHAR(100) | `gemini-2.0-flash` (free) |
 | `latency_ms` | INTEGER | Response time |
+
+---
+
+### `ai_project_summaries`
+Cached AI-generated summaries for each project. Stores the flattened-context responses from Google Gemini free API.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `project_id` | UUID FK → projects | |
+| `farmer_id` | UUID FK → farmer_profiles | |
+| `summary_text` | TEXT | The AI-generated summary |
+| `context_json` | JSONB | The flattened project context sent to AI |
+| `model_used` | VARCHAR(100) | `gemini-2.0-flash` |
+| `input_tokens` | INTEGER | Tokens sent |
+| `output_tokens` | INTEGER | Tokens received |
+| `cost_usd` | DECIMAL(10,6) | Always 0.00 (free tier) |
+| `trigger` | VARCHAR(50) | `manual`, `weekly_scheduled`, `on_issue` |
+| `generated_at` | TIMESTAMP | |
 
 ---
 

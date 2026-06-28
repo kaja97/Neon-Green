@@ -1,358 +1,314 @@
-# AgriFarm AI — AI, RAG & MCP Architecture
+# AgriFarm AI — AI Strategy (Free Gemini + Future RAG/MCP)
 
-## The Golden Rule: AI is the Last Resort
+## The Golden Rule: ZERO COST AI
+
+All AI in this platform uses **exclusively free APIs and open-source models**. No paid API keys required.
 
 ```
 User question or task
         ↓
 Can a deterministic function answer this?
-  YES → Return instantly (0 tokens, 0 cost)
+  YES → Return instantly (0 tokens, $0)
   NO  ↓
 Can structured DB data answer this?
-  YES → Format and return (0 tokens, 0 cost)
+  YES → Format and return (0 tokens, $0)
   NO  ↓
-Can RAG retrieval alone answer without generation?
-  YES → Return top chunks directly (0 tokens)
-  NO  ↓
-Call LLM with RAG context + MCP tools (costs tokens)
+Flatten project context → Send to Google AI Studio (Gemini Free)
+  → Get summary/guidance/answer ($0, free tier)
 ```
 
-**Result:** ~80% of daily queries answered without LLM.
-**Estimated AI cost:** < $0.10 per farmer per month.
+**Result:** ~80% of daily queries answered without any AI. Remaining 20% use free Gemini API.
 
 ---
 
-## 1. Per-Farmer RAG Architecture
+## 1. Google AI Studio Free Tier (Current AI Backend)
 
-### Concept
-Every farmer has a **private knowledge bubble** — a vector store built entirely from their specific farm data. When the LLM is needed, it retrieves context from this personal store rather than guessing or using generic knowledge.
+### What Is Google AI Studio?
+Google AI Studio provides **free access** to Gemini models via a simple REST API. No credit card required. The free tier is generous enough for a farming platform.
 
-### Knowledge Bubble Structure
+### Free Tier Limits (Gemini 2.0 Flash)
+| Limit | Value | Our Usage |
+|-------|-------|-----------|
+| Requests per minute | 15 RPM | ~2-3 RPM at 100 active farmers |
+| Tokens per minute | 1,000,000 | ~50,000 tokens/min at peak |
+| Requests per day | 1,500 RPD | ~500 RPD at 100 farmers (10 AI calls each, 50 use it daily) |
+| Input token limit | 1,048,576 per request | Our context: ~2,000 tokens per call |
+| Output token limit | 8,192 per response | Our limit: 800 tokens per response |
+
+### Why This Is Enough
+- Each farmer makes ~3-5 AI calls per day (summary, 1-2 questions)
+- 100 farmers × 5 calls = 500 calls/day (well within 1,500 RPD limit)
+- Each call uses ~2,000 input tokens + 800 output tokens = 2,800 tokens
+- 500 calls × 2,800 tokens = 1.4M tokens/day (free tier allows much more)
+
+### Setup
+```bash
+# Install the Google Generative AI Python SDK
+pip install google-generativeai
+
+# Get your FREE API key from:
+# https://aistudio.google.com/apikey
+# No credit card needed. Click "Create API Key" → done.
 ```
-[Farmer's RAG Knowledge Base]
-         │
-┌────────┴──────────────────────────────┐
-│  PERSONAL CONTEXT    GENERAL CONTEXT  │
-│  - Soil test results - Plant info     │
-│  - Activity history  - Disease DB     │
-│  - Problem history   - Fertilizer DB  │
-│  - Farm location     - Market trends  │
-│  - Crop outcomes     - Agri guides    │
-│  - Own notes         - Local weather  │
-└────────────────────────────────────────┘
-         │
-   [pgvector index]
-   Cosine similarity search on farmer's chunks
-```
-
----
-
-## 2. RAG Document Types
-
-| Document Type | Trigger | Content | Update Frequency |
-|--------------|---------|---------|-----------------|
-| `plant_info` | Project created | Full plant guide (stages, care, nutrient needs) | Once per project |
-| `soil_profile` | Soil test submitted | Soil analysis summary + gap recommendations | Per test |
-| `activity_history` | Activity marked done | Log of what was done, when, farmer notes | Daily |
-| `issue_log` | Issue resolved | Problem description + solution applied | Per issue |
-| `weather_summary` | Monthly | Weather pattern summary for farm location | Monthly |
-| `market_summary` | Weekly | Price trends for farmer's crops | Weekly |
-| `farmer_notes` | AI chat / manual | Observations the farmer shares | Per conversation |
-| `agronomist_advice` | Admin upload | Expert guidance for local conditions | As available |
-
----
-
-## 3. Document Ingestion Pipeline
 
 ```python
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+# backend/services/ai_service.py
+import google.generativeai as genai
+import os
 
-# Standard documents: 500-token chunks, 50-token overlap
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,
-    chunk_overlap=50,
-    separators=["\n\n", "\n", ".", " "]
-)
+genai.configure(api_key=os.environ["GOOGLE_AI_STUDIO_API_KEY"])
 
-# Structured data (soil, nutrient tables): smaller chunks
-soil_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=200,
-    chunk_overlap=20
-)
+# Use Gemini 2.0 Flash (free, fast, good for structured tasks)
+model = genai.GenerativeModel("gemini-2.0-flash")
+```
 
-async def ingest_document(farmer_id, project_id, doc_type, title, content, metadata):
-    # 1. Store document record
-    doc = await create_farmer_rag_document(
-        farmer_id=farmer_id,
-        project_id=project_id,
-        document_type=doc_type,
-        title=title,
-        content=content,
-        metadata_json=metadata
-    )
+---
 
-    # 2. Choose splitter based on content type
-    active_splitter = soil_splitter if doc_type == 'soil_profile' else splitter
-    chunks = active_splitter.split_text(content)
+## 2. The Flattened Context Approach
 
-    # 3. Generate embeddings (batched — cheaper API usage)
-    embeddings_response = await openai_client.embeddings.create(
-        input=chunks,
-        model="text-embedding-3-small"  # 1536 dimensions, $0.02/1M tokens
-    )
+Instead of complex RAG (vector embeddings, chunking, retrieval), we use a simpler and equally effective approach: **flatten all project-related data into a single structured JSON** and send it directly as context to the AI.
 
-    # 4. Store chunks with embeddings in pgvector
-    chunk_records = [
-        {
-            'document_id': doc.id,
-            'farmer_id': farmer_id,
-            'chunk_index': i,
-            'content': chunk,
-            'embedding': embedding.embedding,
-            'token_count': len(chunk.split()),
-            'metadata_json': {**metadata, 'chunk_index': i}
+### Why Flattening Works Better Than RAG for v1.0
+
+| Approach | Complexity | Accuracy | Cost |
+|----------|-----------|----------|------|
+| Full RAG (vector DB, embeddings) | High | Good | Embedding API costs |
+| Flattened Context (direct DB → JSON) | Low | **Excellent** (no retrieval errors) | **$0** |
+
+**Key insight:** A single farming project has limited data (~2,000 tokens when flattened). This easily fits in Gemini's 1M token context window. RAG is designed for when you have millions of documents — we don't. We have a few hundred rows per project. Just send them all.
+
+### What Gets Flattened
+
+```python
+def build_project_context(project_id: str) -> dict:
+    """
+    Pulls data from ALL related tables for a project and flattens
+    it into a single dict that gets JSON-serialized for the AI.
+    """
+    return {
+        # From: projects + plants table
+        "project": {
+            "crop_name": "Tomato",
+            "scientific_name": "Solanum lycopersicum",
+            "area": "1 acre",
+            "plant_count": 2000,
+            "planting_date": "2025-03-01",
+            "days_since_planting": 45,
+            "total_growth_days": 90,
+            "expected_harvest": "2025-05-29",
+            "farming_method": "organic",
+            "status": "active"
+        },
+
+        # From: plant_stages table
+        "current_stage": {
+            "name": "Flowering",
+            "order": 4,
+            "start_day": 42,
+            "end_day": 60,
+            "day_in_stage": 3,
+            "key_indicators": "Yellow flower clusters visible",
+            "critical_actions": "Switch to potassium, reduce nitrogen",
+            "watch_for": "Blossom drop, Late Blight, Whitefly"
+        },
+
+        # From: weather_cache table (5-day forecast)
+        "weather": [
+            {"date": "2025-04-15", "condition": "sunny", "temp_max": 32, "rain_mm": 0, "humidity": 68},
+            {"date": "2025-04-16", "condition": "cloudy", "temp_max": 29, "rain_mm": 5, "humidity": 78},
+            {"date": "2025-04-17", "condition": "rain", "temp_max": 27, "rain_mm": 25, "humidity": 92}
+        ],
+
+        # From: soil_nutrient_results table
+        "soil": {
+            "ph": 6.2,
+            "nitrogen_ppm": 120,
+            "phosphorus_ppm": 45,
+            "potassium_ppm": 185,
+            "organic_matter_pct": 2.1,
+            "status": "Nitrogen LOW, Phosphorus OK, Potassium OK",
+            "last_test_date": "2025-03-20"
+        },
+
+        # From: farming_activities table (last 7 days)
+        "recent_activities": [
+            {"date": "2025-04-14", "type": "watering", "title": "Water 180L", "status": "done"},
+            {"date": "2025-04-13", "type": "fertilizing", "title": "Applied MOP 45kg", "status": "done"},
+            {"date": "2025-04-12", "type": "monitoring", "title": "Pest check", "status": "done"}
+        ],
+
+        # From: farming_activities table (today)
+        "todays_tasks": [
+            {"title": "Water plants 180L", "type": "watering", "priority": 2},
+            {"title": "Monitor for blight", "type": "monitoring", "priority": 3}
+        ],
+
+        # From: project_issues table
+        "active_issues": [
+            {"type": "disease", "description": "Yellow spots on lower leaves", "area_affected": "15%"}
+        ],
+
+        # From: market_prices table
+        "market": {
+            "current_price": "180 LKR/kg",
+            "trend": "rising",
+            "change_pct": "+12%"
         }
-        for i, (chunk, embedding) in enumerate(zip(chunks, embeddings_response.data))
-    ]
-    await bulk_create_rag_chunks(chunk_records)
-    await mark_document_indexed(doc.id)
-
-    return doc
+    }
 ```
+
+**Total token size:** ~1,500-2,500 tokens (easily fits in Gemini's free tier context window).
 
 ---
 
-## 4. Retrieval Strategy
+## 3. AI Use Cases
+
+### Use Case 1: Daily Project Summary
+**Trigger:** Farmer taps "Get AI Summary" on dashboard, or automated weekly summary.
 
 ```python
-async def retrieve_context(farmer_id, query, project_id=None, intent=None, top_k=5):
-    """
-    Multi-query retrieval with intent-specific boosting.
-    """
-    query_embedding = await embed_text(query)
-    results = []
+SUMMARY_PROMPT = """You are an expert farming assistant for Sri Lankan farmers.
 
-    # Primary semantic search (project-scoped if project_id provided)
-    primary = await vector_search(
-        farmer_id=farmer_id,
-        embedding=query_embedding,
-        filter={'project_id': project_id} if project_id else None,
-        top_k=3
-    )
-    results.extend(primary)
+Based on the project data below, provide a clear daily summary in this format:
 
-    # Intent-specific boosting (add specialized chunks)
-    if intent == 'disease':
-        disease_docs = await vector_search(
-            farmer_id=farmer_id,
-            embedding=query_embedding,
-            filter={'document_type': ['plant_info', 'issue_log']},
-            top_k=2
-        )
-        results.extend(disease_docs)
+📊 GROWTH STATUS
+- Current stage, progress percentage, what's normal/abnormal
 
-    if intent == 'market':
-        market_docs = await vector_search(
-            farmer_id=farmer_id,
-            embedding=query_embedding,
-            filter={'document_type': 'market_summary'},
-            top_k=2
-        )
-        results.extend(market_docs)
+🌤️ WEATHER IMPACT
+- How weather affects the crop this week, any action needed
 
-    if intent == 'soil':
-        soil_docs = await vector_search(
-            farmer_id=farmer_id,
-            embedding=query_embedding,
-            filter={'document_type': 'soil_profile'},
-            top_k=2
-        )
-        results.extend(soil_docs)
+🧪 SOIL & NUTRITION
+- Nutrient health, any deficiencies, what to apply
 
-    # Deduplicate by chunk_id and return top K by similarity
-    seen = set()
-    unique = [r for r in results if r.id not in seen and not seen.add(r.id)]
-    return sorted(unique, key=lambda x: x.similarity, reverse=True)[:top_k]
+🦠 DISEASE & PEST RISK
+- Current risk level, what to watch for, prevention steps
+
+📋 TODAY'S PRIORITIES
+- Top 3 actions the farmer must do today, in order
+
+⚠️ WARNINGS
+- Any urgent issues requiring immediate attention
+
+Keep it under 400 words. Use simple language. 
+Scale all quantities to the farm area specified.
+If farming method is 'organic', only recommend organic solutions."""
 ```
 
-### pgvector SQL Query
-```sql
-SELECT
-    content,
-    metadata_json,
-    1 - (embedding <=> $1) AS similarity
-FROM farmer_rag_chunks
-WHERE farmer_id = $2
-  AND ($3::uuid IS NULL OR metadata_json->>'project_id' = $3::text)
-  AND ($4::text IS NULL OR metadata_json->>'document_type' = ANY($4::text[]))
-ORDER BY embedding <=> $1
-LIMIT $5;
-```
+### Use Case 2: Farmer Q&A
+**Trigger:** Farmer types a question in the AI chat.
 
----
-
-## 5. Embedding Model
-
-| Model | Dimensions | Cost | Notes |
-|-------|-----------|------|-------|
-| `text-embedding-3-small` (OpenAI) | 1536 | $0.02/1M tokens | Primary, fast |
-| `voyage-lite-02-instruct` (Voyage AI) | 1024 | $0.02/1M tokens | Agriculture domain fallback |
-
-**Config:** Store embedding dimensions in environment variable so models can be swapped without schema changes.
-
----
-
-## 6. Per-Farmer MCP Server
-
-### What is It?
-Each farmer gets a **session-scoped virtual MCP server** — a Python object (not a persistent process) that:
-1. Knows the farmer's context (id, active project, farming method, language)
-2. Exposes tools that the LLM can call to fetch real-time data
-3. Routes tool calls to the correct backend service
-4. Assembles context efficiently
-
-### MCP Session Lifecycle
-```
-Farmer opens AI Chat
-        ↓
-Create FarmerMCPServer(farmer_id, project_id):
-  → Load farmer_profile (name, language, method)
-  → Load active project (crop, area, stage)
-  → Register all tools
-        ↓
-Build system prompt with farmer context
-        ↓
-LLM receives prompt + available tools
-        ↓
-LLM calls tools as needed (weather, soil, market, RAG search)
-        ↓
-MCP routes to correct service → returns structured data
-        ↓
-LLM assembles personalized, context-aware answer
-        ↓
-Session closed (stateless — all context loaded from DB next time)
-```
-
-### MCP Server Implementation
 ```python
-from mcp import Server, Tool
+QA_PROMPT = """You are a farming expert assistant. A farmer has a question.
 
-class FarmerMCPServer:
-    def __init__(self, farmer_id: str, project_id: str):
-        self.farmer_id = farmer_id
-        self.project_id = project_id
-        self.server = Server("agrifarm-farmer-mcp")
-        self._register_tools()
+Use ONLY the project data provided below to answer.
+Do not make up information. If you don't know, say so.
 
-    def _register_tools(self):
+Always be specific:
+- Use exact quantities scaled to the farm area
+- Recommend specific products (organic or conventional based on farming method)
+- Reference the current growth stage
+- Consider the weather forecast in your answer
 
-        @self.server.tool()
-        async def get_current_weather():
-            """Get today's weather and 5-day forecast for the farmer's field."""
-            return await weather_service.get_forecast_for_project(self.project_id)
+FARMER'S QUESTION: {farmer_question}
 
-        @self.server.tool()
-        async def get_todays_activities():
-            """Get today's scheduled farming activities with full details and quantities."""
-            return await planner_service.get_today(self.project_id)
+PROJECT DATA:
+{flattened_context_json}
+"""
+```
 
-        @self.server.tool()
-        async def get_soil_status():
-            """Get latest soil test results and nutrient recommendations."""
-            return await soil_service.get_latest(self.project_id)
+### Use Case 3: Disease Diagnosis Assistance
+**Trigger:** Farmer reports issue but keyword matcher gives low confidence.
 
-        @self.server.tool()
-        async def get_market_prices():
-            """Get current market prices for crops in the farmer's district."""
-            return await market_service.get_for_project(self.project_id)
+```python
+DIAGNOSIS_PROMPT = """You are a plant pathologist analyzing a sick crop.
 
-        @self.server.tool()
-        async def get_disease_solutions(disease_name: str):
-            """Get treatment solutions for a specific disease or pest."""
-            method = await project_service.get_farming_method(self.project_id)
-            return await disease_service.get_solutions(disease_name, method)
+Based on the symptoms described and the project context:
+1. What is the most likely disease or deficiency?
+2. What caused it? (weather, nutrition, pest?)
+3. Immediate treatment steps ({farming_method} methods only)
+4. How to prevent recurrence
 
-        @self.server.tool()
-        async def search_knowledge(query: str):
-            """Search farmer's personal knowledge base for relevant information."""
-            return await rag_service.retrieve_context(
-                self.farmer_id, query, self.project_id
+REPORTED SYMPTOMS: {description}
+AFFECTED PARTS: {affected_parts}
+AREA AFFECTED: {pct}%
+
+PROJECT CONTEXT:
+{flattened_context_json}
+"""
+```
+
+### Use Case 4: AI-Powered Database Updates
+**Trigger:** After receiving AI response, system parses it to create actionable records.
+
+```python
+async def process_and_apply_ai_insights(project_id, ai_response_text):
+    """
+    Parse the AI summary and create database records from it.
+    This makes the AI 'smart brain' that updates the system.
+    """
+    text = ai_response_text.lower()
+
+    # 1. Disease risk detection
+    disease_keywords = ["blight", "fungal", "mildew", "wilt", "rot", "virus"]
+    for keyword in disease_keywords:
+        if keyword in text:
+            create_project_alert(
+                project_id=project_id,
+                alert_type="disease_risk",
+                title=f"AI detected potential {keyword} risk",
+                description=extract_sentence_containing(text, keyword),
+                severity="warning"
             )
 
-        @self.server.tool()
-        async def save_note(note: str):
-            """Save an observation or note to the farmer's knowledge base."""
-            await rag_service.ingest_note(self.farmer_id, self.project_id, note)
-            return {"saved": True, "message": "Note saved to your knowledge base"}
+    # 2. Nutrient deficiency detection
+    nutrient_keywords = {
+        "nitrogen": "nitrogen_deficiency",
+        "phosphorus": "phosphorus_deficiency",
+        "potassium": "potassium_deficiency",
+        "calcium": "calcium_deficiency"
+    }
+    for nutrient, issue_type in nutrient_keywords.items():
+        if f"low {nutrient}" in text or f"{nutrient} deficien" in text:
+            create_soil_recommendation(
+                project_id=project_id,
+                recommendation_type="fertilizer",
+                nutrient_affected=nutrient,
+                action_required=extract_sentence_containing(text, nutrient)
+            )
+
+    # 3. Activity adjustment suggestions
+    if "skip watering" in text or "postpone irrigation" in text:
+        skip_todays_watering(project_id, reason="AI recommendation based on weather + soil analysis")
+
+    if "apply fertilizer" in text or "apply lime" in text:
+        # Don't auto-apply — create a notification instead
+        create_notification(
+            project_id=project_id,
+            type="ai_insight",
+            title="AI recommends fertilizer action",
+            message=extract_sentence_containing(text, "apply")
+        )
+
+    # 4. Store the full summary for history
+    save_ai_summary(project_id, ai_response_text)
 ```
 
 ---
 
-## 7. System Prompt Builder
+## 4. Intent Classifier (No AI Needed — Regex)
 
-```python
-def build_system_prompt(farmer, project, current_stage, weather_today, soil_summary, rag_context):
-    method = project.farming_method
-    opposite = "organic" if method == "conventional" else "conventional"
-
-    context_text = "\n".join([f"- {chunk.content}" for chunk in rag_context])
-
-    return f"""
-You are a personal AI farming assistant for {farmer.full_name}.
-
-## Farmer Profile
-- Location: {farmer.district}, {farmer.province}
-- Farming experience: {farmer.experience_years} years
-- Farming method: {method} (CRITICAL: only recommend {method} solutions)
-- Preferred language: {farmer.primary_language}
-
-## Current Project
-- Crop: {project.plant.common_name} ({project.plant.local_name})
-- Area: {project.area} {project.area_unit} ({project.plant_count} plants)
-- Planting date: {project.planting_date}
-- Expected harvest: {project.expected_harvest_date}
-
-## Current Stage: {current_stage.stage_name}
-- Day {current_stage.days_since_planting} of {project.plant.growth_duration_days}
-- Key actions this stage: {current_stage.critical_actions}
-- Watch for: {current_stage.watch_for}
-- Key indicators: {current_stage.key_indicators}
-
-## Today's Weather
-{weather_today}
-
-## Soil Summary
-{soil_summary}
-
-## Your Knowledge Base (relevant context)
-{context_text}
-
-## Your Rules
-1. Give SPECIFIC advice — quantities, product names, timings, methods
-2. Scale all quantities to {project.area} {project.area_unit}
-3. NEVER recommend {opposite} products
-4. Use search_knowledge tool if you need more context
-5. If disease/pest risk: proactively suggest prevention action
-6. Be concise — farmers are busy. Lead with the action, explain briefly.
-7. Use simple language — avoid agricultural jargon
-8. Answer in {farmer.primary_language}
-""".strip()
-```
-
----
-
-## 8. Intent Classifier (Deterministic Pre-Filter)
+Before calling the AI, a regex-based intent classifier routes simple questions to deterministic functions:
 
 ```python
 import re
 
 DETERMINISTIC_INTENTS = {
     r'(water|irrigat|how much water)': 'watering_details',
-    r'(weather|rain|forecast|temperature|temp|sunny|cloudy)': 'weather_info',
-    r'(price|market|sell|selling|how much.*sell|kg.*price)': 'market_price',
+    r'(weather|rain|forecast|temperature|sunny|cloudy)': 'weather_info',
+    r'(price|market|sell|selling|how much.*sell)': 'market_price',
     r'(today|activity|task|schedule|plan|what to do)': 'todays_plan',
     r'(fertiliz|nutrient|npk|urea|compost|feed)': 'fertilizer_schedule',
-    r'(harvest|when.*harvest|harvest.*when|ready.*pick)': 'harvest_date',
+    r'(harvest|when.*harvest|ready.*pick)': 'harvest_date',
     r'(soil|ph|nitrogen|phosphorus|potassium)': 'soil_status',
 }
 
@@ -361,200 +317,123 @@ def classify_intent(message: str) -> str:
     for pattern, intent in DETERMINISTIC_INTENTS.items():
         if re.search(pattern, msg):
             return intent
-    return 'llm_required'
+    return 'ai_required'  # Only this goes to Gemini
 
-# In process_chat():
-intent = classify_intent(message)
-if intent == 'watering_details':
-    return planner_service.get_watering_details(project_id)
+# Usage in chat handler:
+intent = classify_intent(farmer_message)
 if intent == 'weather_info':
-    return weather_service.get_today_summary(project_id)
-if intent == 'market_price':
-    return market_service.get_latest_prices(project_id)
+    return weather_service.get_today_summary(project_id)  # Instant, free
 if intent == 'todays_plan':
-    return planner_service.get_today_summary(project_id)
-if intent == 'harvest_date':
-    return project_service.get_harvest_estimate(project_id)
-if intent == 'soil_status':
-    return soil_service.get_summary(project_id)
-# Only if intent == 'llm_required': proceed to LLM
+    return planner_service.get_today(project_id)  # Instant, free
+if intent == 'ai_required':
+    return await get_ai_summary(project_id, farmer_message)  # Gemini free API
 ```
 
 ---
 
-## 9. AI Cost Control
+## 5. Rate Limiting & Error Handling
 
-### Token Budget Per Request
+### Rate Limits for Free Tier Protection
+
 ```python
-MAX_SYSTEM_PROMPT_TOKENS = 2000   # farmer context + RAG chunks
-MAX_HISTORY_TOKENS        = 1500  # conversation history (trimmed)
-MAX_OUTPUT_TOKENS         = 800   # response length
+# Per-farmer AI call limits (protect Google's free tier)
+MAX_AI_CALLS_PER_FARMER_PER_DAY = 10
+MAX_AI_CALLS_PER_MINUTE_GLOBAL = 14  # Keep under 15 RPM free limit
 
-# Daily limit per farmer
-DAILY_TOKEN_LIMIT = 50_000  # ~$0.15/day ceiling
-
-async def check_daily_budget(farmer_id: str) -> bool:
-    today_usage = await get_today_token_usage(farmer_id)
-    if today_usage >= DAILY_TOKEN_LIMIT:
-        await log_budget_exceeded(farmer_id)
-        return False
+async def check_ai_budget(farmer_id: str) -> bool:
+    today_count = await redis.get(f"ai_calls:{farmer_id}:{today()}")
+    if int(today_count or 0) >= MAX_AI_CALLS_PER_FARMER_PER_DAY:
+        return False  # Show message: "You've used your daily AI quota"
     return True
+
+async def rate_limit_global() -> bool:
+    """Sliding window rate limit for Google free tier (15 RPM)."""
+    current_minute_count = await redis.incr(f"ai_global:{current_minute()}")
+    await redis.expire(f"ai_global:{current_minute()}", 60)
+    return current_minute_count <= MAX_AI_CALLS_PER_MINUTE_GLOBAL
 ```
 
-### Conversation Trimming (Long Sessions)
-```python
-async def trim_conversation(messages: list, farmer_id: str) -> list:
-    total_tokens = estimate_token_count(messages)
-
-    if total_tokens > 3000:
-        # Keep last 4 turns fresh
-        recent = messages[-4:]
-        old = messages[:-4]
-
-        # Summarize older messages using LLM (one-time cost)
-        summary = await summarize_conversation(old)
-        await save_conversation_summary(farmer_id, summary)
-
-        return [
-            {"role": "system", "content": f"Previous conversation summary: {summary}"}
-        ] + recent
-
-    return messages
-```
-
-### Monthly Cost Estimate Per Farmer
-| Task | Frequency | Tokens | Cost/Month |
-|------|-----------|--------|-----------|
-| Daily activity plan | 0 (deterministic) | 0 | $0 |
-| Weather-adjusted plan | 0 (rule-based) | 0 | $0 |
-| Disease diagnosis | ~2/month | 2,000 each | $0.02 |
-| AI chat session | ~5/month | 3,000 each | $0.075 |
-| Monthly summary | 1/month | 1,500 | $0.0075 |
-| **TOTAL** | | | **~$0.10** |
-
----
-
-## 10. Background RAG Update Tasks
+### Error Handling
 
 ```python
-from celery import shared_task
-
-@shared_task
-def update_activity_rag_doc(project_id: str, activity_id: str):
-    """Called when an activity is marked as done."""
-    activity = get_activity(activity_id)
-    project = get_project(project_id)
-
-    content = f"""
-Farming Activity Completed:
-Date: {activity.completed_at.date()}
-Type: {activity.activity_type}
-Action: {activity.title}
-Details: {format_activity_details(activity)}
-Stage: {activity.stage.stage_name} (Day {get_day_in_project(project, activity.scheduled_date)})
-Notes: {activity.notes or 'None'}
-    """.strip()
-
-    ingest_document(
-        farmer_id=project.farmer_id,
-        project_id=project_id,
-        doc_type='activity_history',
-        title=f"Activity: {activity.title} on {activity.completed_at.date()}",
-        content=content,
-        metadata={'date': str(activity.scheduled_date), 'type': activity.activity_type}
-    )
-
-
-@shared_task
-def update_soil_rag_doc(soil_test_id: str):
-    """Called after soil analysis is computed."""
-    test = get_soil_test_with_results(soil_test_id)
-    content = build_soil_summary_text(test)  # Human-readable summary
-    ingest_document(
-        farmer_id=test.farmer_id,
-        project_id=test.project_id,
-        doc_type='soil_profile',
-        title=f"Soil Test: {test.test_date}",
-        content=content,
-        metadata={'test_date': str(test.test_date)}
-    )
-
-
-@shared_task
-def seed_project_rag_documents(project_id: str):
-    """Called when a project is created. Seeds plant knowledge."""
-    project = get_project(project_id)
-    plant = project.plant
-
-    # Comprehensive plant guide
-    content = build_plant_guide(plant)  # stages + care + nutrients + diseases
-    ingest_document(
-        farmer_id=project.farmer_id,
-        project_id=project_id,
-        doc_type='plant_info',
-        title=f"Complete Guide: {plant.common_name}",
-        content=content,
-        metadata={'plant_id': str(plant.id)}
-    )
-
-
-@shared_task
-def weekly_market_rag_update():
-    """Every Sunday: update market summary docs for all active farmers."""
-    for project in get_all_active_projects():
-        summary = market_service.build_weekly_summary(project.plant_id, project.location.district)
-        ingest_document(
-            farmer_id=project.farmer_id,
-            project_id=project.id,
-            doc_type='market_summary',
-            title=f"Market Summary: {project.plant.common_name} - Week of {today()}",
-            content=summary
-        )
+async def safe_ai_call(project_id, query=None):
+    try:
+        response = await get_ai_summary(project_id, query)
+        return response
+    except google.api_core.exceptions.ResourceExhausted:
+        # Free tier limit hit — return deterministic fallback
+        return {
+            "summary": generate_deterministic_summary(project_id),
+            "source": "deterministic_fallback",
+            "reason": "AI rate limit reached. Showing calculated summary."
+        }
+    except google.api_core.exceptions.GoogleAPIError as e:
+        # API error — return cached summary or deterministic
+        cached = await get_cached_ai_summary(project_id)
+        if cached:
+            return {"summary": cached, "source": "cached"}
+        return {
+            "summary": generate_deterministic_summary(project_id),
+            "source": "deterministic_fallback"
+        }
 ```
 
 ---
 
-## 11. AI for Disease Diagnosis (LLM Use Case)
+## 6. Future: Self-Hosted Gemma 3 for Small Tasks
+
+For high-frequency, small tasks (intent classification, symptom extraction), deploy Google's open-source Gemma 3 1B model on a cheap VPS:
 
 ```python
-async def ai_diagnose_issue(issue_id: str):
-    issue = get_issue(issue_id)
-    project = get_project(issue.project_id)
+# Future: local Gemma 3 via Ollama or vLLM
+# Cost: $5/month VPS (2 vCPU, 4GB RAM is sufficient for 1B model)
+# Latency: ~200ms per call (much faster than API)
+# Use for: intent classification, keyword extraction, short answers
 
-    # Build context
-    context = f"""
-Plant: {project.plant.common_name} ({project.plant.scientific_name})
-Current stage: {get_current_stage(project).stage_name}
-Farmer reports: {issue.description}
-Affected parts: {', '.join(issue.affected_parts)}
-Affected area: {issue.affected_area_pct}% of crop
-Stage-specific threats: {get_current_stage(project).watch_for}
-Common diseases this stage: {get_common_diseases(project)}
-    """
+# Example with Ollama:
+# ollama run gemma3:1b
 
-    response = await anthropic_client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=500,
-        system="You are an expert plant pathologist. Return a JSON response only.",
-        messages=[{
-            "role": "user",
-            "content": f"""
-Diagnose the farming issue based on this context:
-{context}
+import httpx
 
-Return JSON:
-{{
-  "matched_disease": "disease name or null",
-  "matched_pest": "pest name or null",
-  "confidence": 0.0-1.0,
-  "reasoning": "brief explanation",
-  "immediate_action": "what to do RIGHT NOW"
-}}
-            """
-        }]
-    )
+async def gemma_classify(text: str) -> str:
+    """Use local Gemma 3 1B for intent classification."""
+    response = await httpx.post("http://localhost:11434/api/generate", json={
+        "model": "gemma3:1b",
+        "prompt": f"Classify this farming question into one category: weather, soil, disease, market, schedule, general.\nQuestion: {text}\nCategory:",
+        "stream": False
+    })
+    return response.json()["response"].strip().lower()
+```
 
-    diagnosis = json.loads(response.content[0].text)
-    await update_issue_diagnosis(issue_id, diagnosis)
-    return diagnosis
+---
+
+## 7. Future: Full RAG + MCP Architecture (v3.0)
+
+When the user base grows and projects accumulate years of historical data, upgrade to full RAG:
+
+```
+v1.0 (Current)                    v2.0                              v3.0
+─────────────────                 ─────────────────                 ─────────────────
+Flattened Context                 + pgvector embeddings             Full RAG Pipeline
+→ Google Gemini Free              + Gemini Embedding API (free)     + MCP Server
+Regex Intent Classifier           + Gemma 3 local classifier        + AI Agent
+Simple DB queries                 + Semantic search                 + Autonomous actions
+```
+
+### MCP Server (Future — When AI Agent Feature Ships)
+
+```python
+# Future: Model Context Protocol server
+# Each farmer gets a virtual MCP endpoint that exposes tools:
+#   - get_current_weather()
+#   - get_todays_activities()
+#   - get_soil_status()
+#   - get_market_prices()
+#   - search_knowledge()
+#
+# The AI Agent can autonomously call these tools to:
+#   - Monitor crops 24/7
+#   - Auto-reschedule activities
+#   - Generate proactive alerts
+#   - Answer complex multi-step queries
 ```

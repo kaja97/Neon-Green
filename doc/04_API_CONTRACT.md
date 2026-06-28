@@ -2,8 +2,8 @@
 
 ## Base URL
 ```
-Development:  http://localhost:8000/v1
-Production:   https://api.agrifarm.app/v1
+Development:  http://localhost:8000/api/v1
+Production:   https://api.agrifarm.app/api/v1
 ```
 
 ## Authentication
@@ -48,251 +48,332 @@ Body: {
   "full_name": "Nimal Perera",
   "district": "Colombo"
 }
-Response: {
-  "account": { "id": "...", "email": "..." },
-  "farmer_profile": { "id": "...", "full_name": "Nimal Perera" },
-  "access_token": "eyJ...",
-  "refresh_token": "eyJ..."
+Response 201: {
+  "success": true,
+  "data": {
+    "account_id": "uuid",
+    "farmer_profile_id": "uuid",
+    "access_token": "eyJ...",
+    "refresh_token": "eyJ...",
+    "token_type": "bearer"
+  }
 }
 ```
 
 ### Login
 ```
 POST /auth/login
-Body: { "email_or_phone": "farmer@example.com", "password": "secure123" }
-Response: { "access_token": "...", "refresh_token": "...", "farmer_profile": {...} }
+Body: {
+  "email": "farmer@example.com",
+  "password": "secure123"
+}
+Response 200: {
+  "success": true,
+  "data": {
+    "access_token": "eyJ...",
+    "refresh_token": "eyJ...",
+    "token_type": "bearer",
+    "expires_in": 900
+  }
+}
 ```
 
 ### Refresh Token
 ```
 POST /auth/refresh
-Body: { "refresh_token": "..." }
-Response: { "access_token": "..." }
+Body: { "refresh_token": "eyJ..." }
+Response 200: {
+  "data": { "access_token": "new_eyJ...", "refresh_token": "new_eyJ..." }
+}
 ```
 
-### Logout
+### Get Current User
 ```
-POST /auth/logout
-Body: { "refresh_token": "..." }
-Response: { "success": true }
-```
-
-### Forgot Password
-```
-POST /auth/forgot-password
-Body: { "email_or_phone": "..." }
-Response: { "message": "OTP sent to your email/phone" }
-
-POST /auth/verify-otp
-Body: { "email_or_phone": "...", "otp": "123456", "new_password": "new123" }
-Response: { "access_token": "..." }
+GET /auth/me
+Headers: Authorization: Bearer <token>
+Response 200: {
+  "data": {
+    "account_id": "uuid",
+    "email": "farmer@example.com",
+    "farmer_profile": { "full_name": "Nimal Perera", "farming_method": "organic" },
+    "vendor_profile": null,
+    "buyer_profile": null
+  }
+}
 ```
 
 ---
 
-## FARMER PROFILE ENDPOINTS
+## FARMER ENDPOINTS
 
-### Get Full Profile
+### Get Profile
 ```
-GET /farmer/me
-Response: {
-  "account": { "id": "...", "email": "...", "role": "farmer" },
-  "profile": {
-    "id": "...", "full_name": "Nimal", "primary_language": "en",
-    "experience_years": 5, "avatar_url": "..."
-  },
-  "locations": [
-    {
-      "id": "...", "label": "Home Farm", "city": "Kandy",
-      "district": "Kandy", "latitude": 7.2906, "longitude": 80.6337,
-      "is_primary": true
-    }
-  ],
-  "land_details": [...],
-  "livestock": [...]
+GET /farmer/profile
+Response 200: {
+  "data": {
+    "id": "uuid",
+    "full_name": "Nimal Perera",
+    "primary_language": "en",
+    "experience_years": 5,
+    "farming_method": "organic",
+    "avatar_url": null
+  }
 }
 ```
 
 ### Update Profile
 ```
-PUT /farmer/me
-Body: { "full_name": "...", "primary_language": "si", "experience_years": 6 }
+PUT /farmer/profile
+Body: {
+  "full_name": "Nimal Perera",
+  "primary_language": "si",
+  "experience_years": 6,
+  "farming_method": "organic"
+}
 ```
 
-### Locations CRUD
+### Add Location
 ```
 POST /farmer/locations
 Body: {
-  "label": "North Field",
+  "label": "Home Farm",
   "address_line": "123 Farm Road",
-  "city": "Jaffna", "district": "Jaffna", "province": "Northern",
-  "latitude": 9.6615, "longitude": 80.0255,
-  "is_primary": false
+  "city": "Dambulla",
+  "district": "Matale",
+  "province": "Central",
+  "latitude": 7.8731,
+  "longitude": 80.6518,
+  "is_primary": true
 }
-
-GET  /farmer/locations
-PUT  /farmer/locations/{id}    Body: { same fields }
-DELETE /farmer/locations/{id}
 ```
 
-### Land Details CRUD
+### List Locations
+```
+GET /farmer/locations
+Response 200: {
+  "data": [
+    {
+      "id": "uuid",
+      "label": "Home Farm",
+      "city": "Dambulla",
+      "district": "Matale",
+      "latitude": 7.8731,
+      "longitude": 80.6518,
+      "is_primary": true
+    }
+  ]
+}
+```
+
+### Add Land Details
 ```
 POST /farmer/land
 Body: {
-  "location_id": "...",
-  "total_area": 1.5, "area_unit": "acres",
-  "land_type": "highland", "soil_type": "loam",
-  "water_source": "well", "irrigation_type": "drip",
+  "location_id": "uuid",
+  "total_area": 1.0,
+  "area_unit": "acres",
+  "soil_type": "loam",
+  "water_source": "well",
+  "irrigation_type": "drip",
   "land_ownership": "owned"
 }
-
-GET  /farmer/land
-PUT  /farmer/land/{id}
-DELETE /farmer/land/{id}
-```
-
-### Livestock CRUD
-```
-POST /farmer/livestock
-Body: { "animal_type": "poultry", "breed": "Broiler", "count": 200, "purpose": "meat" }
-GET  /farmer/livestock
-PUT  /farmer/livestock/{id}
-DELETE /farmer/livestock/{id}
 ```
 
 ---
 
-## PROJECT ENDPOINTS
-
-### List Projects
-```
-GET /projects?status=active&page=1&per_page=10
-Response: [
-  {
-    "id": "...", "name": "Tomato Farm — 1 Acre",
-    "plant": { "common_name": "Tomato", "image_url": "..." },
-    "current_stage": { "name": "Flowering", "progress_pct": 50 },
-    "today_task_count": 3,
-    "alert_count": 1,
-    "status": "active"
-  }
-]
-```
+## PROJECT ENDPOINTS ⭐ (Core Feature)
 
 ### Create Project
 ```
 POST /projects
 Body: {
-  "plant_id": "uuid-of-tomato",
+  "plant_id": "uuid",
+  "location_id": "uuid",
+  "land_detail_id": "uuid",
+  "farming_method_id": "uuid",
   "name": "Tomato Farm — 1 Acre — March 2025",
-  "farming_method_id": "uuid-of-conventional",
-  "location_id": "uuid-of-location",
-  "land_detail_id": "uuid-of-land",
-  "area": 1.0, "area_unit": "acres",
-  "plant_count": 2000,
-  "planting_date": "2025-03-01",
-  "services": ["weather", "activity_plan", "soil", "disease_watch", "market", "ai_chat"]
+  "area": 1.0,
+  "area_unit": "acres",
+  "planting_date": "2025-03-01"
 }
-Response: {
-  "project": { "id": "...", "name": "...", "expected_harvest_date": "2025-05-29" },
-  "message": "Project created. Activity plan generating in background."
-}
-```
-
-### Get Project
-```
-GET /projects/{project_id}
-Response: {
-  "project": { full project object },
-  "plant": { plant + stages },
-  "current_stage": { stage details + day count },
-  "farming_method": { "code": "conventional", "name": "Conventional" },
-  "location": { location details }
+Response 201: {
+  "data": {
+    "id": "uuid",
+    "name": "Tomato Farm — 1 Acre — March 2025",
+    "plant": { "common_name": "Tomato", "growth_duration_days": 90 },
+    "planting_date": "2025-03-01",
+    "expected_harvest_date": "2025-05-29",
+    "status": "active",
+    "plan_generation_status": "in_progress"
+  }
 }
 ```
+**Side effects:** Background Celery task starts generating the full season activity plan.
 
-### Update Project
+### List Projects
 ```
-PUT /projects/{project_id}
-Body: { "name": "...", "status": "paused", "notes": "..." }
-```
-
-### Archive Project (Soft Delete)
-```
-DELETE /projects/{project_id}
-→ Sets status = 'archived'. No data deletion.
-```
-
-### Project Dashboard (Full Aggregate)
-```
-GET /projects/{project_id}/dashboard
-Response: {
-  "project": { id, name, area, planting_date },
-  "current_stage": {
-    "name": "Flowering", "stage_order": 4,
-    "days_since_planting": 45, "total_days": 90, "progress_pct": 50,
-    "key_indicators": "Flower buds visible...",
-    "watch_for": "Watch for Late Blight..."
-  },
-  "todays_activities": [
-    { "id": "...", "type": "watering", "title": "Water 180L", "priority": 2, "status": "pending",
-      "details": { "water_liters": 180, "method": "drip" } }
-  ],
-  "upcoming_activities": [ ... next 7 days ... ],
-  "active_alerts": [
-    { "type": "disease_risk", "severity": "warning", "title": "High fungal risk tomorrow" }
-  ],
-  "open_issues_count": 1,
-  "weather_summary": { "today": "Sunny 32°C", "rain_in_days": 3 },
-  "soil_summary": { "ph": 6.2, "nitrogen_status": "LOW", "last_test": "2025-05-28" },
-  "market_summary": { "price": 180, "unit": "kg", "currency": "LKR", "trend": "rising", "change_pct": 12 },
-  "service_blocks": ["weather", "soil", "activity_plan", "disease_watch", "market", "ai_chat"]
+GET /projects
+Query params: ?status=active&page=1&per_page=10
+Response 200: {
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Tomato Farm — 1 Acre",
+      "plant": { "common_name": "Tomato", "image_url": "..." },
+      "planting_date": "2025-03-01",
+      "days_since_planting": 45,
+      "current_stage": "Flowering",
+      "progress_pct": 50.0,
+      "status": "active",
+      "todays_task_count": 3,
+      "active_alerts": 1
+    }
+  ]
 }
 ```
 
-### Manage Project Services
+### Get Project Dashboard (Aggregated)
 ```
-POST /projects/{id}/services
-Body: { "service_type": "soil", "config_json": {} }
+GET /projects/{id}/dashboard
+Response 200: {
+  "data": {
+    "project": {
+      "id": "uuid",
+      "name": "Tomato Farm — 1 Acre",
+      "crop": "Tomato",
+      "area": "1.0 acres",
+      "planting_date": "2025-03-01",
+      "days_since_planting": 45,
+      "expected_harvest_date": "2025-05-29",
+      "status": "active"
+    },
+    "farming_circle": {
+      "stages": [
+        { "name": "Germination", "order": 1, "start_day": 0, "end_day": 7, "status": "completed" },
+        { "name": "Seedling", "order": 2, "start_day": 8, "end_day": 21, "status": "completed" },
+        { "name": "Vegetative", "order": 3, "start_day": 22, "end_day": 42, "status": "completed" },
+        { "name": "Flowering", "order": 4, "start_day": 43, "end_day": 60, "status": "current" },
+        { "name": "Fruiting", "order": 5, "start_day": 61, "end_day": 80, "status": "upcoming" },
+        { "name": "Harvest", "order": 6, "start_day": 81, "end_day": 90, "status": "upcoming" }
+      ],
+      "current_stage": "Flowering",
+      "current_day": 45,
+      "progress_pct": 50.0
+    },
+    "todays_activities": [
+      { "id": "uuid", "type": "watering", "title": "Water plants — 180L", "priority": 2, "status": "pending" },
+      { "id": "uuid", "type": "monitoring", "title": "Check for blight", "priority": 3, "status": "pending" }
+    ],
+    "upcoming_activities": [...],
+    "weather": {
+      "today": { "condition": "sunny", "temp_max": 32, "rain_mm": 0, "humidity": 68 },
+      "forecast_5day": [...]
+    },
+    "weather_alerts": [
+      { "type": "disease_risk_high_humidity", "severity": "warning", "title": "High humidity — blight risk" }
+    ],
+    "soil_status": {
+      "ph": 6.2,
+      "nitrogen_status": "LOW",
+      "last_test": "2025-03-20"
+    },
+    "active_issues": [],
+    "market_price": { "price_per_kg": 180, "trend": "rising", "change_pct": 12.0 },
+    "ai_summary": {
+      "text": "Your tomato crop is in the Flowering stage (Day 45). Growth is on track...",
+      "generated_at": "2025-04-14T05:00:00Z",
+      "source": "gemini-2.0-flash"
+    }
+  }
+}
+```
 
-PUT /projects/{id}/services/{service_type}
-Body: { "config_json": { "notify_low_price": true } }
+### Update Project Status
+```
+PATCH /projects/{id}/status
+Body: { "status": "harvested", "actual_harvest_date": "2025-05-25" }
+```
 
-DELETE /projects/{id}/services/{service_type}
+---
+
+## PLANNER ENDPOINTS
+
+### Get Today's Activities
+```
+GET /planner/{project_id}/today
+Response 200: {
+  "data": [
+    {
+      "id": "uuid",
+      "activity_type": "watering",
+      "title": "Water plants — 180L",
+      "description": "Irrigate via drip system",
+      "scheduled_date": "2025-04-15",
+      "scheduled_time": "06:00",
+      "priority": 2,
+      "status": "pending",
+      "is_weather_adjusted": false,
+      "stage": "Flowering"
+    }
+  ]
+}
+```
+
+### Mark Activity Complete
+```
+PATCH /planner/activities/{id}/complete
+Body: { "notes": "Watered all rows, soil looks moist" }
+Response 200: { "data": { "id": "uuid", "status": "done", "completed_at": "2025-04-15T07:30:00Z" } }
+```
+
+### Skip Activity
+```
+PATCH /planner/activities/{id}/skip
+Body: { "reason": "Rained heavily this morning" }
+Response 200: { "data": { "id": "uuid", "status": "skipped", "skipped_reason": "Rained heavily this morning" } }
+```
+
+### Get Full Season Plan
+```
+GET /planner/{project_id}/activities
+Query params: ?stage_id=uuid&status=pending&page=1
 ```
 
 ---
 
 ## WEATHER ENDPOINTS
 
+### Get Weather for Project
 ```
-GET /weather/project/{project_id}
-Response: {
-  "location": { "lat": 7.29, "lng": 80.63, "name": "Kandy" },
-  "forecast": [
+GET /weather/{project_id}
+Response 200: {
+  "data": {
+    "location": { "city": "Dambulla", "lat": 7.8731, "lng": 80.6518 },
+    "current": { "temp": 30, "humidity": 72, "condition": "partly_cloudy", "wind_speed": 12 },
+    "forecast_5day": [
+      { "date": "2025-04-15", "temp_max": 32, "temp_min": 24, "rain_mm": 0, "humidity": 68, "condition": "sunny" },
+      { "date": "2025-04-16", "temp_max": 29, "temp_min": 23, "rain_mm": 5, "humidity": 78, "condition": "cloudy" }
+    ],
+    "cached_at": "2025-04-15T05:00:00Z"
+  }
+}
+```
+
+### Get Weather Alerts
+```
+GET /weather/{project_id}/alerts
+Response 200: {
+  "data": [
     {
-      "date": "2025-06-10",
-      "condition": "sunny",
-      "temp_max": 32, "temp_min": 24,
-      "rainfall_mm": 0,
-      "humidity_pct": 68,
-      "wind_speed_kmh": 10,
-      "uv_index": 8
-    },
-    {
-      "date": "2025-06-12",
-      "condition": "rain",
-      "rainfall_mm": 25,
-      "humidity_pct": 92
+      "id": "uuid",
+      "type": "disease_risk_high_humidity",
+      "severity": "warning",
+      "title": "High humidity — blight risk",
+      "description": "Humidity above 90% with temps >25°C creates ideal conditions for blight.",
+      "action_required": "Inspect leaves for brown spots. Apply preventive copper spray if organic.",
+      "is_acknowledged": false
     }
-  ],
-  "farm_actions": [
-    { "date": "2025-06-12", "action_type": "skip_watering",
-      "reason": "25mm rain expected", "priority": "info" },
-    { "date": "2025-06-12", "action_type": "disease_risk",
-      "reason": "High humidity — fungal risk", "priority": "urgent" }
-  ],
-  "active_alerts": [...]
+  ]
 }
 ```
 
@@ -304,279 +385,261 @@ Response: {
 ```
 POST /soil/tests
 Body: {
-  "project_id": "...",
-  "test_date": "2025-05-28",
-  "lab_name": "Agricultural Research Institute",
-  "ph": 5.8,
-  "nitrogen_ppm": 120,
-  "phosphorus_ppm": 22,
-  "potassium_ppm": 185,
-  "calcium_ppm": 280,
-  "organic_matter_pct": 1.8,
-  "ec_ds_per_m": 0.4
-}
-Response: {
-  "soil_test": { "id": "...", "test_date": "2025-05-28" },
-  "recommendations": [
-    {
-      "type": "pH_correction",
-      "nutrient": "pH",
-      "current_level": 5.8,
-      "optimal_level": "6.0–6.8",
-      "severity": "moderate",
-      "action": "Apply 450kg agricultural lime per acre",
-      "product": "Agricultural Lime",
-      "priority": 1
-    },
-    {
-      "type": "fertilizer",
-      "nutrient": "nitrogen_ppm",
-      "severity": "moderate",
-      "action": "Apply 30kg Urea per acre",
-      "product": "Urea (46-0-0)",
-      "priority": 1
-    }
-  ]
-}
-```
-
-### Get Tests & Recommendations
-```
-GET /soil/tests/project/{project_id}   → All soil tests list
-GET /soil/tests/{test_id}              → Single test + nutrient results + recommendations
-GET /soil/tests/{test_id}/recommendations  → Sorted by priority
-POST /soil/analyze   → Same body as POST /soil/tests but no DB save
-```
-
----
-
-## ACTIVITY PLAN ENDPOINTS
-
-```
-POST /planner/generate/{project_id}
-→ Trigger background Celery task
-Response: { "message": "Plan generation started", "plan_id": "..." }
-
-GET /planner/plan/{project_id}
-Response: {
-  "plan": { "id": "...", "generated_at": "...", "is_active": true },
-  "activities_by_week": {
-    "2025-W10": [ { activity objects } ],
-    "2025-W11": [ ... ]
+  "project_id": "uuid",
+  "test_date": "2025-03-20",
+  "lab_name": "NIFS Kandy",
+  "input_method": "manual",
+  "results": {
+    "ph": 6.2,
+    "nitrogen_ppm": 120,
+    "phosphorus_ppm": 45,
+    "potassium_ppm": 185,
+    "organic_matter_pct": 2.1
   }
 }
-
-GET /planner/today/{project_id}
-Response: {
-  "date": "2025-06-10",
-  "activities": [
-    {
-      "id": "...", "type": "watering", "title": "Water plants — 180L",
-      "priority": 2, "status": "pending",
-      "details": { "water_liters": 180, "method": "drip", "duration_minutes": 45 },
-      "note": "High humidity today — check for mold after watering"
-    }
-  ]
-}
-
-GET /planner/week/{project_id}?start_date=2025-06-10
-Response: {
-  "days": [
-    { "date": "2025-06-10", "activities": [...] },
-    { "date": "2025-06-11", "activities": [...] }
-  ]
-}
-
-PUT /planner/activities/{activity_id}
-Body: { "status": "done", "notes": "Used drip irrigation, 45 mins", "completed_at": "2025-06-10T08:30:00" }
-
-POST /planner/activities/{activity_id}/reschedule
-Body: { "new_date": "2025-06-11", "reason": "Equipment issue" }
-
-POST /planner/adjust/{project_id}
-Response: {
-  "adjusted_count": 2,
-  "changes": [
-    { "activity_id": "...", "change": "skipped", "reason": "25mm rain expected" }
-  ]
-}
-```
-
----
-
-## DISEASE & PEST ENDPOINTS
-
-### Report an Issue
-```
-POST /issues/report
-Body: {
-  "project_id": "...",
-  "issue_type": "disease",
-  "description": "Leaves turning yellow with brown spots at edges",
-  "affected_parts": ["leaves"],
-  "affected_area_pct": 15,
-  "image_urls": ["https://s3.aws.../photo1.jpg"]
-}
-Response: {
-  "issue": { "id": "...", "status": "open" },
-  "diagnosis": {
-    "matched_disease": {
-      "id": "...", "disease_name": "Early Blight",
-      "symptoms": "...", "severity": "medium"
-    },
-    "confidence": 0.82,
-    "method": "keyword",
-    "solutions": [
+Response 201: {
+  "data": {
+    "soil_test_id": "uuid",
+    "recommendations": [
       {
-        "method": "conventional",
-        "product_name": "Mancozeb 75 WP",
-        "dosage": "2g per litre water",
-        "application_method": "Spray foliage",
-        "frequency": "Every 7 days",
-        "waiting_period_days": 3
+        "type": "fertilizer",
+        "nutrient": "Nitrogen",
+        "severity": "moderate",
+        "action": "Apply compost or blood meal",
+        "quantity_per_acre": 25.0,
+        "unit": "kg"
       }
     ]
   }
 }
 ```
 
-### Disease Watch
+---
+
+## DISEASE ENDPOINTS
+
+### Report Issue
 ```
-GET /disease/watch/{project_id}
-Response: {
-  "current_risk_level": "medium",
-  "risk_calendar": [
-    {
-      "date": "2025-06-12",
-      "disease_name": "Late Blight",
-      "risk_level": "high",
-      "reason": "High humidity forecast (92%) + warm temperature"
-    }
-  ],
-  "diseases_to_watch": [
-    {
-      "disease_name": "Early Blight",
-      "visual_symptoms": "Brown spots with yellow halo on older leaves",
-      "prevention_tips": "Spray Mancozeb before symptoms appear"
-    }
-  ]
+POST /issues
+Body: {
+  "project_id": "uuid",
+  "issue_type": "disease",
+  "title": "Yellow spots on leaves",
+  "description": "Lower leaves have yellow-brown circular spots, started 3 days ago",
+  "affected_parts": ["leaves"],
+  "affected_area_pct": 15.0,
+  "image_urls": ["s3://uploads/issue_123.jpg"]
 }
+Response 201: {
+  "data": {
+    "issue_id": "uuid",
+    "matched_disease": {
+      "name": "Early Blight",
+      "confidence": 0.85,
+      "source": "database_keyword_match"
+    },
+    "solutions": [
+      {
+        "method": "organic",
+        "name": "Copper-based fungicide (Bordeaux mixture)",
+        "dosage": "10g copper sulfate + 10g lime per 1L water",
+        "application": "Spray on affected leaves, morning application",
+        "frequency": "Every 7 days"
+      },
+      {
+        "method": "conventional",
+        "name": "Mancozeb spray",
+        "dosage": "2g per liter",
+        "application": "Full plant coverage spray",
+        "frequency": "Every 7-10 days"
+      }
+    ]
+  }
+}
+```
 
-GET /disease/search?plant_id=&symptoms=yellowing+leaves&stage_id=
-Response: [ { disease with confidence_score } ]
-
-GET /disease/{disease_id}/solutions?method=organic
-Response: [ { solution objects } ]
+### Search Diseases by Symptoms
+```
+GET /disease/search?plant_id=uuid&symptoms=yellow+spots+leaves
 ```
 
 ---
 
 ## MARKET ENDPOINTS
 
+### Get Prices
 ```
-GET /market/project/{project_id}
-Response: {
-  "plant": { "common_name": "Tomato" },
-  "latest_price": { "price": 180, "unit": "kg", "currency": "LKR", "date": "2025-06-10" },
-  "change_pct": 12.5, "change_direction": "rising",
-  "prices_by_market": [
-    { "market_name": "Colombo Pettah", "price": 185, "date": "2025-06-10" },
-    { "market_name": "Dambulla", "price": 172, "date": "2025-06-10" }
-  ],
-  "estimated_revenue": {
-    "yield_kg": 1200, "price_per_kg": 180,
-    "total_lkr": 216000,
-    "yield_basis": "industry average for 1 acre tomato"
+GET /market/prices/{plant_id}?district=Colombo
+Response 200: {
+  "data": {
+    "crop": "Tomato",
+    "district": "Colombo",
+    "current_price": 180.00,
+    "unit": "kg",
+    "currency": "LKR",
+    "trend": "rising",
+    "change_pct": 12.0,
+    "recorded_date": "2025-04-14"
   }
 }
+```
 
-GET /market/trends/{plant_id}?district=colombo&period=30d
-Response: {
-  "trend_data": [ { "date": "2025-05-10", "avg_price": 140 }, ... ],
-  "direction": "rising",
-  "best_sell_window": "2025-06-15 to 2025-06-25"
+### Get 30-Day Trend
+```
+GET /market/trends/{plant_id}?district=Colombo
+Response 200: {
+  "data": {
+    "prices": [
+      { "date": "2025-03-15", "price": 160 },
+      { "date": "2025-03-22", "price": 165 },
+      { "date": "2025-04-01", "price": 172 },
+      { "date": "2025-04-14", "price": 180 }
+    ],
+    "avg_30d": 169.25,
+    "min_30d": 155,
+    "max_30d": 185,
+    "trend": "rising"
+  }
 }
 ```
 
 ---
 
-## AI CHAT ENDPOINTS
+## AI ENDPOINTS ⭐ (Free Google AI Studio)
 
+### Get AI Summary (Cached)
+```
+GET /ai/summary/{project_id}
+Response 200: {
+  "data": {
+    "summary": "📊 Your tomato crop is in Flowering stage (Day 45/90).\n\n🌤️ Weather looks good for the next 3 days...",
+    "generated_at": "2025-04-15T05:00:00Z",
+    "model": "gemini-2.0-flash",
+    "cost": 0.00,
+    "source": "cached"
+  }
+}
+```
+
+### Generate Fresh AI Summary
+```
+POST /ai/summary/{project_id}
+Response 200: {
+  "data": {
+    "summary": "📊 GROWTH STATUS: Your tomatoes are in Flowering stage...",
+    "generated_at": "2025-04-15T10:30:00Z",
+    "model": "gemini-2.0-flash",
+    "cost": 0.00,
+    "ai_calls_remaining_today": 8,
+    "insights_applied": [
+      "Created soil recommendation: Nitrogen deficiency detected",
+      "Updated weather alert: High humidity blight risk"
+    ]
+  }
+}
+```
+
+### AI Chat (Ask a Question)
 ```
 POST /ai/chat
 Body: {
-  "project_id": "...",
-  "message": "My tomato leaves are turning yellow from the bottom",
-  "conversation_id": null,
-  "image_urls": []
+  "project_id": "uuid",
+  "message": "Why are my tomato leaves turning yellow?"
 }
-Response: {
-  "conversation_id": "...",
-  "message": "Based on your tomato farm at Day 45 (Flowering stage) and the symptom you described — yellowing from the bottom up — this is likely nitrogen deficiency or early signs of Fusarium wilt...",
-  "suggestions": ["Report as issue", "See disease solutions"],
-  "related_service": "disease",
-  "tokens_used": { "input": 850, "output": 340 }
+Response 200: {
+  "data": {
+    "answer": "Based on your project data, the yellow leaves are most likely due to...",
+    "source": "gemini-2.0-flash",
+    "cost": 0.00,
+    "ai_calls_remaining_today": 7
+  }
 }
+```
+**Note:** If the question matches a deterministic intent (weather, schedule, price), it routes directly to the database without calling the AI.
 
-GET  /ai/conversations/{project_id}        → List conversations
-GET  /ai/conversations/{id}/messages       → Full message history
+---
 
-POST /ai/insights/{project_id}
-Response: {
-  "insights": [
+## NOTIFICATION ENDPOINTS
+
+### Get Notifications
+```
+GET /notifications?unread_only=true
+Response 200: {
+  "data": [
     {
-      "type": "weather_opportunity",
-      "title": "Good transplanting window",
-      "message": "Next 3 days have ideal conditions: 27–29°C, no rain, moderate humidity",
-      "action": "View activity plan"
+      "id": "uuid",
+      "type": "activity_reminder",
+      "title": "Water plants — 180L",
+      "message": "No rain expected today. Water your tomato plants.",
+      "deep_link": "/projects/uuid?tab=plan&highlight=activity_uuid",
+      "is_read": false,
+      "created_at": "2025-04-15T05:30:00Z"
     }
+  ]
+}
+```
+
+### Mark as Read
+```
+PATCH /notifications/{id}/read
+```
+
+---
+
+## MASTER DATA ENDPOINTS (Read-only)
+
+### List Available Crops
+```
+GET /plants?category=vegetable&search=tomato
+Response 200: {
+  "data": [
+    {
+      "id": "uuid",
+      "common_name": "Tomato",
+      "local_name": "තක්කාලි",
+      "category": "vegetable",
+      "growth_duration_days": 90,
+      "image_url": "...",
+      "compatible_soil_types": ["loam", "sandy"],
+      "optimal_temp_range": "20-30°C"
+    }
+  ]
+}
+```
+
+### List Farming Methods
+```
+GET /farming-methods
+Response 200: {
+  "data": [
+    { "id": "uuid", "code": "organic", "name": "Organic Farming" },
+    { "id": "uuid", "code": "inorganic", "name": "Conventional Farming" },
+    { "id": "uuid", "code": "integrated", "name": "Integrated Farming" }
   ]
 }
 ```
 
 ---
 
-## NOTIFICATIONS ENDPOINTS
+## Future API Endpoints (Planned — Not in v1.0)
 
-```
-GET /notifications?is_read=false&type=activity&page=1
-Response: [
-  {
-    "id": "...",
-    "type": "activity_reminder",
-    "title": "Water your tomatoes — 180L",
-    "message": "Today is watering day for Tomato Farm. No rain expected.",
-    "deep_link": "/projects/123?scroll=activity_plan&highlight=act_456",
-    "is_read": false,
-    "created_at": "2025-06-10T06:00:00"
-  }
-]
-
-GET  /notifications/count               → { "unread": 5 }
-PUT  /notifications/{id}/read           → Mark as read
-POST /notifications/mark-all-read       → Mark all read
-POST /notifications/push-token          → { "token": "...", "platform": "web" }
-DELETE /notifications/push-token        → { "token": "..." }
-```
+| Module | Endpoint | When |
+|--------|----------|------|
+| Marketplace | `POST /marketplace/products` | v2.0 |
+| Marketplace | `POST /marketplace/harvests` | v2.0 |
+| Marketplace | `POST /marketplace/orders` | v2.0 |
+| Vendor Profile | `POST /vendor/profile` | v2.0 |
+| Buyer Profile | `POST /buyer/profile` | v2.0 |
+| AI Agent | `POST /agent/task` | v3.0 |
+| MCP Server | `GET /mcp/tools` | v3.0 |
 
 ---
 
-## MASTER DATA ENDPOINTS (Read-only, Seeded)
+## Rate Limits
 
-```
-GET /plants?category=vegetable&q=tomato
-Response: [ { id, common_name, local_name, growth_duration_days, image_url, category } ]
-
-GET /plants/{plant_id}
-Response: {
-  "plant": { full plant object },
-  "stages": [ all growth stages ],
-  "diseases": [ associated diseases ],
-  "pests": [ associated pests ]
-}
-
-GET /plants/{plant_id}/stages
-GET /plants/{plant_id}/diseases
-GET /plants/{plant_id}/pests
-GET /farming-methods    → [ { code, name, description } ]
-```
+| Endpoint Category | Limit | Notes |
+|-------------------|-------|-------|
+| Auth | 5 req/min per IP | Prevent brute force |
+| General API | 100 req/min per user | Normal use |
+| AI endpoints | 10 req/day per farmer | Google free tier protection |
+| File uploads | 5 req/min, 5MB max | S3/MinIO |
