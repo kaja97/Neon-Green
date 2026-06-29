@@ -5,6 +5,7 @@ from modules.auth import router as auth_router
 from modules.farmer import router as farmer_router
 from modules.project import router as project_router
 from modules.project import master_router
+from modules.planner import router as planner_router
 
 app = FastAPI(
     title="AgriFarm AI API",
@@ -33,3 +34,4 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(farmer_router, prefix="/api/v1")
 app.include_router(project_router, prefix="/api/v1")
 app.include_router(master_router, prefix="/api/v1")
+app.include_router(planner_router, prefix="/api/v1")

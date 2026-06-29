@@ -1,25 +1,30 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
-from datetime import date, time
+from datetime import date, datetime
 import uuid
 
 class ActivityResponse(BaseModel):
     id: uuid.UUID
-    project_id: uuid.UUID
-    stage_id: Optional[uuid.UUID] = None
+    plan_id: uuid.UUID
     activity_type: str
     title: str
     description: Optional[str] = None
-    scheduled_date: date
-    scheduled_time: Optional[time] = None
-    priority: int
+    
+    planned_date: date
+    due_date: date
     status: str
-    completed_date: Optional[date] = None
-    skipped_reason: Optional[str] = None
-    notes: Optional[str] = None
+    completed_at: Optional[datetime] = None
+    
+    is_ai_recommended: bool = False
+    ai_reasoning: Optional[str] = None
+    
+    model_config = ConfigDict(from_attributes=True)
 
 class CompleteRequest(BaseModel):
     notes: Optional[str] = None
+    actual_water_liters: Optional[float] = None
+    actual_fertilizer_kg: Optional[float] = None
+    attachments: Optional[List[str]] = None
 
 class SkipRequest(BaseModel):
     skipped_reason: str

@@ -5,6 +5,7 @@ from models.project import Project
 from models.plant import Plant, PlantStage
 from models.farmer import FarmerLocation
 from .schemas import ProjectCreate, ProjectStatusUpdate
+from tasks.planner_tasks import generate_season_plan
 import uuid
 from datetime import date
 
@@ -65,7 +66,8 @@ async def create_project(db: AsyncSession, account_id: uuid.UUID, data: ProjectC
     await db.commit()
     await db.refresh(project)
     
-    # TODO: TRIGGER generate_season_plan.delay(project.id)
+    # TRIGGER celery background task
+    generate_season_plan.delay(str(project.id))
     # TODO: TRIGGER refresh_weather_for_location.delay(location.latitude, location.longitude)
     
     return project

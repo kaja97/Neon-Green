@@ -1,4 +1,5 @@
 import FarmingCircle from "@/components/project/FarmingCircle";
+import ActivityBlock from "@/components/blocks/ActivityBlock";
 import { ArrowLeft, Settings, AlertTriangle, Bot, CloudRain, FlaskConical, Calendar, Bug, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
@@ -86,6 +87,11 @@ export default function ProjectDashboard({ params }: { params: { id: string } })
             );
           })}
         </div>
+      </section>
+
+      {/* Activity Block */}
+      <section>
+        <ActivityBlock projectId={params.id} />
       </section>
 
       {/* AI Summary Card */}
