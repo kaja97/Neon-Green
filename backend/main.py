@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .config import settings
+from config import settings
+from modules.auth import router as auth_router
+from modules.farmer import router as farmer_router
 
 app = FastAPI(
     title="AgriFarm AI API",
@@ -24,3 +26,6 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(farmer_router, prefix="/api/v1")
