@@ -6,6 +6,9 @@ from modules.farmer import router as farmer_router
 from modules.project import router as project_router
 from modules.project import master_router
 from modules.planner import router as planner_router
+from modules.weather import router as weather_router
+from modules.soil import router as soil_router
+from modules.disease import router as disease_router
 
 app = FastAPI(
     title="AgriFarm AI API",
@@ -35,3 +38,6 @@ app.include_router(farmer_router, prefix="/api/v1")
 app.include_router(project_router, prefix="/api/v1")
 app.include_router(master_router, prefix="/api/v1")
 app.include_router(planner_router, prefix="/api/v1")
+app.include_router(weather_router, prefix="/api/v1")
+app.include_router(soil_router, prefix="/api/v1")
+app.include_router(disease_router, prefix="/api/v1")

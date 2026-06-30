@@ -1,39 +1,82 @@
-import { CloudRain, Droplets, Thermometer, Wind } from "lucide-react";
+"use client";
 
-export default function WeatherBlock() {
+import { CloudRain, Sun, Cloud, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/api";
+import Link from "next/link";
+
+interface WeatherCondition {
+  temp_celsius: number;
+  humidity: number;
+  rain_mm: number;
+  wind_kph: number;
+  description: string;
+  icon_code: string;
+}
+
+interface ForecastDay {
+  forecast_date: string;
+  condition: WeatherCondition;
+}
+
+interface WeatherResponse {
+  location_id: string;
+  current: WeatherCondition;
+  forecast: ForecastDay[];
+}
+
+export default function WeatherBlock({ projectId }: { projectId: string }) {
+  const { data: weather, isLoading, error } = useQuery<WeatherResponse>({
+    queryKey: ["weather", projectId],
+    queryFn: async () => {
+      const res = await api.get(`/weather/${projectId}`);
+      return res.data;
+    },
+    enabled: !!projectId && projectId !== "1" && projectId !== "2" && projectId !== "3",
+  });
+
+  const getIcon = (description: string) => {
+    const desc = description.toLowerCase();
+    if (desc.includes("rain")) return <CloudRain className="w-6 h-6 text-blue-400" />;
+    if (desc.includes("cloud")) return <Cloud className="w-6 h-6 text-slate-400" />;
+    return <Sun className="w-6 h-6 text-amber-400" />;
+  };
+
+  const getBg = (description: string) => {
+    const desc = description.toLowerCase();
+    if (desc.includes("rain")) return "bg-blue-500/10";
+    if (desc.includes("cloud")) return "bg-slate-500/10";
+    return "bg-amber-500/10";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-card border border-slate-800 rounded-2xl p-4 flex items-center justify-center min-h-[120px]">
+        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  // Fallback to mock data if no data
+  const current = weather?.current || {
+    temp_celsius: 32,
+    description: "Cloudy",
+  };
+
+  const icon = getIcon(current.description);
+  const bg = getBg(current.description);
+
   return (
-    <div className="bg-card border border-slate-800 rounded-3xl p-6 min-w-[280px] hover:border-blue-500/50 transition-colors cursor-pointer group flex-1">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2 text-blue-400">
-          <CloudRain className="w-5 h-5" />
-          <h3 className="font-semibold">Weather</h3>
-        </div>
-        <span className="text-xs font-medium text-slate-500 bg-slate-800 px-2 py-1 rounded-md">
-          Today
-        </span>
+    <Link
+      href={`/projects/${projectId}/weather`}
+      className="bg-card border border-slate-800 rounded-2xl p-4 hover:border-slate-600 transition-all hover:shadow-lg group block"
+    >
+      <div className={`p-2 rounded-xl w-fit mb-3 ${bg} group-hover:scale-110 transition-transform`}>
+        {icon}
       </div>
-
-      <div className="flex items-end gap-3 mb-6">
-        <span className="text-5xl font-bold text-white tracking-tighter">32°</span>
-        <span className="text-lg font-medium text-slate-400 pb-1 border-b border-slate-700">Cloudy</span>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex items-center gap-2">
-          <Droplets className="w-4 h-4 text-blue-500" />
-          <div className="flex flex-col">
-            <span className="text-xs text-slate-500">Humidity</span>
-            <span className="text-sm font-semibold text-slate-300">78%</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Wind className="w-4 h-4 text-slate-400" />
-          <div className="flex flex-col">
-            <span className="text-xs text-slate-500">Wind</span>
-            <span className="text-sm font-semibold text-slate-300">12 km/h</span>
-          </div>
-        </div>
-      </div>
-    </div>
+      <p className="text-xs text-slate-500 mb-0.5">Weather</p>
+      <p className="text-lg font-bold text-white">{current.temp_celsius}°C</p>
+      <p className="text-xs text-slate-400 capitalize">{current.description}</p>
+    </Link>
   );
 }

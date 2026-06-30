@@ -1,5 +1,7 @@
 import FarmingCircle from "@/components/project/FarmingCircle";
 import ActivityBlock from "@/components/blocks/ActivityBlock";
+import WeatherBlock from "@/components/blocks/WeatherBlock";
+import AlertBanner from "@/components/blocks/AlertBanner";
 import { ArrowLeft, Settings, AlertTriangle, Bot, CloudRain, FlaskConical, Calendar, Bug, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
@@ -14,7 +16,6 @@ export default function ProjectDashboard({ params }: { params: { id: string } })
   ];
 
   const serviceBlocks = [
-    { href: `/projects/${params.id}/weather`, icon: CloudRain, label: "Weather", value: "32°C", sub: "Cloudy", color: "text-blue-400", bg: "bg-blue-500/10" },
     { href: `/projects/${params.id}/soil`, icon: FlaskConical, label: "Soil", value: "pH 6.2", sub: "N: Low", color: "text-amber-400", bg: "bg-amber-500/10" },
     { href: `/projects/${params.id}/plan`, icon: Calendar, label: "Plan", value: "3 Tasks", sub: "Today", color: "text-violet-400", bg: "bg-violet-500/10" },
     { href: `/projects/${params.id}/disease`, icon: Bug, label: "Disease", value: "1 Alert", sub: "Blight", color: "text-red-400", bg: "bg-red-500/10" },
@@ -52,23 +53,14 @@ export default function ProjectDashboard({ params }: { params: { id: string } })
 
       {/* Alerts */}
       <section>
-        <Link href={`/projects/${params.id}/weather`} className="block">
-          <div className="flex items-start gap-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl hover:bg-rose-500/15 transition-colors">
-            <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-            <div>
-              <h4 className="text-rose-500 font-semibold text-sm">Heavy rain tomorrow</h4>
-              <p className="text-rose-400/80 text-sm mt-1">
-                Postpone fertilizer application to avoid nutrient runoff.
-              </p>
-            </div>
-          </div>
-        </Link>
+        <AlertBanner projectId={params.id} />
       </section>
 
       {/* Service Blocks Grid */}
       <section>
         <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Services</h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <WeatherBlock projectId={params.id} />
           {serviceBlocks.map((block) => {
             const Icon = block.icon;
             return (

@@ -1,95 +1,153 @@
-import { ArrowLeft, AlertTriangle, Bug, Search, Camera } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/api";
 import Link from "next/link";
-import { clsx } from "clsx";
+import { ArrowLeft, Bug, Search, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 
 export default function DiseasePage({ params }: { params: { id: string } }) {
-  const diseases = [
-    {
-      id: "1",
-      name: "Early Blight",
-      risk: "high",
-      description: "Dark concentric rings on lower leaves. Caused by Alternaria solani fungus.",
-      solution: "Apply copper-based fungicide. Remove affected leaves. Improve air circulation.",
-    },
-    {
-      id: "2",
-      name: "Blossom End Rot",
-      risk: "medium",
-      description: "Dark, sunken spots at the bottom of fruits. Caused by calcium deficiency and uneven watering.",
-      solution: "Maintain consistent watering. Apply calcium foliar spray. Mulch to retain moisture.",
-    },
-    {
-      id: "3",
-      name: "Whitefly Infestation",
-      risk: "low",
-      description: "Small white flying insects on leaf undersides. Can transmit viral diseases.",
-      solution: "Use yellow sticky traps. Spray neem oil solution weekly. Encourage natural predators.",
-    },
-  ];
+  const queryClient = useQueryClient();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const riskColors = {
-    high: { text: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", badge: "bg-red-500" },
-    medium: { text: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", badge: "bg-amber-500" },
-    low: { text: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", badge: "bg-emerald-500" },
+  const { data: issues, isLoading } = useQuery({
+    queryKey: ["project_issues", params.id],
+    queryFn: async () => {
+      const res = await api.get(`/disease/issues/${params.id}`);
+      return res.data;
+    },
+    enabled: !!params.id && params.id !== "1" && params.id !== "2",
+  });
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery) return;
+    setIsSearching(true);
+    try {
+      const res = await api.get(`/disease/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchResults(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSearching(false);
+    }
   };
+
+  const reportIssueMutation = useMutation({
+    mutationFn: async (disease: any) => {
+      const res = await api.post(`/disease/issues/${params.id}`, {
+        issue_type: "disease",
+        title: `Suspected: ${disease.name}`,
+        description: `Matched symptoms: ${searchQuery}`,
+        severity: disease.severity,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project_issues", params.id] });
+      setSearchQuery("");
+      setSearchResults([]);
+    }
+  });
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8">
+      {/* Header */}
       <header className="flex items-center gap-4">
         <Link href={`/projects/${params.id}`} className="p-2 bg-slate-800/50 hover:bg-slate-800 rounded-full transition-colors">
           <ArrowLeft className="w-5 h-5 text-slate-300" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Disease Watch</h1>
-          <p className="text-slate-400 text-sm">Tomato Farm · Current threats</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Disease & Pest Management</h1>
+          <p className="text-slate-400 text-sm">Identify issues and find solutions</p>
         </div>
       </header>
 
-      {/* Search & Report */}
-      <div className="flex gap-3">
-        <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search diseases, pests..."
-            className="w-full bg-card border border-slate-800 text-white rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-slate-600"
-          />
-        </div>
-        <button className="flex items-center gap-2 bg-amber-500/20 text-amber-400 px-4 py-3 rounded-xl font-semibold hover:bg-amber-500/30 transition-colors shrink-0">
-          <Camera className="w-5 h-5" />
-          <span className="hidden md:inline">Report Issue</span>
-        </button>
-      </div>
+      {/* Symptom Checker */}
+      <section className="bg-card border border-slate-800 rounded-3xl p-6">
+        <h2 className="text-lg font-bold text-white mb-4">Symptom Checker</h2>
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="w-5 h-5 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="e.g. yellow spots on leaves, wilting"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-800/50 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-primary"
+            />
+          </div>
+          <button 
+            type="submit" 
+            disabled={isSearching || !searchQuery}
+            className="bg-primary text-primary-foreground px-6 rounded-xl font-bold hover:bg-primary/90 transition-colors flex items-center justify-center min-w-[120px]"
+          >
+            {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : "Search"}
+          </button>
+        </form>
 
-      {/* Disease Cards */}
-      <div className="space-y-4">
-        {diseases.map((d) => {
-          const colors = riskColors[d.risk as keyof typeof riskColors];
-          return (
-            <div key={d.id} className={clsx("bg-card border rounded-3xl p-6", colors.border)}>
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className={clsx("p-2 rounded-xl", colors.bg)}>
-                    <Bug className={clsx("w-5 h-5", colors.text)} />
+        {/* Search Results */}
+        {searchResults.length > 0 && (
+          <div className="mt-6 space-y-4">
+            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Possible Matches</h3>
+            {searchResults.map((d) => (
+              <div key={d.id} className="bg-slate-800/30 border border-slate-700 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                    <h4 className="text-white font-bold">{d.name}</h4>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-white">{d.name}</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">Current risk for your farm</p>
-                  </div>
+                  <p className="text-sm text-slate-400 mb-2">Symptoms: {d.symptoms?.join(", ")}</p>
+                  <Link href="#" className="text-primary text-sm font-medium hover:underline">View Treatments</Link>
                 </div>
-                <span className={clsx("px-3 py-1 rounded-full text-xs font-bold text-white uppercase", colors.badge)}>
-                  {d.risk}
-                </span>
+                <button
+                  onClick={() => reportIssueMutation.mutate(d)}
+                  disabled={reportIssueMutation.isPending}
+                  className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+                >
+                  Report Issue
+                </button>
               </div>
-              <p className="text-sm text-slate-400 leading-relaxed mb-4">{d.description}</p>
-              <div className="bg-slate-800/30 p-4 rounded-2xl">
-                <h4 className="text-sm font-semibold text-emerald-400 mb-1">💊 Treatment</h4>
-                <p className="text-sm text-slate-400">{d.solution}</p>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Reported Issues */}
+      <section>
+        <h2 className="text-lg font-bold text-white mb-4">Active Issues</h2>
+        {isLoading ? (
+          <div className="text-center text-slate-500 py-6">Loading issues...</div>
+        ) : issues && issues.length > 0 ? (
+          <div className="space-y-4">
+            {issues.map((issue: any) => (
+              <div key={issue.id} className="bg-card border border-rose-500/20 rounded-3xl p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-2 h-full bg-rose-500"></div>
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-lg font-bold text-white">{issue.title}</h3>
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-rose-500/10 text-rose-500 capitalize">
+                    {issue.status}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-400 mb-4">{issue.description}</p>
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <span>Reported: {issue.reported_date}</span>
+                  <span>•</span>
+                  <span className="capitalize">Severity: {issue.severity}</span>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center bg-card border border-emerald-500/20 rounded-3xl p-12">
+            <ShieldCheck className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-white mb-2">Crop is Healthy</h3>
+            <p className="text-slate-400 text-sm">No active diseases or pests reported for this project.</p>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
