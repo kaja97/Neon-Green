@@ -7,27 +7,28 @@ class FarmerProfileUpdate(BaseModel):
     last_name: Optional[str] = None
     preferred_language: Optional[str] = "en"
     experience_years: Optional[int] = None
+    farming_method: Optional[str] = None
     
 class FarmerProfileResponse(BaseModel):
-    id: uuid.UUID
-    first_name: str
-    last_name: str
-    preferred_language: str
-    experience_years: Optional[int] = None
+    account_id: uuid.UUID
+    full_name: str
+    primary_language: str
+    experience_years: int
+    farming_method: str
 
 class LocationCreate(BaseModel):
-    name: str
-    address: Optional[str] = None
+    label: str
     district: str
+    province: Optional[str] = None
     latitude: float
     longitude: float
     is_primary: bool = False
 
 class LocationResponse(BaseModel):
     id: uuid.UUID
-    name: str
-    address: Optional[str]
+    label: str
     district: str
+    province: Optional[str]
     latitude: float
     longitude: float
     is_primary: bool
@@ -37,6 +38,7 @@ class LandDetailCreate(BaseModel):
     total_area: float
     area_unit: str = "acres"
     soil_type: Optional[str] = None
+    water_source: Optional[str] = None
     irrigation_type: Optional[str] = None
 
 class LandDetailResponse(BaseModel):
@@ -45,4 +47,5 @@ class LandDetailResponse(BaseModel):
     total_area: float
     area_unit: str
     soil_type: Optional[str]
+    water_source: Optional[str]
     irrigation_type: Optional[str]

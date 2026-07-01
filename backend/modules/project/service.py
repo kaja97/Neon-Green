@@ -47,6 +47,9 @@ async def create_project(db: AsyncSession, account_id: uuid.UUID, data: ProjectC
     )
     first_stage = result.scalars().first()
 
+    from datetime import timedelta
+    expected_harvest_date = data.planting_date + timedelta(days=plant.growth_duration_days)
+
     # 3. Create project record
     project = Project(
         farmer_id=account_id,
@@ -59,7 +62,9 @@ async def create_project(db: AsyncSession, account_id: uuid.UUID, data: ProjectC
         farming_method=data.farming_method,
         planting_date=data.planting_date,
         status="active",
-        current_stage_id=first_stage.id if first_stage else None
+        current_stage_id=first_stage.id if first_stage else None,
+        expected_harvest_date=expected_harvest_date,
+        plan_generation_status="pending"
     )
     
     db.add(project)
@@ -68,7 +73,9 @@ async def create_project(db: AsyncSession, account_id: uuid.UUID, data: ProjectC
     
     # TRIGGER celery background task
     generate_season_plan.delay(str(project.id))
-    # TODO: TRIGGER refresh_weather_for_location.delay(location.latitude, location.longitude)
+    
+    from tasks.weather_tasks import refresh_weather_for_location
+    refresh_weather_for_location.delay(str(project.id), float(location.latitude), float(location.longitude))
     
     return project
 

@@ -1,103 +1,231 @@
 "use client";
 
 import { useState } from "react";
-import { Sprout, Mail, Lock, User, Eye, EyeOff, Phone } from "lucide-react";
+import { useRouter } from "next/navigation";
+import api from "@/lib/api";
+import { Leaf, MapPin, CheckCircle2, ChevronRight, ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const MapPicker = dynamic(() => import("@/components/MapPicker"), {
+    ssr: false,
+    loading: () => <div className="h-[300px] bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">Loading map...</div>
+});
 
 export default function RegisterPage() {
-  const [showPassword, setShowPassword] = useState(false);
+    const router = useRouter();
+    const [step, setStep] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-card to-background relative overflow-hidden">
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/10 blur-3xl rounded-full pointer-events-none" />
+    // Form State
+    const [formData, setFormData] = useState({
+        email: "",
+        phone: "",
+        password: "",
+        confirmPassword: "",
+        full_name: "",
+        farming_method: "integrated",
+        primary_language: "en",
+        location: {
+            label: "",
+            district: "",
+            latitude: 0,
+            longitude: 0,
+        }
+    });
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Logo */}
-        <div className="text-center mb-10">
-          <Link href="/" className="inline-flex items-center gap-3 mb-4">
-            <div className="p-3 bg-primary/20 rounded-2xl">
-              <Sprout className="w-10 h-10 text-primary" />
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        if (name.startsWith("location.")) {
+            const locField = name.split(".")[1];
+            setFormData(prev => ({
+                ...prev,
+                location: {
+                    ...prev.location,
+                    [locField]: value
+                }
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const handleLocationSelect = (lat: number, lng: number) => {
+        setFormData(prev => ({
+            ...prev,
+            location: {
+                ...prev.location,
+                latitude: lat,
+                longitude: lng
+            }
+        }));
+    };
+
+    const nextStep = () => {
+        if (step === 1 && formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
+        setError("");
+        setStep(s => s + 1);
+    };
+
+    const prevStep = () => setStep(s => s - 1);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (step !== 3) {
+            nextStep();
+            return;
+        }
+
+        if (!formData.location.latitude || !formData.location.longitude) {
+            setError("Please drop a pin on the map to set your location");
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+
+        try {
+            const res = await api.post("/auth/register", {
+                email: formData.email,
+                phone: formData.phone || undefined,
+                password: formData.password,
+                full_name: formData.full_name,
+                farming_method: formData.farming_method,
+                primary_language: formData.primary_language,
+                location: formData.location
+            });
+            localStorage.setItem("access_token", res.data.access_token);
+            router.push("/dashboard");
+        } catch (err: any) {
+            setError(err.response?.data?.detail || "Registration failed. Please try again.");
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md flex flex-col items-center">
+                <Leaf className="w-12 h-12 text-green-600 mb-4" />
+                <h2 className="text-center text-3xl font-extrabold text-gray-900">
+                    Create your account
+                </h2>
+                <div className="mt-4 flex space-x-2 text-sm">
+                    <span className={`px-2 py-1 rounded-full ${step >= 1 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>1. Account</span>
+                    <span className={`px-2 py-1 rounded-full ${step >= 2 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>2. Profile</span>
+                    <span className={`px-2 py-1 rounded-full ${step >= 3 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>3. Farm</span>
+                </div>
             </div>
-          </Link>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Create Account</h1>
-          <p className="text-slate-400 mt-2">Start your smart farming journey</p>
+
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
+                    <form className="space-y-6" onSubmit={handleSubmit}>
+                        {error && (
+                            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md">
+                                {error}
+                            </div>
+                        )}
+
+                        {step === 1 && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Email Address</label>
+                                    <input required type="email" name="email" value={formData.email} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Phone Number (Optional)</label>
+                                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Password</label>
+                                    <input required type="password" name="password" minLength={8} value={formData.password} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                                    <input required type="password" name="confirmPassword" minLength={8} value={formData.confirmPassword} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" />
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 2 && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                                    <input required type="text" name="full_name" value={formData.full_name} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Farming Method</label>
+                                    <select name="farming_method" value={formData.farming_method} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
+                                        <option value="integrated">Integrated</option>
+                                        <option value="organic">Organic</option>
+                                        <option value="conventional">Conventional</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Primary Language</label>
+                                    <select name="primary_language" value={formData.primary_language} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
+                                        <option value="en">English</option>
+                                        <option value="si">Sinhala</option>
+                                        <option value="ta">Tamil</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 3 && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Farm/Location Label</label>
+                                    <input required type="text" name="location.label" placeholder="e.g. Home Garden, North Field" value={formData.location.label} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">District</label>
+                                    <input required type="text" name="location.district" placeholder="e.g. Anuradhapura" value={formData.location.district} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Pinpoint Farm on Map</label>
+                                    <MapPicker onLocationSelect={handleLocationSelect} />
+                                    {formData.location.latitude !== 0 && (
+                                        <p className="mt-2 text-xs text-green-600 flex items-center">
+                                            <CheckCircle2 className="w-4 h-4 mr-1" /> Location selected
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex justify-between pt-4">
+                            {step > 1 ? (
+                                <button type="button" onClick={prevStep} className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+                                    <ChevronLeft className="w-4 h-4 mr-1" /> Back
+                                </button>
+                            ) : <div></div>}
+                            
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none disabled:opacity-50"
+                            >
+                                {step < 3 ? (
+                                    <>Next <ChevronRight className="w-4 h-4 ml-1" /></>
+                                ) : (
+                                    loading ? "Registering..." : "Complete Registration"
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <p className="mt-6 text-center text-sm text-gray-600">
+                    Already have an account?{" "}
+                    <Link href="/login" className="font-medium text-green-600 hover:text-green-500">
+                        Sign in
+                    </Link>
+                </p>
+            </div>
         </div>
-
-        {/* Form */}
-        <div className="bg-card/50 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl">
-          <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Full Name</label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                <input
-                  type="text"
-                  placeholder="Your full name"
-                  className="w-full bg-slate-900 border border-slate-700 text-white rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-slate-600"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                <input
-                  type="email"
-                  placeholder="farmer@example.com"
-                  className="w-full bg-slate-900 border border-slate-700 text-white rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-slate-600"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Phone</label>
-              <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                <input
-                  type="tel"
-                  placeholder="+94 77 123 4567"
-                  className="w-full bg-slate-900 border border-slate-700 text-white rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-slate-600"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Min 8 characters"
-                  className="w-full bg-slate-900 border border-slate-700 text-white rounded-xl py-3.5 pl-12 pr-12 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-slate-600"
-                />
-                <button
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <Link
-              href="/dashboard"
-              className="block w-full text-center bg-primary text-white py-3.5 rounded-xl font-bold text-lg hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20"
-            >
-              Create Account
-            </Link>
-          </div>
-
-          <div className="mt-8 text-center">
-            <p className="text-slate-400 text-sm">
-              Already have an account?{" "}
-              <Link href="/login" className="text-primary font-semibold hover:text-emerald-400 transition-colors">
-                Sign In
-              </Link>
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 }

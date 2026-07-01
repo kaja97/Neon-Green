@@ -53,6 +53,8 @@ class ProjectResponse(BaseModel):
     planting_date: date
     status: str
     current_stage_id: Optional[uuid.UUID] = None
+    plan_generation_status: str
+    expected_harvest_date: Optional[date] = None
 
 class ProjectStatusUpdate(BaseModel):
     status: str

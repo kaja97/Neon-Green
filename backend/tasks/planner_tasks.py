@@ -118,6 +118,11 @@ async def _generate_season_plan(project_id_str: str):
                     activities.append(act)
         
         db.add_all(activities)
+        
+        # Update project status
+        project.plan_generation_status = "completed"
+        db.add(project)
+        
         await db.commit()
         logger.info(f"Generated {len(activities)} activities for project {project_id}.")
 

@@ -2,16 +2,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException, status
 from models.account import Account, FarmerProfile
-from .schemas import RegisterRequest, LoginRequest, TokenResponse, UserResponse
-from .utils import hash_password, verify_password, create_access_token, create_refresh_token
+from models.farmer import FarmerLocation
+from .schemas import RegisterRequest, LoginRequest, TokenResponse
+from core.security import get_password_hash, verify_password, create_access_token, create_refresh_token
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
+from core.redis import get_redis_client
+from config import settings
 
 async def register_user(db: AsyncSession, user_data: RegisterRequest) -> TokenResponse:
     if not user_data.email and not user_data.phone:
         raise HTTPException(status_code=400, detail="Must provide either email or phone")
 
-    # Check if user exists
     query = select(Account).where(
         or_(
             (Account.email == user_data.email) & (Account.email != None),
@@ -24,8 +26,7 @@ async def register_user(db: AsyncSession, user_data: RegisterRequest) -> TokenRe
     if existing_user:
         raise HTTPException(status_code=409, detail="User with this email or phone already exists")
 
-    # Create account
-    hashed_pwd = hash_password(user_data.password)
+    hashed_pwd = get_password_hash(user_data.password)
     new_account = Account(
         email=user_data.email,
         phone=user_data.phone,
@@ -33,25 +34,44 @@ async def register_user(db: AsyncSession, user_data: RegisterRequest) -> TokenRe
         role="farmer"
     )
     db.add(new_account)
-    await db.flush() # flush to get new_account.id
+    await db.flush()
 
-    # Create FarmerProfile
     new_profile = FarmerProfile(
         account_id=new_account.id,
-        first_name=user_data.first_name,
-        last_name=user_data.last_name,
+        full_name=user_data.full_name,
+        farming_method=user_data.farming_method,
+        primary_language=user_data.primary_language
     )
     db.add(new_profile)
-    
+    await db.flush()
+
+    if user_data.location:
+        new_location = FarmerLocation(
+            farmer_profile_id=new_profile.id, # Needs FarmerProfile.id (which is UUID) Wait, FarmerProfile PK is id
+            label=user_data.location.label,
+            district=user_data.location.district,
+            latitude=user_data.location.latitude,
+            longitude=user_data.location.longitude,
+            is_primary=True
+        )
+        db.add(new_location)
+
     try:
         await db.commit()
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=400, detail="Database error during registration")
 
-    # Generate tokens
     access_token = create_access_token({"sub": str(new_account.id)})
     refresh_token = create_refresh_token({"sub": str(new_account.id)})
+
+    # Store refresh token in Redis
+    redis_client = await get_redis_client()
+    await redis_client.setex(
+        f"refresh_token:{new_account.id}",
+        settings.JWT_REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
+        refresh_token
+    )
 
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
@@ -75,5 +95,11 @@ async def login_user(db: AsyncSession, login_data: LoginRequest) -> TokenRespons
     access_token = create_access_token({"sub": str(account.id)})
     refresh_token = create_refresh_token({"sub": str(account.id)})
     
-    # In a real app, store refresh token in Redis
+    redis_client = await get_redis_client()
+    await redis_client.setex(
+        f"refresh_token:{account.id}",
+        settings.JWT_REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
+        refresh_token
+    )
+
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
