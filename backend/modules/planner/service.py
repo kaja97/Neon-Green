@@ -6,7 +6,7 @@ from models.activity import FarmingActivity, ActivityPlan, ActivityDetail
 from models.project import Project
 from .schemas import CompleteRequest, SkipRequest
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 async def get_activity(db: AsyncSession, activity_id: uuid.UUID, account_id: uuid.UUID):
     # Fetch activity and join with plan and project to verify ownership
@@ -69,7 +69,7 @@ async def mark_complete(db: AsyncSession, activity_id: uuid.UUID, account_id: uu
         raise HTTPException(status_code=400, detail=f"Activity is already {activity.status}")
         
     activity.status = "completed"
-    activity.completed_at = datetime.utcnow()
+    activity.completed_at = datetime.now(timezone.utc)
     
     # Check if there is an ActivityDetail to update, or create one
     result = await db.execute(select(ActivityDetail).where(ActivityDetail.activity_id == activity.id))

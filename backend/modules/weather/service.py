@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException
 import uuid
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 
 from models.project import Project
 from models.farmer import FarmerLocation
@@ -31,7 +31,7 @@ async def get_weather_for_project(db: AsyncSession, project_id: uuid.UUID, accou
     )
     cache = cache_result.scalars().first()
     
-    if cache and cache.expires_at > datetime.utcnow():
+    if cache and cache.expires_at > datetime.now(timezone.utc):
         return _process_raw_data(location.id, cache.data)
         
     # 3. Fetch new data
@@ -40,13 +40,13 @@ async def get_weather_for_project(db: AsyncSession, project_id: uuid.UUID, accou
     # 4. Save to cache
     if cache:
         cache.data = raw_data
-        cache.expires_at = datetime.utcnow() + timedelta(hours=3)
+        cache.expires_at = datetime.now(timezone.utc) + timedelta(hours=3)
     else:
         new_cache = WeatherCache(
             location_id=location.id,
             forecast_date=today,
             data=raw_data,
-            expires_at=datetime.utcnow() + timedelta(hours=3)
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=3)
         )
         db.add(new_cache)
         

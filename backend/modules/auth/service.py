@@ -2,13 +2,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException, status
 from models.account import Account, FarmerProfile
-from models.farmer import FarmerLocation
 from .schemas import RegisterRequest, LoginRequest, TokenResponse
 from core.security import get_password_hash, verify_password, create_access_token, create_refresh_token
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
 from core.redis import get_redis_client
 from config import settings
+
+async def _store_refresh_token(user_id: str, token: str):
+    """Store refresh token in Redis if available, otherwise skip."""
+    redis_client = await get_redis_client()
+    if redis_client:
+        await redis_client.setex(
+            f"refresh_token:{user_id}",
+            settings.JWT_REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
+            token
+        )
 
 async def register_user(db: AsyncSession, user_data: RegisterRequest) -> TokenResponse:
     if not user_data.email and not user_data.phone:
@@ -43,18 +52,6 @@ async def register_user(db: AsyncSession, user_data: RegisterRequest) -> TokenRe
         primary_language=user_data.primary_language
     )
     db.add(new_profile)
-    await db.flush()
-
-    if user_data.location:
-        new_location = FarmerLocation(
-            farmer_profile_id=new_profile.id, # Needs FarmerProfile.id (which is UUID) Wait, FarmerProfile PK is id
-            label=user_data.location.label,
-            district=user_data.location.district,
-            latitude=user_data.location.latitude,
-            longitude=user_data.location.longitude,
-            is_primary=True
-        )
-        db.add(new_location)
 
     try:
         await db.commit()
@@ -65,13 +62,7 @@ async def register_user(db: AsyncSession, user_data: RegisterRequest) -> TokenRe
     access_token = create_access_token({"sub": str(new_account.id)})
     refresh_token = create_refresh_token({"sub": str(new_account.id)})
 
-    # Store refresh token in Redis
-    redis_client = await get_redis_client()
-    await redis_client.setex(
-        f"refresh_token:{new_account.id}",
-        settings.JWT_REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
-        refresh_token
-    )
+    await _store_refresh_token(str(new_account.id), refresh_token)
 
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
@@ -95,11 +86,6 @@ async def login_user(db: AsyncSession, login_data: LoginRequest) -> TokenRespons
     access_token = create_access_token({"sub": str(account.id)})
     refresh_token = create_refresh_token({"sub": str(account.id)})
     
-    redis_client = await get_redis_client()
-    await redis_client.setex(
-        f"refresh_token:{account.id}",
-        settings.JWT_REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
-        refresh_token
-    )
+    await _store_refresh_token(str(account.id), refresh_token)
 
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)

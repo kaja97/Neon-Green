@@ -53,19 +53,22 @@ async def refresh(request: Request, response: Response):
     except InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
+    # Validate against Redis if available
     redis_client = await get_redis_client()
-    stored_token = await redis_client.get(f"refresh_token:{user_id}")
-    if stored_token != refresh_token:
-        raise HTTPException(status_code=401, detail="Refresh token expired or invalid")
+    if redis_client:
+        stored_token = await redis_client.get(f"refresh_token:{user_id}")
+        if stored_token and stored_token != refresh_token:
+            raise HTTPException(status_code=401, detail="Refresh token expired or invalid")
 
     new_access_token = create_access_token({"sub": user_id})
     new_refresh_token = create_refresh_token({"sub": user_id})
 
-    await redis_client.setex(
-        f"refresh_token:{user_id}",
-        settings.JWT_REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
-        new_refresh_token
-    )
+    if redis_client:
+        await redis_client.setex(
+            f"refresh_token:{user_id}",
+            settings.JWT_REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
+            new_refresh_token
+        )
 
     response.set_cookie(
         key="refresh_token",

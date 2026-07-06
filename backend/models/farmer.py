@@ -1,7 +1,6 @@
-from sqlalchemy import String, Boolean, ForeignKey, Numeric, Text, Float
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Boolean, ForeignKey, Numeric, Text
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
-from geoalchemy2 import Geometry
 from .base import BaseModel
 import uuid
 
@@ -14,7 +13,6 @@ class FarmerLocation(BaseModel):
     district: Mapped[str] = mapped_column(String(100))
     latitude: Mapped[float] = mapped_column(Numeric(10, 8))
     longitude: Mapped[float] = mapped_column(Numeric(11, 8))
-    point: Mapped[str | None] = mapped_column(Geometry('POINT', srid=4326), nullable=True)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
 
 class FarmerLandDetail(BaseModel):
@@ -26,7 +24,6 @@ class FarmerLandDetail(BaseModel):
     area_unit: Mapped[str] = mapped_column(String(20), default="acres")
     soil_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     irrigation_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    boundary_polygon: Mapped[str | None] = mapped_column(Geometry('POLYGON', srid=4326), nullable=True)
 
 class FarmerLivestock(BaseModel):
     __tablename__ = "farmer_livestock"
