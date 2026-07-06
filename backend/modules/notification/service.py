@@ -35,7 +35,6 @@ async def mark_read(db: AsyncSession, notification_id: uuid.UUID, account_id: uu
         raise HTTPException(status_code=404, detail="Notification not found")
     
     notification.is_read = True
-    notification.read_at = datetime.now(timezone.utc)
     await db.commit()
     return notification
 
@@ -47,7 +46,6 @@ async def mark_all_read(db: AsyncSession, account_id: uuid.UUID):
     )
     for n in result.scalars().all():
         n.is_read = True
-        n.read_at = datetime.now(timezone.utc)
     
     await db.commit()
 
@@ -69,16 +67,14 @@ async def get_unread_count(db: AsyncSession, account_id: uuid.UUID):
     return {"unread": unread, "total": total}
 
 async def create_notification(db: AsyncSession, farmer_id: uuid.UUID, title: str, message: str,
-                              notification_type: str = "info", priority: str = "medium",
-                              related_project_id: uuid.UUID | None = None):
+                              notification_type: str = "info", project_id: uuid.UUID | None = None):
     """Utility to create a notification (called by other modules)."""
     n = Notification(
         farmer_id=farmer_id,
         title=title,
         message=message,
-        notification_type=notification_type,
-        priority=priority,
-        related_project_id=related_project_id
+        type=notification_type,
+        project_id=project_id
     )
     db.add(n)
     await db.flush()

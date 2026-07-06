@@ -1,6 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func, and_
 from fastapi import HTTPException
 import uuid
 from datetime import date, timedelta
@@ -16,13 +15,13 @@ async def get_prices(db: AsyncSession, plant_id: uuid.UUID, region: str | None =
     
     query = select(MarketPrice).where(
         MarketPrice.plant_id == plant_id,
-        MarketPrice.recorded_date >= start_date
+        MarketPrice.date >= start_date
     )
     
     if region:
         query = query.where(MarketPrice.region == region)
     
-    query = query.order_by(MarketPrice.recorded_date.desc())
+    query = query.order_by(MarketPrice.date.desc())
     
     result = await db.execute(query)
     return result.scalars().all()
@@ -38,8 +37,8 @@ async def get_trend(db: AsyncSession, plant_id: uuid.UUID, region: str = "Jaffna
     
     result = await db.execute(
         select(MarketPrice)
-        .where(MarketPrice.plant_id == plant_id, MarketPrice.region == region, MarketPrice.recorded_date >= start_date)
-        .order_by(MarketPrice.recorded_date)
+        .where(MarketPrice.plant_id == plant_id, MarketPrice.region == region, MarketPrice.date >= start_date)
+        .order_by(MarketPrice.date)
     )
     prices = result.scalars().all()
     
@@ -92,7 +91,7 @@ async def estimate_revenue(db: AsyncSession, project_id: uuid.UUID, account_id: 
     result = await db.execute(
         select(MarketPrice)
         .where(MarketPrice.plant_id == plant.id, MarketPrice.region == region)
-        .order_by(MarketPrice.recorded_date.desc())
+        .order_by(MarketPrice.date.desc())
         .limit(1)
     )
     latest_price = result.scalars().first()

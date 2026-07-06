@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
-from datetime import date
+from datetime import date as date_type
 import uuid
 
 class PriceResponse(BaseModel):
@@ -10,7 +10,7 @@ class PriceResponse(BaseModel):
     price_per_kg: float
     currency: str
     source: Optional[str] = None
-    recorded_date: date
+    date: date_type
 
     model_config = ConfigDict(from_attributes=True)
 

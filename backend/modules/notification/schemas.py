@@ -8,10 +8,11 @@ class NotificationResponse(BaseModel):
     farmer_id: uuid.UUID
     title: str
     message: str
-    notification_type: str
-    priority: str
+    type: str
     is_read: bool
-    related_project_id: Optional[uuid.UUID] = None
+    project_id: Optional[uuid.UUID] = None
+    icon: Optional[str] = None
+    deep_link: Optional[str] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
