@@ -19,16 +19,14 @@ A web-based platform (initially) where every farmer gets their own personalized 
 
 ### Current Phase (v1.0 — Web App)
 - **Web application** built with Next.js 14 (mobile-first PWA)
-- **Farmer Project Service** as the core starting feature
-- **Free AI integration** using Google AI Studio API (Gemini free tier) and self-hosted Gemma models
-- **Deterministic rule-based engines** for routine tasks (weather, fertilizer, soil, activity planning)
-- AI invoked via **flattened project data** sent as context to the free Gemini API for summaries and guidance
+- **Farmer Project Service** as the core starting feature (activity planner always on)
+- **Deterministic rule-based engines** for weather, fertilizer, soil, activity planning, disease matching
+- **Incremental service rollout** via `account_features` + `project_services` (see `16_SERVICE_GATING.md`)
+- **Separate backend** (FastAPI) and **frontend** (Next.js) — deploy independently
 
 ### Future Phases
-- **Phase 2:** Flutter mobile apps (Android + iOS)
-- **Phase 3:** Desktop app (Windows/macOS via Flutter)
-- **Phase 4:** AI Agent with MCP (Model Context Protocol) for autonomous farming guidance
-- **Phase 5:** B2B/B2C Marketplace ecosystem (Vendors, Buyers, Harvest Market)
+- **v2.0:** AI Chat (Gemini Q&A) + Flutter mobile apps (Android + iOS) + Marketplace
+- **v3.0:** AI Agent with MCP + Desktop app (Windows/macOS via Flutter) + full RAG
 
 ---
 
@@ -44,7 +42,8 @@ Farmer Registers
       - Sets Area (e.g., 1 acre)
       - Sets Planting Date
       - Selects Farming Method (organic / conventional / integrated)
-      - Enables Services (weather, soil, activity plan, disease watch, market, AI)
+      - Enables Services (weather, soil, activity plan, disease watch, market — per account access)
+      - AI chat and AI Agent are future services (v2.0 / v3.0)
 
   → System Automatically Generates:
       ┌─────────────────────────────────────────────┐
@@ -58,13 +57,14 @@ Farmer Registers
   → Project Dashboard Shows:
       - Farming Circle (visual ring: stages + progress)
       - Today's Action Items (notification blocks)
-      - Service Blocks: Weather · Soil · Activities · Disease · Market · AI
+      - Service Blocks: Weather · Soil · Activities · Disease · Market
+      - AI Chat block — future (v2.0)
 
   → Daily Operation:
       Every morning → farmer gets notifications for today's tasks
       Farmer taps notification → scrolls to relevant service block → takes action
       Farmer reports issue → Disease/Pest service → solution shown
-      Farmer has question → AI Chat (flattened project data → Google AI Studio free API)
+      Farmer has question → AI Chat (future v2.0 — Gemini with project context)
 ```
 
 ---

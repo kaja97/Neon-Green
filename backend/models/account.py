@@ -1,4 +1,4 @@
-from sqlalchemy import String, Boolean, DateTime, Date, ForeignKey, Integer, Text, Numeric
+from sqlalchemy import String, Boolean, DateTime, Date, ForeignKey, Integer, Text, Numeric, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
@@ -59,3 +59,21 @@ class BuyerProfile(BaseModel):
     contact_phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     
     account: Mapped["Account"] = relationship(back_populates="buyer_profile")
+
+
+class AccountFeature(BaseModel):
+    """Platform-level service access per account (beta rollout, tiers)."""
+
+    __tablename__ = "account_features"
+    __table_args__ = (
+        UniqueConstraint("account_id", "service_type", name="uq_account_service"),
+    )
+
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="CASCADE")
+    )
+    service_type: Mapped[str] = mapped_column(String(50))
+    is_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    enabled_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

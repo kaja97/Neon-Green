@@ -4,26 +4,18 @@ from fastapi import HTTPException
 import uuid
 from datetime import datetime, timedelta, date, timezone
 
-from models.project import Project
 from models.farmer import FarmerLocation
 from models.weather import WeatherCache, WeatherAlert
+from core.farmer import get_owned_project
 from .client import fetch_weather_data
 from .schemas import WeatherResponse, WeatherCondition, ForecastDay
 
 async def get_weather_for_project(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID) -> WeatherResponse:
-    # 1. Verify project & get location
-    result = await db.execute(
-        select(Project, FarmerLocation)
-        .join(FarmerLocation, Project.location_id == FarmerLocation.id)
-        .where(Project.id == project_id, Project.farmer_id == account_id)
-    )
-    row = result.first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Project or location not found")
+    project, _ = await get_owned_project(db, project_id, account_id)
+    location = await db.get(FarmerLocation, project.location_id)
+    if not location:
+        raise HTTPException(status_code=404, detail="Project location not found")
         
-    project, location = row
-    
-    # 2. Check cache
     today = date.today()
     cache_result = await db.execute(
         select(WeatherCache)
@@ -34,10 +26,8 @@ async def get_weather_for_project(db: AsyncSession, project_id: uuid.UUID, accou
     if cache and cache.expires_at > datetime.now(timezone.utc):
         return _process_raw_data(location.id, cache.data)
         
-    # 3. Fetch new data
     raw_data = await fetch_weather_data(float(location.latitude), float(location.longitude))
     
-    # 4. Save to cache
     if cache:
         cache.data = raw_data
         cache.expires_at = datetime.now(timezone.utc) + timedelta(hours=3)
@@ -52,12 +42,10 @@ async def get_weather_for_project(db: AsyncSession, project_id: uuid.UUID, accou
         
     await db.commit()
     
-    # 5. Process and return
     return _process_raw_data(location.id, raw_data)
 
 
 def _process_raw_data(location_id: uuid.UUID, raw_data: dict) -> WeatherResponse:
-    # OpenWeatherMap returns 3-hour chunks for 5 days. We want to aggregate this into daily summaries.
     daily_summaries = {}
     
     for item in raw_data.get("list", []):
@@ -90,12 +78,10 @@ def _process_raw_data(location_id: uuid.UUID, raw_data: dict) -> WeatherResponse
     for d in sorted_dates:
         s = daily_summaries[d]
         
-        # Calculate daily averages/totals
         avg_temp = sum(s["temps"]) / len(s["temps"])
         avg_hum = sum(s["humidity"]) / len(s["humidity"])
-        avg_wind = (sum(s["wind"]) / len(s["wind"])) * 3.6 # m/s to kph
+        avg_wind = (sum(s["wind"]) / len(s["wind"])) * 3.6
         
-        # Most common condition
         most_common_cond = max(set(s["conditions"]), key=s["conditions"].count)
         most_common_icon = max(set(s["icons"]), key=s["icons"].count)
         
@@ -111,7 +97,6 @@ def _process_raw_data(location_id: uuid.UUID, raw_data: dict) -> WeatherResponse
         forecasts.append(ForecastDay(forecast_date=d, condition=cond))
         
     if not forecasts:
-        # Fallback empty
         cond = WeatherCondition(temp_celsius=0, humidity=0, rain_mm=0, wind_kph=0, description="Unknown", icon_code="01d")
         return WeatherResponse(location_id=str(location_id), current=cond, forecast=[])
 
@@ -122,10 +107,7 @@ def _process_raw_data(location_id: uuid.UUID, raw_data: dict) -> WeatherResponse
     )
 
 async def get_alerts_for_project(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
-    # Verify project
-    project = await db.get(Project, project_id)
-    if not project or project.farmer_id != account_id:
-        raise HTTPException(status_code=404, detail="Project not found")
+    await get_owned_project(db, project_id, account_id)
         
     result = await db.execute(
         select(WeatherAlert)

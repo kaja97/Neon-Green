@@ -2,8 +2,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException, status
 from models.account import Account, FarmerProfile
+from models.farmer import FarmerLocation
 from .schemas import RegisterRequest, LoginRequest, TokenResponse
 from core.security import get_password_hash, verify_password, create_access_token, create_refresh_token
+from core.service_gating import seed_account_features
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
 from core.redis import get_redis_client
@@ -52,6 +54,21 @@ async def register_user(db: AsyncSession, user_data: RegisterRequest) -> TokenRe
         primary_language=user_data.primary_language
     )
     db.add(new_profile)
+    await db.flush()
+
+    await seed_account_features(db, new_account.id)
+
+    if user_data.location:
+        db.add(
+            FarmerLocation(
+                farmer_id=new_profile.id,
+                name=user_data.location.label,
+                district=user_data.location.district,
+                latitude=user_data.location.latitude,
+                longitude=user_data.location.longitude,
+                is_primary=True,
+            )
+        )
 
     try:
         await db.commit()

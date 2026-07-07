@@ -4,15 +4,13 @@ from fastapi import HTTPException
 from datetime import date
 import uuid
 
-from models.project import Project
 from models.issue import ProjectIssue
 from models.plant_health import PlantDisease, DiseaseSolution
+from core.farmer import get_owned_project
 from .schemas import IssueCreate
 
 async def report_issue(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID, data: IssueCreate):
-    project = await db.get(Project, project_id)
-    if not project or project.farmer_id != account_id:
-        raise HTTPException(status_code=404, detail="Project not found")
+    await get_owned_project(db, project_id, account_id)
         
     issue = ProjectIssue(
         project_id=project_id,
@@ -31,9 +29,7 @@ async def report_issue(db: AsyncSession, project_id: uuid.UUID, account_id: uuid
     return issue
 
 async def get_issues(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
-    project = await db.get(Project, project_id)
-    if not project or project.farmer_id != account_id:
-        raise HTTPException(status_code=404, detail="Project not found")
+    await get_owned_project(db, project_id, account_id)
         
     result = await db.execute(
         select(ProjectIssue)
@@ -43,9 +39,6 @@ async def get_issues(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.U
     return result.scalars().all()
 
 async def search_diseases(db: AsyncSession, query: str):
-    # Using simple ILIKE matching on symptoms cast to string or name for fallback
-    # In a full Postgres setup, we would use `to_tsvector` and `@@`.
-    # Casting array to text for simpler search across dialects:
     from sqlalchemy import cast, String, or_
     
     search_term = f"%{query}%"

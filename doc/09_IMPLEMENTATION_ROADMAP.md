@@ -1,17 +1,34 @@
 # AgriFarm AI — Implementation Roadmap
 
 ## Team: 1–3 Developers + AI Coding Assistant
-## Total Timeline: ~14 Weeks (v1.0 Web App) + Future Phases
+## Total Timeline: ~12 Weeks (v1.0 Web App) + Future Releases
 
 ---
 
 ## Strategy: Start Small, Plan Big
 
-**v1.0 (Now):** Web app with Farmer Project Service + Free AI (Google Gemini)
-**v2.0 (Future):** Flutter mobile apps (Android + iOS) + RAG + Marketplace
+**v1.0 (Now):** Web app with Farmer Project Service + deterministic engines (planner, weather, soil, disease, market)
+**v2.0 (Future):** Flutter mobile apps + AI Chat (Gemini) + RAG + Marketplace
 **v3.0 (Future):** AI Agent + MCP Server + Desktop app
 
+Services roll out **incrementally** with account- and project-level gating. See [`16_SERVICE_GATING.md`](./16_SERVICE_GATING.md).
+
 All code is structured to support future expansion from day one.
+
+---
+
+## Architecture Quick Reference
+
+| Component | Technology | Notes |
+|-----------|-----------|-------|
+| Backend | FastAPI (Python) in `backend/` | Modular monolith, single deployable |
+| Frontend | Next.js 14 in `frontend/` | Separate app, REST API client |
+| Database | PostgreSQL 16 + Redis 7 | Docker Compose for local dev |
+| Python deps | `requirements.txt` or Poetry | Backend only — not for frontend |
+| Frontend deps | npm + `node_modules/` | Local per project, not global |
+| Deploy | Separate | Frontend CDN/Vercel + Backend VPS/Docker |
+
+**Phase 0 builds DB + backend + frontend foundations — not Phase 4.**
 
 ---
 
@@ -20,34 +37,26 @@ All code is structured to support future expansion from day one.
 **Goal:** Working dev environment + seeded database
 
 ### Backend Setup
-- [ ] Initialize Python project: `pyproject.toml`, virtual env (Python 3.11+)
+- [ ] Python 3.11+ virtual env (`requirements.txt` or Poetry in `backend/`)
 - [ ] Install FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2, Celery, Redis
 - [ ] Configure Docker Compose: PostgreSQL 16 (+ PostGIS + pgvector + pg_trgm), Redis 7
-- [ ] Create `database.py` (async engine, session factory)
-- [ ] Create `config.py` (Pydantic BaseSettings, env vars)
-- [ ] Create first Alembic migration with all core tables (Sections 1-10 from DB model)
+- [ ] Create `database.py`, `config.py`
+- [ ] Create first Alembic migration with all core tables (Sections 1–10 from DB model)
 - [ ] Run migration, verify tables exist
 
 ### Frontend Setup
 - [ ] Initialize Next.js 14 project with App Router, TypeScript
-- [ ] Install Tailwind CSS + shadcn/ui + Recharts + Zustand + React Query
-- [ ] Configure `next-pwa` for offline capability
+- [ ] Install Tailwind CSS + Recharts + Zustand + React Query
 - [ ] Create AppShell layout (TopBar + BottomNav)
 - [ ] Create `lib/api.ts` (Axios instance, JWT interceptor, token refresh)
 
 ### Seed Data
-- [ ] Seed `farming_methods` (organic, inorganic, integrated)
-- [ ] Seed `plants` table with 5 priority crops: Tomato, Chili, Rice, Brinjal, Beans
-- [ ] Seed `plant_stages` for all 5 crops (6 stages each = 30 records)
-- [ ] Seed `plant_water_requirements` for all stages (30 records)
-- [ ] Seed `plant_nutrient_requirements` for all stages (30 records)
-- [ ] Seed `plant_fertilizer_recommendations` for all stages × organic + conventional (60 records)
-- [ ] Seed `plant_diseases` for Tomato (8 diseases) and Chili (5 diseases)
-- [ ] Seed `disease_solutions` for each disease × organic + conventional
-- [ ] Seed `plant_pests` for Tomato (6 pests) and Chili (4 pests)
-- [ ] Seed `pest_solutions` for each pest
+- [ ] Seed `plants` (5 crops: Tomato, Chili, Rice, Brinjal, Beans)
+- [ ] Seed `plant_stages`, water, nutrient, fertilizer records
+- [ ] Seed `plant_diseases` + `disease_solutions` for Tomato and Chili
+- [ ] Seed `plant_pests` + `pest_solutions` (optional in v1.0)
 
-**✅ Deliverable:** `docker-compose up` → PostgreSQL running, all tables created, seed data loaded
+**✅ Deliverable:** `docker-compose up` → PostgreSQL + Redis running, migrations applied, seed loaded, `/docs` shows API
 
 ---
 
@@ -56,28 +65,16 @@ All code is structured to support future expansion from day one.
 **Goal:** User can register, login, and manage their farm profile
 
 ### Backend
-- [ ] Auth Module:
-  - [ ] `POST /auth/register` — create account + farmer_profile
-  - [ ] `POST /auth/login` — email/phone + password → JWT pair
-  - [ ] `POST /auth/refresh` — refresh token rotation
-  - [ ] `GET /auth/me` — current user info
-  - [ ] JWT middleware (RS256, 15-min access, 30-day refresh in Redis)
-  - [ ] bcrypt password hashing
-- [ ] Farmer Module:
-  - [ ] `GET /farmer/profile` — get own profile
-  - [ ] `PUT /farmer/profile` — update profile
-  - [ ] `POST /farmer/locations` — add GPS location
-  - [ ] `GET /farmer/locations` — list locations
-  - [ ] `POST /farmer/land` — add land details
-  - [ ] `GET /farmer/land` — list land details
+- [ ] Auth: register, login, refresh, `/me`, JWT (HS256 dev / RS256 prod), bcrypt
+- [ ] On register: create `farmer_profile` + optional first `farmer_location`
+- [ ] On register: seed `account_features` from `DEFAULT_ACCOUNT_SERVICES` env var
+- [ ] Farmer: profile CRUD, locations, land details
 
 ### Frontend
-- [ ] Login page (`/login`)
-- [ ] Register page (`/register`) — multi-step: account → profile → first location
-- [ ] Profile page (`/profile`) — edit farmer info
-- [ ] Location management page — add/edit locations with Leaflet map picker
+- [ ] Login, register (account → profile → location), profile page
+- [ ] Location management with Leaflet map picker
 
-**✅ Deliverable:** Farmer can register, login, add farm locations, and manage profile
+**✅ Deliverable:** Farmer registers with GPS location; account has service access rows
 
 ---
 
@@ -86,260 +83,144 @@ All code is structured to support future expansion from day one.
 **Goal:** Farmer can create a project and see the dashboard skeleton
 
 ### Backend
-- [ ] Project Module:
-  - [ ] `POST /projects` — create project (validate crop, location, land)
-  - [ ] `GET /projects` — list projects (with filter by status)
-  - [ ] `GET /projects/{id}` — project detail
-  - [ ] `PATCH /projects/{id}/status` — change status
-  - [ ] `GET /projects/{id}/dashboard` — aggregated dashboard endpoint
-- [ ] Master Data endpoints:
-  - [ ] `GET /plants` — list crops with search
-  - [ ] `GET /plants/{id}/stages` — get growth stages
-  - [ ] `GET /farming-methods` — list methods
+- [ ] Project CRUD + `GET /projects/{id}/dashboard`
+- [ ] On project create: seed `project_services` from account's enabled services
+- [ ] `GET /projects/{id}/services` — list active services
+- [ ] Master data: plants, stages, farming methods
+- [ ] Dashboard returns `enabled_services[]` for frontend block visibility
 
 ### Frontend
-- [ ] Dashboard page (`/dashboard`) — project card grid
-- [ ] Create Project Wizard (`/projects/new`) — 5-step wizard:
-  1. Select crop (grid of crop cards)
-  2. Select location
-  3. Select land details + farming method
-  4. Set planting date + area
-  5. Review & create
-- [ ] Project Dashboard page (`/projects/[id]`) — skeleton with:
-  - [ ] FarmingCircle component (visual stage ring)
-  - [ ] DayCounter ("Day 45 of 90 — 50%")
-  - [ ] Service blocks placeholder (Weather, Soil, Activities, Market, AI)
+- [ ] Dashboard, create-project wizard, project dashboard
+- [ ] FarmingCircle, DayCounter
+- [ ] Service blocks: show only when service in `enabled_services`
+- [ ] Placeholder / "Coming soon" for disabled services
 
-**✅ Deliverable:** Farmer creates "Tomato Farm — 1 Acre" project, sees Farming Circle on dashboard
+**✅ Deliverable:** Farmer creates project; dashboard shows Farming Circle + enabled blocks only
 
 ---
 
-## PHASE 3 — Activity Planner (Life Cycle Engine)
+## PHASE 3 — Activity Planner (Life Cycle Engine) — CORE
 **Duration:** Weeks 5–6
 **Goal:** Full-season activity plan generated automatically, daily tasks visible
 
+**Note:** `activity_plan` is always enabled — no service gating.
+
 ### Backend
-- [ ] Activity Planner Module:
-  - [ ] `generate_season_plan()` — Celery task triggered on project creation
-  - [ ] Generates watering, fertilizing, monitoring activities for all stages
-  - [ ] Scales quantities to farm area, filters by farming method
-  - [ ] `GET /planner/{project_id}/today` — today's pending activities
-  - [ ] `GET /planner/{project_id}/activities` — full plan with pagination
-  - [ ] `PATCH /planner/activities/{id}/complete` — mark done (with notes)
-  - [ ] `PATCH /planner/activities/{id}/skip` — skip with reason
+- [ ] `generate_season_plan()` on project creation (sync or Celery)
+- [ ] Watering, fertilizing, monitoring — scaled to area, filtered by farming method
+- [ ] `GET /planner/{project_id}/today`, activities list, complete/skip
+- [ ] Fix ownership checks via `farmer_profiles.id` (not `accounts.id`)
 
 ### Frontend
-- [ ] ActivityBlock on project dashboard — today's task cards
-- [ ] Activity timeline view (`/projects/[id]/plan`) — vertical timeline
-- [ ] ActivityCard component — tap to expand, "Done" / "Skip" buttons
-- [ ] DoneButton with optional notes input
-- [ ] SkipDialog with required reason
+- [ ] ActivityBlock, timeline page, Done/Skip UI
 
-**✅ Deliverable:** Creating a project generates 77 activities. Farmer sees daily tasks and marks them done.
+**✅ Deliverable:** Creating a project generates ~77 activities; farmer marks tasks done
 
 ---
 
 ## PHASE 4 — Weather Integration
 **Duration:** Week 7
 **Goal:** Weather data fetched, activities adjusted, alerts generated
+**Gated service:** `weather`
 
 ### Backend
-- [ ] Weather Module:
-  - [ ] OpenWeatherMap free API integration (1000 calls/day)
-  - [ ] Redis caching (3-hour TTL, GPS rounded to 3 decimals)
-  - [ ] `GET /weather/{project_id}` — 5-day forecast
-  - [ ] `GET /weather/{project_id}/alerts` — active alerts
-- [ ] Celery Beat jobs:
-  - [ ] `refresh_weather_cache` — every 3 hours
-  - [ ] `adjust_plan_for_weather` — 5:00 AM daily
-  - [ ] `check_weather_alerts` — every 6 hours
-- [ ] Weather adjustment rules:
-  - [ ] Skip watering if rain > 5mm
-  - [ ] Reschedule fertilizer if rain > 25mm
-  - [ ] Reschedule spraying if wind > 20km/h
-  - [ ] Alert: flood (>50mm), frost (<10°C), disease risk (humidity >85%)
+- [ ] OpenWeatherMap integration + cache (Redis or DB, 3-hour TTL)
+- [ ] `require_project_service("weather")` on weather endpoints
+- [ ] Celery Beat: refresh cache, adjust plan (5 AM), check alerts
+- [ ] Weather rules: skip watering if rain > 5mm, etc.
 
 ### Frontend
-- [ ] WeatherBlock on project dashboard — current + 5-day mini forecast
-- [ ] AlertBanner component — red/yellow strip for weather alerts
-- [ ] Weather detail page (`/projects/[id]/weather`) — full 5-day chart
-- [ ] Weather-adjusted activity badge (shows "⚡ Skipped by weather" on task card)
+- [ ] WeatherBlock, AlertBanner, weather detail page
+- [ ] Hide weather UI when service not in `enabled_services`
 
-**✅ Deliverable:** Activities auto-adjust based on weather. Farmer sees alerts.
+**✅ Deliverable:** Activities auto-adjust based on weather (for accounts with access)
 
 ---
 
 ## PHASE 5 — Soil Analysis & Disease/Pest Service
 **Duration:** Weeks 8–9
-**Goal:** Soil test analysis + disease matching engine working
+**Goal:** Soil test analysis + disease matching engine
+**Gated services:** `soil`, `disease_watch`
 
 ### Backend — Soil
-- [ ] Soil Module:
-  - [ ] `POST /soil/tests` — submit soil test with nutrient results
-  - [ ] `GET /soil/tests/{project_id}` — test history
-  - [ ] `GET /soil/recommendations/{project_id}` — computed recommendations
-  - [ ] Deterministic nutrient gap calculator:
-    - [ ] Compare actual vs. optimal (from `plant_nutrient_requirements`)
-    - [ ] Generate specific product + quantity recommendations
-    - [ ] Filter organic/conventional by project farming method
+- [ ] Soil test submit, history, recommendations
+- [ ] Nutrient gap calculator vs `plant_nutrient_requirements`
+- [ ] `require_project_service("soil")`
 
 ### Backend — Disease
-- [ ] Disease Module:
-  - [ ] `POST /issues` — report a problem (symptoms + affected parts)
-  - [ ] `GET /issues/{project_id}` — issue history
-  - [ ] `GET /disease/search` — keyword search against `plant_diseases`
-  - [ ] `GET /disease/{id}/solutions` — solutions filtered by farming method
-  - [ ] PostgreSQL full-text search (`to_tsvector`, `ts_rank`)
-  - [ ] If keyword match confidence < threshold → route to AI (Phase 6)
+- [ ] Issue reporting, disease search (PostgreSQL FTS when ready)
+- [ ] Solutions filtered by farming method
+- [ ] **No AI fallback in v1.0** — return helpful "no match" message
+- [ ] `require_project_service("disease_watch")`
 
 ### Frontend
-- [ ] SoilBlock on dashboard — pH, N/P/K status badges
-- [ ] Soil detail page — radar chart + recommendations list
-- [ ] Soil test form — manual entry of lab results
-- [ ] DiseaseBlock on dashboard — "No active issues" / issue count
-- [ ] Issue report flow — select symptoms → select affected parts → submit
-- [ ] Solutions display — organic tab / conventional tab
+- [ ] SoilBlock, test form, disease issue flow, solutions tabs
 
-**✅ Deliverable:** Farmer submits soil test → gets "Apply 30kg Urea per acre". Reports "yellow spots" → matched to "Early Blight" with solutions.
+**✅ Deliverable:** Soil test → recommendations. "Yellow spots" → Early Blight + solutions
 
 ---
 
-## PHASE 6 — AI Integration (Free Google Gemini)
-**Duration:** Weeks 10–11
-**Goal:** AI-powered summaries, chat, and smart database updates
-
-### Backend
-- [ ] AI Module:
-  - [ ] `context_builder.py` — flatten all project tables into JSON context
-  - [ ] `prompts.py` — system prompts for summary, Q&A, diagnosis
-  - [ ] `service.py` — Google AI Studio integration:
-    - [ ] `pip install google-generativeai`
-    - [ ] Configure with free API key (no credit card needed)
-    - [ ] Use `gemini-2.0-flash` model
-  - [ ] `POST /ai/summary/{project_id}` — generate fresh AI summary
-  - [ ] `GET /ai/summary/{project_id}` — get cached summary
-  - [ ] `POST /ai/chat` — farmer Q&A with project context
-  - [ ] Intent classifier (regex-based, no AI):
-    - [ ] Weather questions → route to weather service
-    - [ ] Price questions → route to market service
-    - [ ] Schedule questions → route to planner service
-    - [ ] Complex questions → route to Gemini
-  - [ ] Rate limiting: 10 AI calls/day per farmer, 14 RPM global
-  - [ ] Error handling: fallback to deterministic summary if Gemini unavailable
-  - [ ] AI response parser: extract insights → update DB:
-    - [ ] Disease risk detection → create `project_issues` or `weather_alerts`
-    - [ ] Nutrient deficiency → create `soil_recommendations`
-    - [ ] Schedule suggestions → create `notifications`
-- [ ] Celery Beat:
-  - [ ] `generate_weekly_ai_summary` — Sundays 6 AM, flatten each project → Gemini
-
-### Frontend
-- [ ] AISummaryBlock on dashboard — latest cached AI summary
-- [ ] "🔄 Refresh AI" button — trigger fresh summary
-- [ ] AI Chat page (`/projects/[id]/ai`):
-  - [ ] Chat window with message bubbles
-  - [ ] Context badge ("Tomato Farm — Day 45")
-  - [ ] Remaining calls counter ("8 AI calls remaining today")
-  - [ ] "$0.00" cost badge (shows it's free)
-- [ ] ChatInput with send button
-
-**✅ Deliverable:** Farmer taps "Get AI Summary" → sees "Your tomato is in Flowering stage, watch for blight due to humidity..." Farmer asks "Why are leaves yellow?" → AI answers using project soil + weather data.
-
----
-
-## PHASE 7 — Market Prices & Notifications
-**Duration:** Week 12
+## PHASE 6 — Market Prices & Notifications
+**Duration:** Week 10
 **Goal:** Crop price tracking and push notifications
+**Gated services:** `market_price`, `notifications`
 
 ### Backend
-- [ ] Market Module:
-  - [ ] `GET /market/prices/{plant_id}` — current price by district
-  - [ ] `GET /market/trends/{plant_id}` — 30-day trend
-  - [ ] Admin endpoint: `POST /market/admin/prices` — manual price entry
-  - [ ] Celery: `compute_market_trends` — daily trend calculation
-  - [ ] Price change alert trigger (>15% drop or >20% rise)
-- [ ] Notification Module:
-  - [ ] `GET /notifications` — list notifications (filter: unread)
-  - [ ] `PATCH /notifications/{id}/read` — mark as read
-  - [ ] `POST /notifications/subscribe` — register Web Push subscription
-  - [ ] Web Push via VAPID keys + Service Worker
-  - [ ] Celery Beat: `send_daily_notifications` — 5:30 AM
+- [ ] Market prices, trends, revenue estimate
+- [ ] Admin price entry, Celery trend computation
+- [ ] Notifications list/read, Web Push subscribe, daily Celery job
 
 ### Frontend
-- [ ] MarketBlock on dashboard — price + trend arrow
-- [ ] Market detail page — 30-day line chart + revenue calculator
-- [ ] Notification center (`/notifications`) — grouped by type
-- [ ] Push notification permission prompt on first login
-- [ ] Notification bell with unread count badge in TopBar
+- [ ] MarketBlock, notification center, push permission prompt
 
-**✅ Deliverable:** Farmer sees tomato price 180 LKR/kg (↑12%). Gets push: "🌱 3 tasks today"
+**✅ Deliverable:** Farmer sees tomato price trend; gets "3 tasks today" notification
 
 ---
 
-## PHASE 8 — Polish, Testing & PWA
-**Duration:** Weeks 13–14
+## PHASE 7 — Polish, Testing & Deploy
+**Duration:** Weeks 11–12
 **Goal:** Production-ready v1.0
 
 ### Testing
-- [ ] Unit tests (`pytest`):
-  - [ ] Activity planner: generate plan for tomato, assert 77 activities
-  - [ ] Soil calculator: input pH 5.5, assert lime recommendation
-  - [ ] Intent classifier: "What's the weather?" → routes to weather, not AI
-  - [ ] Weather adjustment: rain 30mm → watering skipped
-- [ ] Integration tests:
-  - [ ] Full project creation flow: register → login → create project → verify plan generated
-  - [ ] Dashboard aggregation: verify all blocks return data
-  - [ ] AI summary: mock Gemini response, verify DB updates
-- [ ] E2E tests (Playwright):
-  - [ ] Register → Create project → Mark task done → View dashboard
-  - [ ] Ask AI question → See response
+- [ ] Unit tests: planner, soil calculator, weather rules
+- [ ] Integration: register → project → plan flow
+- [ ] E2E: register → create project → mark task done
 
-### PWA & Performance
-- [ ] Service Worker caching for daily plan and weather
-- [ ] Offline mode: show cached activities without internet
-- [ ] Optimistic updates: mark task done immediately, sync later
-- [ ] Lighthouse audit: target > 90 on all metrics
+### PWA & Deployment
+- [ ] Service Worker caching, offline daily plan
+- [ ] Docker build for FastAPI + Celery; frontend build separately
+- [ ] VPS deploy, HTTPS, GitHub Actions CI/CD
 
-### Deployment
-- [ ] Docker build for FastAPI + Celery worker + Celery Beat
-- [ ] Docker Compose: Nginx (reverse proxy) + FastAPI + PostgreSQL + Redis
-- [ ] GitHub Actions CI/CD pipeline
-- [ ] Deploy to VPS (DigitalOcean / Hetzner)
-- [ ] HTTPS via Let's Encrypt
-- [ ] Environment variables for production
-
-**✅ Deliverable:** v1.0 deployed. Farmer can register, create project, get daily guidance, ask AI questions — all for $0 AI cost.
+**✅ Deliverable:** v1.0 deployed — planner + gated optional services, **no AI chat**
 
 ---
 
-## FUTURE PHASES (Post v1.0)
+## FUTURE RELEASES (Post v1.0)
 
-### Phase 9 — Flutter Mobile Apps (v2.0)
-- [ ] Flutter project setup (shared codebase for Android + iOS)
-- [ ] Same API, native UI components
-- [ ] Camera integration for disease photo upload
-- [ ] GPS auto-detection for location
-- [ ] FCM push notifications (replaces Web Push)
-- [ ] Hive/SQLite for rich offline caching
+### v2.0 — AI Chat (Gemini)
+**Not in v1.0.** Backend module exists but routes are unmounted until ready.
 
-### Phase 10 — Marketplace (v2.0)
-- [ ] Vendor Profile and Buyer Profile (role-based identity)
-- [ ] Agri-Input Market: vendors list fertilizers/seeds/tools
-- [ ] Harvest Market: farmers list completed crops with provenance
-- [ ] Order system with status tracking
+- [ ] Mount `/ai/*` routes
+- [ ] `POST /ai/summary/{project_id}`, `POST /ai/chat`
+- [ ] Grant via `account_features.service_type = 'ai_chat'`
+- [ ] Intent classifier routes to weather/market/planner where possible
+- [ ] Rate limiting, deterministic fallback
 
-### Phase 11 — AI Agent + MCP (v3.0)
-- [ ] Self-hosted Gemma 3 model for small classification tasks
-- [ ] pgvector embeddings for full RAG pipeline
-- [ ] MCP Server: per-farmer tool endpoints
-- [ ] AI Agent: autonomous monitoring, proactive alerts
-- [ ] Multi-step reasoning for complex farming questions
+### v2.0 — Flutter Mobile Apps
+- [ ] Android + iOS, same API, FCM push, camera for disease photos
 
-### Phase 12 — Desktop & Advanced Features (v3.0)
-- [ ] Flutter Desktop (Windows + macOS)
-- [ ] Admin dashboard for platform management
-- [ ] Multi-language support (Sinhala, Tamil)
-- [ ] Computer vision for disease detection (photo → diagnosis)
+### v2.0 — Marketplace
+- [ ] Vendor/buyer profiles, agri-input and harvest listings, orders
+
+### v3.0 — AI Agent + MCP
+**Not in v1.0 or v2.0 chat scope.**
+
+- [ ] Self-hosted Gemma 3, pgvector RAG, MCP server
+- [ ] Autonomous agent, proactive alerts
+- [ ] Grant via `account_features.service_type = 'ai_agent'`
+
+### v3.0 — Desktop & Advanced
+- [ ] Flutter Desktop, admin dashboard, Sinhala/Tamil, computer vision
 
 ---
 
@@ -353,21 +234,18 @@ DATABASE_URL=postgresql+asyncpg://agrifarm:password@localhost:5432/agrifarm_db
 REDIS_URL=redis://localhost:6379/0
 
 # JWT
-JWT_PRIVATE_KEY=<RS256 private key>
-JWT_PUBLIC_KEY=<RS256 public key>
+JWT_SECRET_KEY=<dev secret>
 JWT_ACCESS_EXPIRE_MINUTES=15
 JWT_REFRESH_EXPIRE_DAYS=30
 
-# AI (FREE — no credit card needed)
-GOOGLE_AI_STUDIO_API_KEY=<get from https://aistudio.google.com/apikey>
+# Service rollout — comma-separated, no AI in v1.0
+DEFAULT_ACCOUNT_SERVICES=activity_plan,weather,soil,disease_watch,market_price
 
 # Weather (FREE — 1000 calls/day)
-OPENWEATHER_API_KEY=<get from https://openweathermap.org/api>
+OPENWEATHER_API_KEY=<https://openweathermap.org/api>
 
-# Storage
-AWS_ACCESS_KEY_ID=...          # Or use MinIO for local dev
-AWS_SECRET_ACCESS_KEY=...
-AWS_BUCKET_NAME=agrifarm-uploads
+# Future — AI (not required for v1.0)
+# GOOGLE_AI_STUDIO_API_KEY=
 
 # Push Notifications
 VAPID_PUBLIC_KEY=...
@@ -379,7 +257,22 @@ CELERY_BROKER_URL=redis://localhost:6379/1
 CELERY_RESULT_BACKEND=redis://localhost:6379/2
 ```
 
-**Required API accounts (all FREE):**
-- [ ] Google AI Studio — free API key (no credit card): https://aistudio.google.com/apikey
-- [ ] OpenWeatherMap — free tier (1,000 calls/day): https://openweathermap.org/api
-- [ ] Generate VAPID keys: `npx web-push generate-vapid-keys`
+**Required API accounts for v1.0:**
+- [ ] OpenWeatherMap — free tier (1,000 calls/day)
+
+**Future (v2.0 AI):**
+- [ ] Google AI Studio — free Gemini API key
+
+---
+
+## Phase Numbering Reference
+
+| Doc phase | What it is |
+|-----------|------------|
+| Phase 0 | DB + backend + frontend setup |
+| Phase 1–3 | Auth, projects, **core planner** |
+| Phase 4–6 | Optional gated services |
+| Phase 7 | Deploy v1.0 |
+| v2.0 / v3.0 | AI chat, mobile, agent — **future milestone names** (not Phase 8+) |
+
+Do not confuse with old overview doc labels ("Phase 2 = Flutter"). Use **v2.0 / v3.0** for future platforms.

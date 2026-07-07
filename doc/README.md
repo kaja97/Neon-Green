@@ -26,6 +26,8 @@
 | [`13_FOLDER_STRUCTURE.md`](./13_FOLDER_STRUCTURE.md) | Codebase folder structure, Docker Compose, Makefile, env template |
 | [`14_REVENUE_HARVEST.md`](./14_REVENUE_HARVEST.md) | Revenue calculator, harvest management, yield tracking |
 | [`15_NOTIFICATIONS_OFFLINE.md`](./15_NOTIFICATIONS_OFFLINE.md) | Smart notification routing, offline-first PWA, mutation queue |
+| [`16_SERVICE_GATING.md`](./16_SERVICE_GATING.md) | Incremental service rollout, account/project access control |
+| [`17_GETTING_STARTED.md`](./17_GETTING_STARTED.md) | **Step-by-step setup:** Docker, migrations, seed, frontend |
 
 ---
 
@@ -65,17 +67,20 @@
 
 ## 📊 v1.0 Scope (Current Build)
 
-- ✅ Farmer Project Service (create project, life cycle plan, daily guidance)
-- ✅ Weather integration (free OpenWeatherMap API)
-- ✅ Soil analysis (deterministic nutrient calculator)
-- ✅ Disease matching (keyword + AI fallback)
-- ✅ Market price tracking
-- ✅ Free AI chat (Google Gemini)
+- ✅ Farmer Project Service (create project, life cycle plan, daily guidance) — **core, always on**
+- ✅ Incremental service gating (`account_features`, `project_services`)
+- ✅ Weather integration (free OpenWeatherMap API) — gated rollout
+- ✅ Soil analysis (deterministic nutrient calculator) — gated rollout
+- ✅ Disease matching (keyword search, no AI fallback in v1.0) — gated rollout
+- ✅ Market price tracking — gated rollout
 - ✅ Push notifications
 - ✅ PWA (offline daily plan)
+- ⏳ AI chat — **deferred to v2.0** (backend module exists, routes unmounted)
+- ⏳ AI Agent + MCP — **deferred to v3.0**
 
 ## 🔮 Future Scope
 
+- 💬 AI Chat — Gemini Q&A (v2.0)
 - 📱 Flutter mobile apps (v2.0)
 - 🏪 Marketplace — vendors + harvest market (v2.0)
 - 🤖 AI Agent + MCP Server (v3.0)

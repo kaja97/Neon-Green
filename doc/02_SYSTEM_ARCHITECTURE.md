@@ -59,10 +59,9 @@ All services live as Python modules within a single FastAPI application. Each mo
 | 6 | Activity Planner | `/planner` | Full-season plan generation, daily tasks |
 | 7 | Disease | `/disease`, `/issues` | Disease/pest lookup, diagnosis, solutions |
 | 8 | Market | `/market` | Crop price data, trends, alerts |
-| 9 | AI Summary | `/ai` | Flattened context → Google Gemini → summary |
+| 9 | AI Summary / Chat | `/ai` | **Future v2.0** — Gemini Q&A (routes unmounted in v1.0) |
 | 10 | Notification | `/notifications` | Push notifications, Celery Beat jobs |
-| **Future** | RAG Service | `/rag` | Knowledge base ingestion and retrieval |
-| **Future** | MCP Server | `/mcp` | Per-farmer tool routing for AI Agent |
+| **Future** | AI Agent | `/agent` | **v3.0** — Autonomous agent + MCP |
 | **Future** | Marketplace | `/marketplace` | B2B/B2C vendor products, harvest listings |
 
 ---

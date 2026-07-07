@@ -5,6 +5,7 @@ from models.plant import PlantStage
 from models.activity import FarmingActivity, ActivityPlan
 from models.weather import WeatherAlert
 from models.issue import ProjectIssue
+from core.service_gating import list_project_services, project_has_service
 from .schemas import DashboardResponse, FarmingCircleResponse, StageProgress
 from .service import get_project, get_plant_stages
 import uuid
@@ -50,6 +51,10 @@ async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uui
         total_days=total_duration
     )
     
+    # Enabled services for this project (drives frontend block visibility)
+    services = await list_project_services(db, project_id)
+    enabled_services = [s.service_type for s in services if s.is_active]
+    
     # --- Fetch real data from other modules ---
     
     # Today's activities
@@ -91,32 +96,35 @@ async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uui
                 "due_date": a.due_date.isoformat(), "status": a.status
             })
     
-    # Weather alerts
+    # Weather alerts (only when weather service is enabled)
     weather_alerts = []
-    alert_res = await db.execute(
-        select(WeatherAlert).where(WeatherAlert.project_id == project_id, WeatherAlert.is_resolved == False)
-    )
-    for alert in alert_res.scalars().all():
-        weather_alerts.append({
-            "type": alert.alert_type, "severity": alert.severity, "message": alert.message,
-            "target_date": alert.target_date.isoformat()
-        })
+    if await project_has_service(db, project_id, "weather"):
+        alert_res = await db.execute(
+            select(WeatherAlert).where(WeatherAlert.project_id == project_id, WeatherAlert.is_resolved == False)
+        )
+        for alert in alert_res.scalars().all():
+            weather_alerts.append({
+                "type": alert.alert_type, "severity": alert.severity, "message": alert.message,
+                "target_date": alert.target_date.isoformat()
+            })
     
-    # Active issues
+    # Active issues (only when disease_watch is enabled)
     active_issues = []
-    issue_res = await db.execute(
-        select(ProjectIssue).where(ProjectIssue.project_id == project_id, ProjectIssue.status != "resolved")
-    )
-    for issue in issue_res.scalars().all():
-        active_issues.append({
-            "id": str(issue.id), "type": issue.issue_type, "title": issue.title,
-            "severity": issue.severity, "status": issue.status
-        })
+    if await project_has_service(db, project_id, "disease_watch"):
+        issue_res = await db.execute(
+            select(ProjectIssue).where(ProjectIssue.project_id == project_id, ProjectIssue.status != "resolved")
+        )
+        for issue in issue_res.scalars().all():
+            active_issues.append({
+                "id": str(issue.id), "type": issue.issue_type, "title": issue.title,
+                "severity": issue.severity, "status": issue.status
+            })
     
     return DashboardResponse(
         project=project,
         current_stage=current_stage,
         farming_circle=farming_circle,
+        enabled_services=enabled_services,
         todays_activities=todays_activities,
         upcoming_activities=upcoming_activities,
         weather_alerts=weather_alerts,

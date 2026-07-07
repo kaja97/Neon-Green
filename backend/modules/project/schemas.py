@@ -59,6 +59,16 @@ class ProjectResponse(BaseModel):
 class ProjectStatusUpdate(BaseModel):
     status: str
 
+class ProjectServiceResponse(BaseModel):
+    id: uuid.UUID
+    project_id: uuid.UUID
+    service_type: str
+    is_active: bool
+    config_json: Optional[dict] = None
+
+    class Config:
+        from_attributes = True
+
 # --- Dashboard Schemas ---
 class StageProgress(BaseModel):
     stage: PlantStageResponse
@@ -75,7 +85,7 @@ class DashboardResponse(BaseModel):
     project: ProjectResponse
     current_stage: Optional[PlantStageResponse] = None
     farming_circle: FarmingCircleResponse
-    # Following fields are placeholders for when other modules are integrated
+    enabled_services: List[str] = []
     todays_activities: List[Dict[str, Any]] = []
     upcoming_activities: List[Dict[str, Any]] = []
     weather: Optional[Dict[str, Any]] = None
@@ -84,4 +94,3 @@ class DashboardResponse(BaseModel):
     active_issues: List[Dict[str, Any]] = []
     market_price: Optional[Dict[str, Any]] = None
     notifications: List[Dict[str, Any]] = []
-    ai_summary: Optional[Dict[str, Any]] = None

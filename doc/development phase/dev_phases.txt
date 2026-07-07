@@ -1,52 +1,61 @@
+AgriFarm AI — Development Phases (v1.0)
+=========================================
+Timeline: ~12 weeks (no AI chat in v1.0)
+See doc/09_IMPLEMENTATION_ROADMAP.md and doc/16_SERVICE_GATING.md
 
-Phase 0 — Environment + Seed Data
-Docker Compose with PostgreSQL 16 (+ PostGIS + pgvector + pg_trgm) + Redis. FastAPI skeleton with all modules stubbed. Next.js 14 project with layout. Alembic migration with all tables. Seed: 5 crops, 30 stages, 60 fertilizer records, 40 diseases, 80 solutions.
-Deliverable:
-docker-compose up → DB seeded → /docs shows API
+Phase 0 — Environment + Seed Data (Week 1)
+  Docker Compose: PostgreSQL 16 + Redis 7
+  Backend: FastAPI skeleton, Alembic migration, requirements.txt or Poetry
+  Frontend: Next.js 14, Tailwind, lib/api.ts
+  Seed: 5 crops, stages, nutrients, diseases, solutions
+  Deliverable: docker-compose up → DB ready → /docs shows API
 
+Phase 1 — Auth + Farmer Profile (Week 2)
+  Register/login/refresh, JWT, farmer profile CRUD
+  Location on register + Leaflet map picker
+  account_features seeded on registration
+  Deliverable: Farmer registers, adds GPS location
 
-Phase 1 — Auth + Farmer Profile
-Register/login/refresh endpoints. JWT with Redis token storage. Farmer profile CRUD. Location management with Leaflet map picker. Land details form. Frontend: login, register (3-step), profile pages.Deliverable:
-Farmer registers, adds GPS location, sets farming method
+Phase 2 — Project CRUD + Dashboard Shell (Weeks 3–4)
+  Project create wizard, dashboard aggregation
+  project_services created per project from account access
+  FarmingCircle, service block placeholders (hidden if not enabled)
+  Deliverable: "Tomato 1 acre" project with Farming Circle
 
+Phase 3 — Activity Planner — CORE (Weeks 5–6)
+  generate_season_plan on project create (sync or Celery)
+  Today's tasks, mark done/skip, activity timeline
+  activity_plan always enabled — no gating needed
+  Deliverable: ~77 activities generated, farmer marks tasks done
 
-Phase 2 — Project CRUD + Dashboard Shell
-Project creation endpoint. 5-step project wizard (crop picker → location → method → dates → review). Dashboard aggregation endpoint. FarmingCircle SVG component (stage ring with progress). DayCounter. Service block placeholders.
-Deliverable:
-Farmer creates "Tomato 1 acre" project, sees Farming Circle on dashboard
+Phase 4 — Weather (Week 7) [gated: weather]
+  OpenWeatherMap, Redis/DB cache, adjustment rules
+  Celery Beat: refresh cache, adjust plan, alerts
+  require_project_service("weather") on API
+  Deliverable: Activities auto-adjust; alerts shown
 
+Phase 5 — Soil + Disease (Weeks 8–9) [gated: soil, disease_watch]
+  Nutrient gap calculator, soil test form
+  Disease keyword search (FTS), issue reporting
+  NO AI fallback in v1.0 — return "no match" message
+  Deliverable: Soil recs + disease match with solutions
 
-Phase 3 — Activity Planner (Life Cycle Engine)
-generate_season_plan() Celery task. Generates watering (scaled to area), fertilizing (filtered by organic/conventional), monitoring activities for every stage. Today's tasks endpoint. Mark done/skip with optimistic UI. Activity timeline page.
-Deliverable:
-Creating tomato project generates 77 activities. Farmer marks tasks done.
-Week 7
+Phase 6 — Market + Notifications (Week 10) [gated: market_price]
+  Market prices, trends, revenue estimate
+  Web Push VAPID, notification center
+  Deliverable: Price display + daily task push
 
-Phase 4 — Weather Integration
-OpenWeatherMap free API client. Redis cache (3hr TTL). Weather adjustment rules engine. Celery jobs: refresh cache (3hr), adjust activities (5AM), check alerts (6hr). WeatherBlock on dashboard. AlertBanner component. Weather detail page with Recharts.
-Deliverable:
-Activities auto-adjust to weather. Alerts pushed when storm/blight risk detected.
-Weeks 8–9
+Phase 7 — Polish, Testing, Deploy (Weeks 11–12)
+  pytest unit/integration, PWA offline, Lighthouse
+  Docker production build, VPS deploy, CI/CD
+  Deliverable: v1.0 live — planner + optional services
 
-Phase 5 — Soil Analysis + Disease Service
-Nutrient gap calculator (NumPy, compare actual vs optimal from plant_nutrient_requirements). Soil test submission form + recommendations. Disease keyword matcher (PostgreSQL ts_rank). Issue reporting flow with symptom selector. Solutions display with organic/conventional tabs.
-Deliverable:
-Soil test → "Apply 30kg Urea/acre". "Yellow spots" → "Early Blight" + solutions.
-Weeks 10–11
+--- FUTURE (not v1.0) ---
 
-Phase 6 — AI Integration (Free Gemini)
-context_builder.py (flatten all project tables to JSON ~2,000 tokens). Google AI Studio free API integration. Intent classifier (regex-based, no tokens). AI chat with project context. Rate limiting: 10 calls/day/farmer. Deterministic fallback. Weekly summary Celery job. AI response parser → update DB.
-Deliverable:
-"Why are leaves yellow?" → Gemini answers with farmer's specific soil, weather, stage context
-Week 12
+v2.0 — AI Chat (Gemini)
+  POST /ai/chat, AI summary, intent routing
+  Grant ai_chat via account_features only
 
-Phase 7 — Market Prices + Notifications
-Market price table + 30-day trend calculation. Revenue estimator. Price change alerts (>15%). Web Push VAPID setup. Deep-link notifications (scroll to block, highlight animation). Daily 5:30AM notification Celery job. Notification center page.
-Deliverable:
-Farmer gets "Water plants today" push → taps → app scrolls to watering block
-Weeks 13–14
+v2.0 — Flutter Mobile + Marketplace
 
-Phase 8 — Polish, Testing, Deploy
-Unit tests (pytest): planner generates 77 activities, soil calculator, intent classifier, weather rules. Integration tests: full register→project→plan flow. PWA Service Worker (cache daily plan + weather offline). Lighthouse >90. Docker production build. VPS deploy. GitHub Actions CI/CD.
-Deliverable:
-v1.0 live at agrifarm.app. $0 AI cost. 300 farmers supported.
+v3.0 — AI Agent + MCP + Desktop + RAG

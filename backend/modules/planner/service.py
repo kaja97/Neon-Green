@@ -1,20 +1,21 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
 from models.activity import FarmingActivity, ActivityPlan, ActivityDetail
 from models.project import Project
+from core.farmer import get_owned_project
 from .schemas import CompleteRequest, SkipRequest
 import uuid
 from datetime import date, datetime, timezone
 
 async def get_activity(db: AsyncSession, activity_id: uuid.UUID, account_id: uuid.UUID):
-    # Fetch activity and join with plan and project to verify ownership
+    from models.account import FarmerProfile
     result = await db.execute(
         select(FarmingActivity)
         .join(ActivityPlan, FarmingActivity.plan_id == ActivityPlan.id)
         .join(Project, ActivityPlan.project_id == Project.id)
-        .where(FarmingActivity.id == activity_id, Project.farmer_id == account_id)
+        .join(FarmerProfile, Project.farmer_id == FarmerProfile.id)
+        .where(FarmingActivity.id == activity_id, FarmerProfile.account_id == account_id)
     )
     activity = result.scalars().first()
     if not activity:
@@ -22,12 +23,8 @@ async def get_activity(db: AsyncSession, activity_id: uuid.UUID, account_id: uui
     return activity
 
 async def get_active_plan(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID) -> ActivityPlan:
-    # Verify project ownership first
-    project = await db.get(Project, project_id)
-    if not project or project.farmer_id != account_id:
-        raise HTTPException(status_code=404, detail="Project not found")
-        
-    # Get active plan
+    await get_owned_project(db, project_id, account_id)
+
     result = await db.execute(
         select(ActivityPlan)
         .where(ActivityPlan.project_id == project_id, ActivityPlan.is_active == True)
@@ -71,7 +68,6 @@ async def mark_complete(db: AsyncSession, activity_id: uuid.UUID, account_id: uu
     activity.status = "completed"
     activity.completed_at = datetime.now(timezone.utc)
     
-    # Check if there is an ActivityDetail to update, or create one
     result = await db.execute(select(ActivityDetail).where(ActivityDetail.activity_id == activity.id))
     detail = result.scalars().first()
     

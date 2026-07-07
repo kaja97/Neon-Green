@@ -1,11 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException
-from models.project import Project
+from models.project import Project, ProjectService
 from models.plant import Plant, PlantStage
 from models.farmer import FarmerLocation
 from models.account import FarmerProfile
-from .schemas import ProjectCreate, ProjectStatusUpdate
+from core.farmer import get_farmer_profile, get_owned_project
+from core.service_gating import seed_project_services, list_project_services
+from .schemas import ProjectCreate, ProjectStatusUpdate, ProjectServiceResponse
 import uuid
 from datetime import date, timedelta
 import logging
@@ -13,12 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 async def _get_farmer_profile(db: AsyncSession, account_id: uuid.UUID) -> FarmerProfile:
-    """Resolve account ID to farmer profile."""
-    result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == account_id))
-    profile = result.scalars().first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="Farmer profile not found")
-    return profile
+    return await get_farmer_profile(db, account_id)
 
 async def get_plants(db: AsyncSession):
     result = await db.execute(select(Plant).where(Plant.is_active == True))
@@ -78,6 +75,8 @@ async def create_project(db: AsyncSession, account_id: uuid.UUID, data: ProjectC
     
     db.add(project)
     await db.flush()
+
+    await seed_project_services(db, project.id, account_id)
     
     # Generate activity plan synchronously (no Celery needed)
     try:
@@ -98,11 +97,14 @@ async def list_projects(db: AsyncSession, account_id: uuid.UUID):
     return result.scalars().all()
 
 async def get_project(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
-    profile = await _get_farmer_profile(db, account_id)
-    project = await db.get(Project, project_id)
-    if not project or project.farmer_id != profile.id:
-        raise HTTPException(status_code=404, detail="Project not found")
+    project, _ = await get_owned_project(db, project_id, account_id)
     return project
+
+async def get_project_services(
+    db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID
+) -> list[ProjectService]:
+    await get_owned_project(db, project_id, account_id)
+    return await list_project_services(db, project_id)
 
 async def update_project_status(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID, update_data: ProjectStatusUpdate):
     project = await get_project(db, project_id, account_id)

@@ -8,7 +8,7 @@ from models.account import Account
 from .schemas import (
     ProjectCreate, ProjectResponse, ProjectStatusUpdate,
     DashboardResponse, PlantResponse, PlantStageResponse,
-    FarmingMethodResponse
+    FarmingMethodResponse, ProjectServiceResponse
 )
 from . import service
 from . import dashboard
@@ -69,3 +69,11 @@ async def get_project_dashboard(
     current_user: Account = Depends(get_current_user)
 ):
     return await dashboard.get_dashboard(db, project_id, current_user.id)
+
+@router.get("/{project_id}/services", response_model=List[ProjectServiceResponse])
+async def get_project_services(
+    project_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: Account = Depends(get_current_user),
+):
+    return await service.get_project_services(db, project_id, current_user.id)

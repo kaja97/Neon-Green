@@ -1,5 +1,5 @@
 from .base import Base
-from .account import Account, FarmerProfile, VendorProfile, BuyerProfile
+from .account import Account, FarmerProfile, VendorProfile, BuyerProfile, AccountFeature
 from .farmer import FarmerLocation, FarmerLandDetail, FarmerLivestock
 from .project import Project, ProjectService
 from .plant import Plant, PlantStage, PlantNutrientReq, PlantWaterReq
@@ -16,7 +16,7 @@ from .marketplace import VendorProduct, HarvestListing
 
 __all__ = [
     "Base",
-    "Account", "FarmerProfile", "VendorProfile", "BuyerProfile",
+    "Account", "FarmerProfile", "VendorProfile", "BuyerProfile", "AccountFeature",
     "FarmerLocation", "FarmerLandDetail", "FarmerLivestock",
     "Project", "ProjectService",
     "Plant", "PlantStage", "PlantNutrientReq", "PlantWaterReq",

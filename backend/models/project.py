@@ -1,6 +1,6 @@
-from sqlalchemy import String, Boolean, Date, ForeignKey, Numeric, Text, Integer
+from sqlalchemy import String, Boolean, Date, DateTime, ForeignKey, Numeric, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from datetime import date, datetime
 from .base import BaseModel
 import uuid
@@ -33,8 +33,16 @@ class Project(BaseModel):
 
 class ProjectService(BaseModel):
     __tablename__ = "project_services"
-    
-    project_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"))
+    __table_args__ = (
+        UniqueConstraint("project_id", "service_type", name="uq_project_service"),
+    )
+
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE")
+    )
     service_type: Mapped[str] = mapped_column(String(50))
+    config_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    settings: Mapped[dict | None] = mapped_column(Text, nullable=True) # JSON stored as Text or JSONB later
+    activated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

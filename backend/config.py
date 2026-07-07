@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     VAPID_PRIVATE_KEY: Optional[str] = None
     VAPID_EMAIL: Optional[str] = None
 
+    # Comma-separated services granted to new accounts (excludes ai_chat, ai_agent).
+    # Example: activity_plan,weather,soil,disease_watch,market_price
+    DEFAULT_ACCOUNT_SERVICES: str = (
+        "activity_plan,weather,soil,disease_watch,market_price"
+    )
+
     model_config = SettingsConfigDict(
         env_file="../.env",
         env_file_encoding="utf-8",

@@ -9,9 +9,9 @@ from modules.planner import router as planner_router
 from modules.weather import router as weather_router
 from modules.soil import router as soil_router
 from modules.disease import router as disease_router
-from modules.ai import router as ai_router
 from modules.market import router as market_router
 from modules.notification import router as notification_router
+# AI chat and AI Agent are deferred — see doc/16_SERVICE_GATING.md
 
 app = FastAPI(
     title="AgriFarm AI API",
@@ -44,6 +44,5 @@ app.include_router(planner_router, prefix="/api/v1")
 app.include_router(weather_router, prefix="/api/v1")
 app.include_router(soil_router, prefix="/api/v1")
 app.include_router(disease_router, prefix="/api/v1")
-app.include_router(ai_router, prefix="/api/v1")
 app.include_router(market_router, prefix="/api/v1")
 app.include_router(notification_router, prefix="/api/v1")

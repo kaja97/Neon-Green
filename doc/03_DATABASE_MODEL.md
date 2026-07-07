@@ -127,6 +127,24 @@ For purchasing harvest outputs (Individuals, Retailers, Wholesalers). **1-to-1 w
 
 ---
 
+### `account_features`
+Platform-level service access per account. Controls which optional services a user may use (beta rollout, tiers, admin grants). Seeded on registration from `DEFAULT_ACCOUNT_SERVICES` env var.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `account_id` | UUID FK → accounts | CASCADE DELETE |
+| `service_type` | VARCHAR(50) | See service types below |
+| `is_enabled` | BOOLEAN | |
+| `enabled_at` | TIMESTAMP | When access was granted |
+| **UNIQUE** | | `(account_id, service_type)` |
+
+**Service types:** `activity_plan` (core), `weather`, `soil`, `disease_watch`, `market_price`, `notifications`, `ai_chat` (v2.0), `ai_agent` (v3.0)
+
+See [`16_SERVICE_GATING.md`](./16_SERVICE_GATING.md) for rollout rules.
+
+---
+
 ### `farmer_locations`
 A farmer can have multiple land locations (home farm, north field, etc.)
 
@@ -407,7 +425,7 @@ Which services are enabled for each project (modular add-ons).
 |--------|------|-------|
 | `id` | UUID PK | |
 | `project_id` | UUID FK → projects | |
-| `service_type` | VARCHAR(50) | `weather`, `soil`, `activity_plan`, `disease_watch`, `market_price`, `ai_chat` |
+| `service_type` | VARCHAR(50) | `activity_plan`, `weather`, `soil`, `disease_watch`, `market_price`, `notifications`, `ai_chat` (future), `ai_agent` (future) |
 | `config_json` | JSONB | Service-specific settings |
 | `is_active` | BOOLEAN | On/off toggle |
 | `activated_at` | TIMESTAMP | |
