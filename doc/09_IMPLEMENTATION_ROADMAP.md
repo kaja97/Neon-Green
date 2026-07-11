@@ -68,8 +68,12 @@ All code is structured to support future expansion from day one.
   - [ ] `PUT /farmer/profile` — update profile
   - [ ] `POST /farmer/locations` — add GPS location
   - [ ] `GET /farmer/locations` — list locations
+  - [ ] `PUT /farmer/locations/{id}` — update location
+  - [ ] `DELETE /farmer/locations/{id}` — delete location
   - [ ] `POST /farmer/land` — add land details
   - [ ] `GET /farmer/land` — list land details
+  - [ ] `PUT /farmer/land/{id}` — update land details
+  - [ ] `DELETE /farmer/land/{id}` — delete land details
 
 ### Frontend
 - [ ] Login page (`/login`)
@@ -90,6 +94,8 @@ All code is structured to support future expansion from day one.
   - [ ] `POST /projects` — create project (validate crop, location, land)
   - [ ] `GET /projects` — list projects (with filter by status)
   - [ ] `GET /projects/{id}` — project detail
+  - [ ] `PUT /projects/{id}` — update project details
+  - [ ] `DELETE /projects/{id}` — delete project
   - [ ] `PATCH /projects/{id}/status` — change status
   - [ ] `GET /projects/{id}/dashboard` — aggregated dashboard endpoint
 - [ ] Master Data endpoints:

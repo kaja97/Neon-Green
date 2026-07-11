@@ -35,8 +35,18 @@ class TokenResponse(BaseModel):
     # but we can for non-browser clients.
     refresh_token: Optional[str] = None
 
+from pydantic import ConfigDict
+
+class FarmerProfileShort(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    full_name: str
+    farming_method: str
+    primary_language: str
+
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     email: Optional[str] = None
     phone: Optional[str] = None
     role: str
+    farmer_profile: Optional[FarmerProfileShort] = None

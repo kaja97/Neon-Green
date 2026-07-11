@@ -30,11 +30,11 @@ The project is building through **8 phases** toward v1.0. Track what is done vs.
 **Week 2**
 
 ### What was completed:
-- `modules/auth/router.py` — `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `GET /auth/me`
-- `modules/auth/service.py` — bcrypt password hashing, JWT creation, token validation
+- `modules/auth/router.py` — `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `GET /auth/me`, `PUT /auth/account`, `DELETE /auth/account`
+- `modules/auth/service.py` — bcrypt password hashing, JWT creation, token validation, account update/soft-delete
 - `modules/auth/utils.py` — JWT encode/decode helpers
-- `modules/auth/schemas.py` — `RegisterRequest`, `LoginRequest`, `TokenResponse`
-- `modules/farmer/` — farmer profile CRUD, location management, land details
+- `modules/auth/schemas.py` — `RegisterRequest`, `LoginRequest`, `TokenResponse`, `AccountUpdate`
+- `modules/farmer/` — farmer profile CRUD, full location management (POST, GET, PUT, DELETE), full land details (POST, GET, PUT, DELETE)
 
 ### DO NOT re-implement:
 - JWT authentication is working. Do not change the auth flow.
@@ -47,8 +47,9 @@ The project is building through **8 phases** toward v1.0. Track what is done vs.
 
 ### What needs to be built:
 - [ ] `core/cache.py` — `invalidate_dashboard_cache(project_id)`, `DASHBOARD_CACHE_KEY`, `DASHBOARD_CACHE_TTL = 180`
-- [ ] `modules/project/service.py` — `create_project()` that triggers Celery plan generation
-- [ ] `modules/project/router.py` — `POST /projects`, `GET /projects`, `GET /projects/{id}`, `GET /projects/{id}/dashboard`
+- [x] `modules/project/service.py` — `create_project()`, `update_project()`, `delete_project()` (fixed location validation)
+- [x] `modules/project/router.py` — `POST /projects`, `GET /projects`, `GET /projects/{id}`, `PUT /projects/{id}`, `DELETE /projects/{id}`
+- [ ] `modules/project/router.py` — `GET /projects/{id}/dashboard`
 - [ ] `modules/project/dashboard.py` — `asyncio.gather()` parallel queries + Redis 3-min cache + `invalidate_dashboard_cache()`
 - [ ] Master data endpoints: `GET /plants`, `GET /plants/{id}/stages`, `GET /farming-methods`
 

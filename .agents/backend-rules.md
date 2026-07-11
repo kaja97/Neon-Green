@@ -140,9 +140,13 @@ Celery app config is in `tasks/celery_app.py`. Broker is Redis DB 1. Result back
 ## 8. API Design
 
 - All routes prefixed with `/api/v1` (mounted in `main.py`).
-- Use proper HTTP verbs: `GET` for reads, `POST` for creates, `PATCH` for partial updates, `DELETE` for deletes.
+- Use proper HTTP verbs: `GET` for reads, `POST` for creates, `PUT` for full updates, `PATCH` for partial updates, `DELETE` for deletes.
 - Return standardized response shapes. Successful creates return `201`.
 - Authentication: Bearer JWT token in `Authorization` header. Validate via `get_current_user` dependency.
+
+### CRUD Principles
+- **Deletes**: Use **Soft Deletes** (`is_active = False`) for core entities (like `Account`) to preserve historical data. Use **Hard Deletes** (`await db.delete(obj)`) for nested dependencies (like `FarmerLocation`, `FarmerLandDetail`, `Project`) where soft deletion isn't necessary.
+- **Dependencies**: Always validate parent dependencies before creating a child record (e.g., validate `FarmerLocation` exists and belongs to the user before creating a `Project`).
 
 ### Dashboard Cache Invalidation Rule
 After any mutation that changes data shown on the dashboard, call `invalidate_dashboard_cache(project_id)` from `core/cache.py`. Required on:

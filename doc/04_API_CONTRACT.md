@@ -102,6 +102,22 @@ Response 200: {
 }
 ```
 
+### Update Account (Email/Phone)
+```
+PUT /auth/account
+Headers: Authorization: Bearer <token>
+Body: {
+  "phone": "+94777123456"
+}
+```
+
+### Delete Account (Soft Delete)
+```
+DELETE /auth/account
+Headers: Authorization: Bearer <token>
+Response 204 No Content
+```
+
 ---
 
 ## FARMER ENDPOINTS
@@ -165,6 +181,12 @@ Response 200: {
 }
 ```
 
+### Update/Delete Location
+```
+PUT /farmer/locations/{id}
+DELETE /farmer/locations/{id}
+```
+
 ### Add Land Details
 ```
 POST /farmer/land
@@ -177,6 +199,12 @@ Body: {
   "irrigation_type": "drip",
   "land_ownership": "owned"
 }
+```
+
+### Update/Delete Land Details
+```
+PUT /farmer/land/{id}
+DELETE /farmer/land/{id}
 ```
 
 ---
@@ -292,6 +320,12 @@ Response 200: {
 ```
 PATCH /projects/{id}/status
 Body: { "status": "harvested", "actual_harvest_date": "2025-05-25" }
+```
+
+### Full Update / Delete Project
+```
+PUT /projects/{id}
+DELETE /projects/{id}
 ```
 
 ---

@@ -54,11 +54,23 @@ async def register_user(db: AsyncSession, user_data: RegisterRequest) -> TokenRe
     )
     db.add(new_profile)
 
+    if user_data.location:
+        from models.farmer import FarmerLocation
+        new_location = FarmerLocation(
+            account_id=new_account.id,
+            label=user_data.location.label,
+            district=user_data.location.district,
+            latitude=user_data.location.latitude,
+            longitude=user_data.location.longitude,
+            is_primary=True
+        )
+        db.add(new_location)
+
     try:
         await db.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         await db.rollback()
-        raise HTTPException(status_code=400, detail="Database error during registration")
+        raise HTTPException(status_code=400, detail="Database error during registration. " + str(e))
 
     access_token = create_access_token({"sub": str(new_account.id)})
     refresh_token = create_refresh_token({"sub": str(new_account.id)})
@@ -84,6 +96,18 @@ async def login_user(db: AsyncSession, login_data: LoginRequest) -> TokenRespons
             headers={"WWW-Authenticate": "Bearer"},
         )
         
+    if not account.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account has been deactivated. Please contact support."
+        )
+
+    # Update last login time
+    from datetime import datetime
+    import pytz
+    account.last_login_at = datetime.now(pytz.utc)
+    await db.commit()
+
     access_token = create_access_token({"sub": str(account.id)})
     refresh_token = create_refresh_token({"sub": str(account.id)})
     
