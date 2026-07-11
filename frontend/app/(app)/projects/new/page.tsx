@@ -1,26 +1,73 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Sprout, MapPin, Calendar, LayoutTemplate } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Sprout, MapPin, Calendar, LayoutTemplate, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import api from "@/lib/api";
+import { useAuthStore } from "@/lib/stores/authStore";
 
 export default function NewProjectWizard() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    plant_id: "",
+    location_id: "",
+    area_acres: "",
+    farming_method: "",
+    planting_date: new Date().toISOString().split('T')[0]
+  });
+
+  // Queries
+  const { data: plants, isLoading: plantsLoading } = useQuery({
+    queryKey: ["plants"],
+    queryFn: async () => (await api.get("/plants")).data,
+    enabled: !!user,
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => (await api.get("/farmer/profile")).data,
+    enabled: !!user,
+  });
+
+  // Mutation
+  const createProject = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await api.post("/projects", data);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      router.push(`/projects/${data.id}`);
+    }
+  });
 
   const nextStep = () => setStep((s) => Math.min(s + 1, 4));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
+  const handleCreate = () => {
+    setStep(5); // Loading step
+    createProject.mutate({
+      plant_id: formData.plant_id,
+      area_acres: parseFloat(formData.area_acres),
+      farming_method: formData.farming_method,
+      planting_date: formData.planting_date
+    });
+  };
+
   return (
-    <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-8 bg-slate-50 min-h-screen text-slate-900">
       {/* Header */}
       <header className="flex items-center gap-4 mb-8">
-        <Link href="/dashboard" className="p-2 bg-slate-800/50 hover:bg-slate-800 rounded-full transition-colors">
-          <ArrowLeft className="w-5 h-5 text-slate-300" />
+        <Link href="/dashboard" className="p-2 bg-white shadow-sm hover:bg-slate-100 rounded-full transition-colors">
+          <ArrowLeft className="w-5 h-5 text-slate-700" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Create New Project</h1>
-          <p className="text-slate-400 text-sm">Step {step} of 4</p>
+          <h1 className="text-2xl font-bold tracking-tight">Create New Project</h1>
+          <p className="text-slate-500 text-sm">Step {Math.min(step, 4)} of 4</p>
         </div>
       </header>
 
@@ -31,56 +78,61 @@ export default function NewProjectWizard() {
             key={s}
             className={clsx(
               "h-2 flex-1 rounded-full transition-colors duration-500",
-              s <= step ? "bg-primary" : "bg-slate-800"
+              s <= step ? "bg-green-600" : "bg-slate-200"
             )}
           />
         ))}
       </div>
 
       {/* Steps Content */}
-      <div className="bg-card border border-slate-800 rounded-3xl p-6 md:p-8 min-h-[400px] relative">
+      <div className="bg-white border shadow-sm rounded-3xl p-6 md:p-8 min-h-[400px] relative">
         {step === 1 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-              <Sprout className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <Sprout className="w-6 h-6 text-green-600" />
               What are you planting?
             </h2>
-            <div className="grid grid-cols-2 gap-4">
-              {["Tomato", "Chili Pepper", "Red Onion", "Cabbage"].map((crop, i) => (
-                <button
-                  key={crop}
-                  onClick={nextStep}
-                  className="p-6 rounded-2xl border-2 border-slate-800 bg-slate-800/20 hover:border-primary hover:bg-primary/5 transition-all text-left group"
-                >
-                  <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                    <span className="text-2xl">{['🍅', '🌶️', '🧅', '🥬'][i]}</span>
-                  </div>
-                  <h3 className="font-semibold text-slate-200 group-hover:text-white">{crop}</h3>
-                </button>
-              ))}
-            </div>
+            {plantsLoading ? (
+               <div className="flex justify-center py-12"><Loader2 className="animate-spin text-green-600" /></div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {plants?.map((plant: any) => (
+                  <button
+                    key={plant.id}
+                    onClick={() => { setFormData({...formData, plant_id: plant.id}); nextStep(); }}
+                    className={clsx(
+                      "p-6 rounded-2xl border-2 transition-all text-left group",
+                      formData.plant_id === plant.id ? "border-green-600 bg-green-50" : "border-slate-200 hover:border-green-300"
+                    )}
+                  >
+                    <h3 className="font-semibold">{plant.common_name}</h3>
+                    <p className="text-xs text-slate-500">{plant.scientific_name}</p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {step === 2 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
               <MapPin className="w-6 h-6 text-blue-500" />
               Where is this field?
             </h2>
             <div className="space-y-4">
               <button
-                onClick={nextStep}
-                className="w-full p-5 rounded-2xl border-2 border-slate-800 bg-slate-800/20 hover:border-blue-500 hover:bg-blue-500/5 transition-all text-left flex items-center justify-between"
+                onClick={() => { setFormData({...formData, location_id: "default"}); nextStep(); }}
+                className={clsx(
+                  "w-full p-5 rounded-2xl border-2 transition-all text-left flex items-center justify-between",
+                  formData.location_id === "default" ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:border-blue-300"
+                )}
               >
                 <div>
-                  <h3 className="font-semibold text-white">North Plot</h3>
-                  <p className="text-sm text-slate-400 mt-1">Jaffna, Sri Lanka</p>
+                  <h3 className="font-semibold text-slate-900">Main Farm</h3>
+                  <p className="text-sm text-slate-500 mt-1">{profile?.address || 'Unknown Location'}</p>
                 </div>
-                <CheckCircle2 className="w-6 h-6 text-slate-600" />
-              </button>
-              <button className="w-full p-5 rounded-2xl border-2 border-dashed border-slate-700 hover:border-slate-500 transition-colors text-center text-slate-400 font-medium">
-                + Add New Location
+                {formData.location_id === "default" && <CheckCircle2 className="w-6 h-6 text-blue-600" />}
               </button>
             </div>
           </div>
@@ -88,26 +140,40 @@ export default function NewProjectWizard() {
 
         {step === 3 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
               <LayoutTemplate className="w-6 h-6 text-amber-500" />
               Land Details & Method
             </h2>
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-2">Cultivation Area (Acres)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Cultivation Area (Acres)</label>
                 <input
                   type="number"
                   placeholder="e.g. 1.5"
-                  className="w-full bg-slate-900 border border-slate-700 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
+                  value={formData.area_acres}
+                  onChange={(e) => setFormData({...formData, area_acres: e.target.value})}
+                  className="w-full bg-white border border-slate-300 rounded-xl py-3 px-4 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-2">Farming Method</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Farming Method</label>
                 <div className="grid grid-cols-2 gap-3">
-                  <button onClick={nextStep} className="py-3 px-4 rounded-xl border-2 border-amber-500 bg-amber-500/10 text-amber-500 font-semibold text-sm">
+                  <button 
+                    onClick={() => setFormData({...formData, farming_method: "organic"})} 
+                    className={clsx(
+                      "py-3 px-4 rounded-xl border-2 font-semibold text-sm transition-colors",
+                      formData.farming_method === "organic" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-600"
+                    )}
+                  >
                     Organic
                   </button>
-                  <button onClick={nextStep} className="py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-800/50 text-slate-300 font-semibold text-sm hover:border-slate-500 transition-colors">
+                  <button 
+                    onClick={() => setFormData({...formData, farming_method: "conventional"})} 
+                    className={clsx(
+                      "py-3 px-4 rounded-xl border-2 font-semibold text-sm transition-colors",
+                      formData.farming_method === "conventional" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-600"
+                    )}
+                  >
                     Conventional
                   </button>
                 </div>
@@ -117,44 +183,62 @@ export default function NewProjectWizard() {
         )}
 
         {step === 4 && (
-          <div className="animate-in fade-in slide-in-from-right-4 duration-500 text-center">
-            <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Calendar className="w-10 h-10 text-primary" />
+          <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+             <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <Calendar className="w-6 h-6 text-purple-500" />
+              When did you plant?
+            </h2>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Planting Date</label>
+                <input
+                  type="date"
+                  value={formData.planting_date}
+                  onChange={(e) => setFormData({...formData, planting_date: e.target.value})}
+                  className="w-full bg-white border border-slate-300 rounded-xl py-3 px-4 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                />
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">
+          </div>
+        )}
+
+        {step === 5 && (
+          <div className="animate-in fade-in slide-in-from-right-4 duration-500 text-center py-12">
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">
               Generating Farm Plan...
             </h2>
-            <p className="text-slate-400 mb-8 max-w-sm mx-auto">
+            <p className="text-slate-500 mb-8 max-w-sm mx-auto">
               Our AI is analyzing the weather forecast, soil data, and optimal growth stages to create your personalized daily activity plan.
             </p>
-            <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
-            
-            {/* Mock auto-redirect button for the sake of the UI demo */}
-            <Link
-              href="/projects/1"
-              className="mt-12 inline-block text-sm font-semibold text-primary hover:text-emerald-400"
-            >
-              Skip Loading Demo →
-            </Link>
+            <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto" />
+            {createProject.isError && (
+              <p className="text-red-500 mt-4 text-sm font-medium">Failed to create project. Please try again.</p>
+            )}
           </div>
         )}
       </div>
 
       {/* Navigation Buttons */}
-      {step < 4 && (
+      {step < 5 && (
         <div className="flex justify-between">
           <button
             onClick={prevStep}
             disabled={step === 1}
-            className="px-6 py-3 rounded-xl font-semibold text-slate-400 hover:text-white transition-colors disabled:opacity-50"
+            className="px-6 py-3 rounded-xl font-semibold text-slate-500 hover:bg-slate-200 transition-colors disabled:opacity-50"
           >
             Back
           </button>
           <button
-            onClick={nextStep}
-            className="px-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-emerald-600 transition-all hover:scale-105 shadow-lg shadow-emerald-500/20"
+            onClick={step === 4 ? handleCreate : nextStep}
+            disabled={
+              (step === 1 && !formData.plant_id) || 
+              (step === 2 && !formData.location_id) ||
+              (step === 3 && (!formData.area_acres || !formData.farming_method)) ||
+              (step === 4 && !formData.planting_date)
+            }
+            className="px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all shadow-lg disabled:opacity-50"
           >
-            {step === 3 ? "Create Plan" : "Continue"}
+            {step === 4 ? "Create Plan" : "Continue"}
           </button>
         </div>
       )}

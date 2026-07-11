@@ -12,14 +12,13 @@ export default function SoilBlock({ projectId }: { projectId: string }) {
     queryFn: async () => {
       const res = await api.get(`/soil/tests/${projectId}`);
       return res.data;
-    },
-    enabled: !!projectId && projectId !== "1" && projectId !== "2",
+    }
   });
 
   if (isLoading) {
     return (
-      <div className="bg-card border border-slate-800 rounded-2xl p-4 flex items-center justify-center min-h-[120px]">
-        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-center min-h-[120px] shadow-sm">
+        <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
       </div>
     );
   }
@@ -33,14 +32,14 @@ export default function SoilBlock({ projectId }: { projectId: string }) {
   return (
     <Link
       href={`/projects/${projectId}/soil`}
-      className="bg-card border border-slate-800 rounded-2xl p-4 hover:border-slate-600 transition-all hover:shadow-lg group block"
+      className="bg-white border border-slate-200 rounded-2xl p-4 hover:border-slate-300 transition-all hover:shadow-lg group block shadow-sm"
     >
-      <div className="p-2 rounded-xl w-fit mb-3 bg-amber-500/10 group-hover:scale-110 transition-transform">
-        <FlaskConical className="w-5 h-5 text-amber-400" />
+      <div className="p-2 rounded-xl w-fit mb-3 bg-amber-50 group-hover:scale-110 transition-transform">
+        <FlaskConical className="w-5 h-5 text-amber-500" />
       </div>
       <p className="text-xs text-slate-500 mb-0.5">Soil</p>
-      <p className="text-lg font-bold text-white">{value}</p>
-      <p className={clsx("text-xs", sub.includes("Low") ? "text-rose-400" : "text-slate-400")}>{sub}</p>
+      <p className="text-lg font-bold text-slate-800">{value}</p>
+      <p className={clsx("text-xs", sub.includes("Low") ? "text-rose-500" : "text-slate-500")}>{sub}</p>
     </Link>
   );
 }
