@@ -1,112 +1,102 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import api from "@/lib/api";
-import { Leaf } from "lucide-react";
-import Link from "next/link";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { Leaf } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import api from "@/lib/api"
+import { useAuthStore } from "@/lib/stores/authStore"
+
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address."),
+  password: z.string().min(1, "Password is required."),
+})
+
+type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
-    const router = useRouter();
-    const [emailOrPhone, setEmailOrPhone] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+  const router = useRouter()
+  const { login } = useAuthStore()
+  const [error, setError] = useState<string | null>(null)
+  
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  })
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setLoading(true);
+  const onSubmit = async (data: LoginFormValues) => {
+    setError(null)
+    try {
+      // Must use form-data since OAuth2PasswordRequestForm in FastAPI expects it
+      const formData = new FormData()
+      formData.append('username', data.email)
+      formData.append('password', data.password)
+      
+      const res = await api.post("/auth/login", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      })
+      
+      const { access_token, refresh_token } = res.data
+      
+      // Fetch user profile info
+      const meRes = await api.get("/auth/me", {
+        headers: { Authorization: `Bearer ${access_token}` }
+      })
+      
+      login(meRes.data, access_token, refresh_token)
+      router.push("/dashboard")
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Failed to login. Please check your credentials.")
+    }
+  }
 
-        try {
-            const res = await api.post("/auth/login", {
-                email_or_phone: emailOrPhone,
-                password,
-            });
-            localStorage.setItem("access_token", res.data.access_token);
-            router.push("/dashboard");
-        } catch (err: any) {
-            setError(err.response?.data?.detail || "Failed to login. Please check your credentials.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md flex flex-col items-center">
-                <Leaf className="w-12 h-12 text-green-600 mb-4" />
-                <h2 className="text-center text-3xl font-extrabold text-gray-900">
-                    Sign in to AgriFarm AI
-                </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    Or{" "}
-                    <Link href="/register" className="font-medium text-green-600 hover:text-green-500">
-                        create a new account
-                    </Link>
-                </p>
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="mb-8 flex items-center space-x-2">
+        <Leaf className="h-8 w-8 text-green-600" />
+        <span className="text-2xl font-bold tracking-tight text-green-900">AgriFarm AI</span>
+      </div>
+      
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-2xl">Welcome back</CardTitle>
+          <CardDescription>Enter your email and password to login to your account.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="farmer@example.com" {...register("email")} />
+              {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
             </div>
-
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
-                    <form className="space-y-6" onSubmit={handleLogin}>
-                        {error && (
-                            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md">
-                                {error}
-                            </div>
-                        )}
-                        <div>
-                            <label
-                                htmlFor="emailOrPhone"
-                                className="block text-sm font-medium text-gray-700"
-                            >
-                                Email address or Phone number
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    id="emailOrPhone"
-                                    name="emailOrPhone"
-                                    type="text"
-                                    required
-                                    value={emailOrPhone}
-                                    onChange={(e) => setEmailOrPhone(e.target.value)}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label
-                                htmlFor="password"
-                                className="block text-sm font-medium text-gray-700"
-                            >
-                                Password
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
-                            >
-                                {loading ? "Signing in..." : "Sign in"}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" {...register("password")} />
+              {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
             </div>
-        </div>
-    );
+            
+            {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
+            
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Logging in..." : "Login"}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Button variant="link" className="p-0" onClick={() => router.push("/register")}>
+              Sign up
+            </Button>
+          </p>
+        </CardFooter>
+      </Card>
+    </div>
+  )
 }

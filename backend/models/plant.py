@@ -10,9 +10,12 @@ class Plant(BaseModel):
     common_name: Mapped[str] = mapped_column(String(100))
     local_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     scientific_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    category: Mapped[str] = mapped_column(String(50))
+    category: Mapped[str] = mapped_column(String(100))
+    sub_category: Mapped[str | None] = mapped_column(String(100), nullable=True)
     
     growth_duration_days: Mapped[int] = mapped_column(Integer)
+    expected_yield_per_acre_kg: Mapped[float] = mapped_column(Numeric(10, 2), default=0.0)
+    
     planting_season: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     
     optimal_temp_min: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)

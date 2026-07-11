@@ -24,8 +24,11 @@ class Project(BaseModel):
     plan_generation_status: Mapped[str] = mapped_column(String(50), default="pending")
     
     expected_harvest_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    expected_yield_kg: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    expected_revenue: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
     actual_yield_kg: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     actual_revenue: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+    actual_harvest_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     actual_harvest_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     
     plant: Mapped["Plant"] = relationship()

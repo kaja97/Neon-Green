@@ -1,0 +1,60 @@
+import asyncio
+import sys
+import logging
+from sqlalchemy.future import select
+from database import engine, async_session
+from models.plant import Plant, PlantStage, FertilizerRecommendation
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+async def validate_seed_data():
+    """Validates the seed data for consistency and logic errors."""
+    has_errors = False
+    
+    async with async_session() as db:
+        # 1. Check for stage continuity
+        plants = (await db.execute(select(Plant))).scalars().all()
+        for plant in plants:
+            stages = (await db.execute(
+                select(PlantStage)
+                .where(PlantStage.plant_id == plant.id)
+                .order_by(PlantStage.stage_order)
+            )).scalars().all()
+            
+            if not stages:
+                logger.error(f"Plant {plant.common_name} has no stages!")
+                has_errors = True
+                continue
+            
+            # Check gaps or overlaps
+            expected_start = 0
+            for stage in stages:
+                if stage.start_day != expected_start:
+                    logger.error(f"Plant {plant.common_name} stage {stage.stage_name} starts at {stage.start_day}, expected {expected_start}")
+                    has_errors = True
+                expected_start = stage.end_day + 1
+            
+            if stages[-1].end_day != plant.growth_duration_days:
+                logger.warning(f"Plant {plant.common_name} final stage ends at {stages[-1].end_day}, but total duration is {plant.growth_duration_days}")
+                
+        # 2. Verify organic fertilizers don't recommend synthetic products
+        fertilizers = (await db.execute(select(FertilizerRecommendation))).scalars().all()
+        synthetic_terms = ["urea", "tsp", "mop", "npk", "synthetic"]
+        
+        for fert in fertilizers:
+            if fert.farming_method == "organic":
+                for term in synthetic_terms:
+                    if term in fert.product_name.lower():
+                        logger.error(f"Organic fertilizer recommendation contains synthetic product: {fert.product_name}")
+                        has_errors = True
+                        
+    if has_errors:
+        logger.error("Seed data validation failed.")
+        sys.exit(1)
+    else:
+        logger.info("Seed data validation passed.")
+        sys.exit(0)
+
+if __name__ == "__main__":
+    asyncio.run(validate_seed_data())

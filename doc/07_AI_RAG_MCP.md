@@ -29,17 +29,16 @@ Google AI Studio provides **free access** to Gemini models via a simple REST API
 ### Free Tier Limits (Gemini 2.0 Flash)
 | Limit | Value | Our Usage |
 |-------|-------|-----------|
-| Requests per minute | 15 RPM | ~2-3 RPM at 100 active farmers |
+| Requests per minute | 15 RPM | Stay ≤14 RPM with global sliding-window counter |
 | Tokens per minute | 1,000,000 | ~50,000 tokens/min at peak |
-| Requests per day | 1,500 RPD | ~500 RPD at 100 farmers (10 AI calls each, 50 use it daily) |
+| Requests per day | 1,500 RPD | ~300 RPD at 100 farmers (with context hashing) |
 | Input token limit | 1,048,576 per request | Our context: ~2,000 tokens per call |
 | Output token limit | 8,192 per response | Our limit: 800 tokens per response |
 
-### Why This Is Enough
-- Each farmer makes ~3-5 AI calls per day (summary, 1-2 questions)
-- 100 farmers × 5 calls = 500 calls/day (well within 1,500 RPD limit)
-- Each call uses ~2,000 input tokens + 800 output tokens = 2,800 tokens
-- 500 calls × 2,800 tokens = 1.4M tokens/day (free tier allows much more)
+### ⚠️ Real Capacity Warning
+- Without fixes: 150 active farmers × 10 calls/day = **1,500 calls → hits ceiling exactly**
+- The weekly Celery job alone (300 projects × 1 call) = 300 calls on Sunday
+- **Three fixes** bring effective capacity to 500+ farmers within the free tier (see Section 5)
 
 ### Setup
 ```bash
@@ -333,50 +332,126 @@ if intent == 'ai_required':
 
 ## 5. Rate Limiting & Error Handling
 
-### Rate Limits for Free Tier Protection
+### Fix 1: Context Hashing — Avoid Duplicate Gemini Calls
+
+Before calling Gemini, hash the flattened context. If the project data hasn't changed since the last summary, return the cached result without any API call. This is the single most effective way to stay within free tier limits.
 
 ```python
-# Per-farmer AI call limits (protect Google's free tier)
-MAX_AI_CALLS_PER_FARMER_PER_DAY = 10
-MAX_AI_CALLS_PER_MINUTE_GLOBAL = 14  # Keep under 15 RPM free limit
+import hashlib, json
 
-async def check_ai_budget(farmer_id: str) -> bool:
-    today_count = await redis.get(f"ai_calls:{farmer_id}:{today()}")
-    if int(today_count or 0) >= MAX_AI_CALLS_PER_FARMER_PER_DAY:
-        return False  # Show message: "You've used your daily AI quota"
-    return True
+async def get_or_generate_ai_summary(project_id: str, force_refresh: bool = False):
+    # Build context first (cheap — DB queries only)
+    context = await build_project_context(project_id, db)
+    context_hash = hashlib.md5(
+        json.dumps(context, sort_keys=True, default=str).encode()
+    ).hexdigest()
 
-async def rate_limit_global() -> bool:
-    """Sliding window rate limit for Google free tier (15 RPM)."""
-    current_minute_count = await redis.incr(f"ai_global:{current_minute()}")
-    await redis.expire(f"ai_global:{current_minute()}", 60)
-    return current_minute_count <= MAX_AI_CALLS_PER_MINUTE_GLOBAL
+    # Check if we already have a summary for this exact context state
+    existing = await get_latest_ai_summary(project_id)  # from ai_project_summaries
+    if existing and existing.context_hash == context_hash and not force_refresh:
+        return existing  # Data unchanged — no Gemini call needed
+
+    # Context changed or forced — call Gemini
+    summary = await call_gemini(context)
+    await save_ai_summary(project_id, summary, context_hash=context_hash)
+    return summary
 ```
 
-### Error Handling
+> **Note:** Add `context_hash VARCHAR(32)` column to `ai_project_summaries` table in a new migration.
+
+### Fix 2: Three-Bucket Per-Farmer Daily Quota
+
+Instead of a flat "10 calls/day" limit, split the budget by call type so disease diagnosis never blocks the farmer's ability to ask questions:
 
 ```python
-async def safe_ai_call(project_id, query=None):
+# modules/ai/rate_limiter.py
+from enum import Enum
+
+class AICallType(str, Enum):
+    MANUAL_CHAT = "chat"          # Farmer explicitly asks a question
+    MANUAL_REFRESH = "refresh"    # Farmer taps "Refresh AI Summary"
+    AUTO_DIAGNOSIS = "diagnosis"  # Triggered when farmer reports an issue
+
+DAILY_QUOTAS = {
+    AICallType.MANUAL_CHAT: 5,
+    AICallType.MANUAL_REFRESH: 3,
+    AICallType.AUTO_DIAGNOSIS: 2,
+}  # Total: 10/day — tracked separately per type
+
+async def check_quota(farmer_id: str, call_type: AICallType) -> bool:
+    key = f"ai_quota:{farmer_id}:{call_type.value}:{today()}"
+    count = int(await redis.get(key) or 0)
+    return count < DAILY_QUOTAS[call_type]
+
+async def consume_quota(farmer_id: str, call_type: AICallType):
+    key = f"ai_quota:{farmer_id}:{call_type.value}:{today()}"
+    await redis.incr(key)
+    await redis.expire(key, 86400)  # TTL: 1 day (auto-resets)
+```
+
+### Fix 3: Global RPM Limiter (stays under 15 RPM)
+
+```python
+MAX_AI_CALLS_PER_MINUTE_GLOBAL = 14  # 1 buffer below 15 RPM free limit
+
+async def rate_limit_global() -> bool:
+    """Sliding window rate limit for Google free tier."""
+    key = f"ai_global:{current_minute()}"
+    count = await redis.incr(key)
+    await redis.expire(key, 60)
+    return count <= MAX_AI_CALLS_PER_MINUTE_GLOBAL
+```
+
+### Fix 4: Throttled Weekly Summary Job
+
+The Sunday 6 AM Celery job generates summaries for ALL active projects. For 300 projects at 15 RPM this takes 20 minutes minimum — space the calls to avoid burst failures:
+
+```python
+# tasks/ai_tasks.py
+@celery_app.task
+def generate_weekly_ai_summary():
+    active_projects = get_all_active_projects()
+    for i, project in enumerate(active_projects):
+        # 4-second delay between calls = max 15 per minute
+        if i > 0:
+            time.sleep(4)
+        try:
+            _generate_summary_for_project(project.id)
+        except ResourceExhausted:
+            log.warning(f"Rate limited on project {project.id}, skipping this week")
+            continue  # Skip — will get summary next week
+```
+
+### Error Handling (unchanged)
+
+```python
+async def safe_ai_call(project_id, query=None, call_type=AICallType.MANUAL_CHAT):
     try:
-        response = await get_ai_summary(project_id, query)
+        response = await get_or_generate_ai_summary(project_id, query)
         return response
     except google.api_core.exceptions.ResourceExhausted:
-        # Free tier limit hit — return deterministic fallback
         return {
             "summary": generate_deterministic_summary(project_id),
             "source": "deterministic_fallback",
             "reason": "AI rate limit reached. Showing calculated summary."
         }
-    except google.api_core.exceptions.GoogleAPIError as e:
-        # API error — return cached summary or deterministic
-        cached = await get_cached_ai_summary(project_id)
+    except google.api_core.exceptions.GoogleAPIError:
+        cached = await get_latest_ai_summary(project_id)
         if cached:
-            return {"summary": cached, "source": "cached"}
+            return {"summary": cached.summary_text, "source": "cached"}
         return {
             "summary": generate_deterministic_summary(project_id),
             "source": "deterministic_fallback"
         }
 ```
+
+### Effective Capacity with All Fixes
+
+| Scenario | Without Fixes | With Fixes |
+|----------|--------------|------------|
+| 100 active farmers | 500-1000 calls/day | ~200 calls/day (context hashing) |
+| 300 active farmers | **breaks at RPD limit** | ~600 calls/day ✅ |
+| Weekly job (300 projects) | Burst failures | Throttled, 20 min, stable ✅ |
 
 ---
 

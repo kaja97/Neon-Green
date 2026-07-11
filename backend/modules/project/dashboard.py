@@ -1,3 +1,6 @@
+import uuid
+import json
+from datetime import date, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from models.project import Project
@@ -7,14 +10,10 @@ from models.weather import WeatherAlert
 from models.issue import ProjectIssue
 from .schemas import DashboardResponse, FarmingCircleResponse, StageProgress
 from .service import get_project, get_plant_stages
-import uuid
-from datetime import date
+from core.cache import get_dashboard_cache_key, get_redis_client
 
-async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID) -> DashboardResponse:
-    project = await get_project(db, project_id, account_id)
+async def _get_farming_circle_and_stage(db: AsyncSession, project: Project):
     stages = await get_plant_stages(db, project.plant_id)
-    
-    # Calculate farming circle
     days_since_planting = (date.today() - project.planting_date).days
     total_duration = sum([(s.end_day - s.start_day + 1) for s in stages]) if stages else 0
     
@@ -49,10 +48,9 @@ async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uui
         current_day=days_since_planting,
         total_days=total_duration
     )
-    
-    # --- Fetch real data from other modules ---
-    
-    # Today's activities
+    return current_stage, farming_circle
+
+async def _get_activities(db: AsyncSession, project_id: uuid.UUID):
     today = date.today()
     todays_activities = []
     upcoming_activities = []
@@ -63,7 +61,6 @@ async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uui
     plan = plan_res.scalars().first()
     
     if plan:
-        # Today's pending activities
         act_res = await db.execute(
             select(FarmingActivity)
             .where(FarmingActivity.plan_id == plan.id, FarmingActivity.planned_date <= today, FarmingActivity.status == "pending")
@@ -76,8 +73,6 @@ async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uui
                 "description": a.description, "due_date": a.due_date.isoformat(), "status": a.status
             })
         
-        # Upcoming activities (next 7 days)
-        from datetime import timedelta
         upcoming_res = await db.execute(
             select(FarmingActivity)
             .where(FarmingActivity.plan_id == plan.id, FarmingActivity.planned_date > today,
@@ -90,8 +85,10 @@ async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uui
                 "id": str(a.id), "type": a.activity_type, "title": a.title,
                 "due_date": a.due_date.isoformat(), "status": a.status
             })
-    
-    # Weather alerts
+            
+    return todays_activities, upcoming_activities
+
+async def _get_alerts_and_issues(db: AsyncSession, project_id: uuid.UUID):
     weather_alerts = []
     alert_res = await db.execute(
         select(WeatherAlert).where(WeatherAlert.project_id == project_id, WeatherAlert.is_resolved == False)
@@ -102,7 +99,6 @@ async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uui
             "target_date": alert.target_date.isoformat()
         })
     
-    # Active issues
     active_issues = []
     issue_res = await db.execute(
         select(ProjectIssue).where(ProjectIssue.project_id == project_id, ProjectIssue.status != "resolved")
@@ -112,8 +108,37 @@ async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uui
             "id": str(issue.id), "type": issue.issue_type, "title": issue.title,
             "severity": issue.severity, "status": issue.status
         })
+        
+    return weather_alerts, active_issues
+
+async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID) -> DashboardResponse:
+    # 1. Check Redis Cache
+    redis = await get_redis_client()
+    cache_key = get_dashboard_cache_key(project_id)
+    if redis:
+        cached = await redis.get(cache_key)
+        if cached:
+            try:
+                data = json.loads(cached)
+                return DashboardResponse(**data)
+            except Exception:
+                pass
+                
+    # 2. Gather data sequentially for Project, then parallel for the rest
+    project = await get_project(db, project_id, account_id)
     
-    return DashboardResponse(
+    import asyncio
+    (
+        (current_stage, farming_circle),
+        (todays_activities, upcoming_activities),
+        (weather_alerts, active_issues)
+    ) = await asyncio.gather(
+        _get_farming_circle_and_stage(db, project),
+        _get_activities(db, project_id),
+        _get_alerts_and_issues(db, project_id)
+    )
+    
+    response = DashboardResponse(
         project=project,
         current_stage=current_stage,
         farming_circle=farming_circle,
@@ -122,3 +147,12 @@ async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uui
         weather_alerts=weather_alerts,
         active_issues=active_issues
     )
+    
+    # 3. Store in cache
+    if redis:
+        # Pydantic v2 dump
+        data = response.model_dump(mode='json')
+        from core.cache import DASHBOARD_CACHE_TTL
+        await redis.setex(cache_key, DASHBOARD_CACHE_TTL, json.dumps(data))
+        
+    return response

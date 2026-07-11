@@ -140,8 +140,8 @@ A farmer can have multiple land locations (home farm, north field, etc.)
 | `district` | VARCHAR(100) | Important for market prices |
 | `province` | VARCHAR(100) | |
 | `country` | VARCHAR(100) | Default: Sri Lanka |
-| `latitude` | DECIMAL(10,8) | GPS coordinate |
-| `longitude` | DECIMAL(11,8) | GPS coordinate |
+| `location_polygon` | GEOMETRY(Polygon, 4326) | PostGIS GeoJSON mapping coordinates |
+| `centroid` | GEOMETRY(Point, 4326) | Focal point for localized weather fetching |
 | `timezone` | VARCHAR(50) | Default: Asia/Colombo |
 | `is_primary` | BOOLEAN | Primary farm location |
 

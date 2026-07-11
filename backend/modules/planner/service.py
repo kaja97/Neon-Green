@@ -90,6 +90,12 @@ async def mark_complete(db: AsyncSession, activity_id: uuid.UUID, account_id: uu
         
     await db.commit()
     await db.refresh(activity)
+    
+    from core.cache import invalidate_dashboard_cache
+    plan = await db.get(ActivityPlan, activity.plan_id)
+    if plan:
+        await invalidate_dashboard_cache(plan.project_id)
+        
     return activity
 
 async def mark_skip(db: AsyncSession, activity_id: uuid.UUID, account_id: uuid.UUID, data: SkipRequest):
@@ -111,4 +117,10 @@ async def mark_skip(db: AsyncSession, activity_id: uuid.UUID, account_id: uuid.U
         
     await db.commit()
     await db.refresh(activity)
+    
+    from core.cache import invalidate_dashboard_cache
+    plan = await db.get(ActivityPlan, activity.plan_id)
+    if plan:
+        await invalidate_dashboard_cache(plan.project_id)
+        
     return activity

@@ -42,22 +42,27 @@ async def get_issues(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.U
     )
     return result.scalars().all()
 
+from .matcher import match_disease
+
 async def search_diseases(db: AsyncSession, query: str):
-    # Using simple ILIKE matching on symptoms cast to string or name for fallback
-    # In a full Postgres setup, we would use `to_tsvector` and `@@`.
-    # Casting array to text for simpler search across dialects:
-    from sqlalchemy import cast, String, or_
+    # 1. Use deterministic PostgreSQL full-text search
+    matches = await match_disease(db, query)
     
-    search_term = f"%{query}%"
-    result = await db.execute(
-        select(PlantDisease).where(
-            or_(
-                PlantDisease.name.ilike(search_term),
-                cast(PlantDisease.symptoms, String).ilike(search_term)
-            )
-        ).limit(10)
-    )
-    return result.scalars().all()
+    if matches:
+        ids = [m["id"] for m in matches]
+        # Keep the order returned by matcher (highest rank first)
+        # Using a simple IN clause, but reordering in python to match rank order
+        result = await db.execute(select(PlantDisease).where(PlantDisease.id.in_(ids)))
+        diseases = result.scalars().all()
+        
+        # Sort by rank
+        id_to_rank = {m["id"]: m["rank"] for m in matches}
+        diseases.sort(key=lambda d: id_to_rank.get(d.id, 0), reverse=True)
+        return diseases
+        
+    # 2. Fallback to AI (Phase 6 placeholder)
+    # If no DB match, we would invoke the Gemini API here.
+    return []
 
 async def get_disease_solutions(db: AsyncSession, disease_id: uuid.UUID, farming_method: str = "conventional"):
     result = await db.execute(

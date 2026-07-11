@@ -36,6 +36,11 @@ backend/
 ├── exceptions.py                     ← Custom HTTP exceptions with error codes
 ├── middleware.py                      ← CORS, rate limiting, request logging
 │
+├── core/                             ← Shared infrastructure helpers
+│   ├── __init__.py
+│   └── cache.py                      ← Redis helpers: get_dashboard_cache, invalidate_dashboard_cache
+│                                        setex wrapper, DASHBOARD_CACHE_KEY, TTL constants
+│
 ├── models/                           ← SQLAlchemy ORM models (shared across modules)
 │   ├── __init__.py                   ← Exports all models for Alembic
 │   ├── base.py                       ← Base model class (id, created_at, updated_at)
@@ -78,9 +83,12 @@ backend/
 │   ├── planner/
 │   │   ├── __init__.py
 │   │   ├── router.py                 ← GET /planner/{id}/today, PATCH /activities/{id}/complete
+│   │   │                                Calls invalidate_dashboard_cache() on complete/skip mutations
 │   │   ├── service.py                ← get_today, mark_complete, mark_skip
 │   │   ├── schemas.py                ← ActivityResponse, CompleteRequest, SkipRequest
-│   │   └── engine.py                 ← generate_season_plan() — the core deterministic engine
+│   │   └── engine.py                 ← generate_season_plan() — pure async, NO Celery import
+│   │                                    Includes pre-flight stage gap detection + auto-patch
+│   │                                    Includes build_generic_stages() 3-stage fallback
 │   │
 │   ├── weather/
 │   │   ├── __init__.py
@@ -114,11 +122,14 @@ backend/
 │   │   ├── __init__.py
 │   │   ├── router.py                 ← POST /ai/summary/{id}, POST /ai/chat
 │   │   ├── service.py                ← get_ai_summary, chat, safe_ai_call with fallback
+│   │   │                                Uses get_or_generate_ai_summary() with context hashing
 │   │   ├── schemas.py                ← AISummaryResponse, ChatRequest, ChatResponse
 │   │   ├── context_builder.py        ← build_project_context() — flatten all tables to JSON
 │   │   ├── prompts.py                ← System prompts: SUMMARY_PROMPT, QA_PROMPT, DIAGNOSIS_PROMPT
 │   │   ├── gemini_client.py          ← Google AI Studio SDK wrapper (free tier)
 │   │   ├── intent_classifier.py      ← Regex-based: route weather/price/schedule to deterministic
+│   │   ├── rate_limiter.py           ← 3-bucket daily quota: chat(5) / refresh(3) / diagnosis(2)
+│   │   │                                AICallType enum, check_quota(), consume_quota() via Redis
 │   │   └── response_parser.py        ← Extract insights from AI response → update DB
 │   │
 │   └── notification/
@@ -131,15 +142,26 @@ backend/
 ├── tasks/                            ← Celery background tasks
 │   ├── __init__.py
 │   ├── celery_app.py                 ← Celery app config (broker=Redis)
+│   │                                    Supports CELERY_EAGER_MODE env var for local testing without Docker
 │   ├── weather_tasks.py              ← refresh_weather_cache, adjust_plan_for_weather, check_alerts
-│   ├── planner_tasks.py              ← generate_season_plan (triggered on project create)
+│   │                                    Calls invalidate_dashboard_cache() after activity adjustments
+│   ├── planner_tasks.py              ← generate_season_plan_task — THIN WRAPPER only
+│   │                                    All logic is in modules/planner/engine.py (testable without Celery)
+│   │                                    Uses max_retries=3, exponential backoff
 │   ├── notification_tasks.py         ← send_daily_notifications (5:30 AM)
 │   ├── market_tasks.py               ← compute_market_trends (daily)
 │   └── ai_tasks.py                   ← generate_weekly_ai_summary (Sunday 6 AM)
+│                                        Throttled: 4-second delay between calls to stay under 15 RPM
 │
 ├── seed/                             ← Database seed data
 │   ├── __init__.py
 │   ├── run_seed.py                   ← Master seed runner: python -m backend.seed.run_seed
+│   │                                    Calls validator.py after seeding — fails loud on data errors
+│   ├── validator.py                  ← [NEW] Seed data validation suite:
+│   │                                    validate_plant_stages() — checks start/end day continuity
+│   │                                    validate_fertilizer_coverage() — organic+conventional exists
+│   │                                    validate_water_requirements() — every stage has water data
+│   │                                    run_all_validations() — fails with SystemExit(1) on errors
 │   ├── farming_methods.py            ← 3 records
 │   ├── plants.py                     ← 5 crops
 │   ├── stages.py                     ← 30 records (6 per crop)
@@ -154,17 +176,25 @@ backend/
 │   ├── alembic.ini
 │   ├── env.py
 │   └── versions/
-│       └── 001_initial_schema.py     ← All v1.0 tables
+│       ├── 001_initial_schema.py     ← All v1.0 tables
+│       └── 002_ai_context_hash.py    ← [NEW] Adds context_hash VARCHAR(32) to ai_project_summaries
+│                                        Enables deduplication: skip Gemini if context unchanged
 │
 ├── tests/                            ← Test suite
 │   ├── conftest.py                   ← Test database, fixtures, mock data
 │   ├── test_auth.py
 │   ├── test_project.py
 │   ├── test_planner.py               ← Test plan generation, activity count, organic filtering
+│   │                                    Calls engine.py directly (no Celery needed in tests)
 │   ├── test_weather.py               ← Test adjustment rules
 │   ├── test_soil.py                  ← Test nutrient calculator
 │   ├── test_disease.py               ← Test keyword matching
-│   ├── test_ai.py                    ← Test context builder, rate limiting, fallback
+│   ├── test_ai.py                    ← Test context builder, rate limiting, context hashing, fallback
+│   ├── test_seed_data.py             ← [NEW] Validates all seed data integrity:
+│   │                                    test_all_plants_have_stages()
+│   │                                    test_stage_continuity_no_gaps()
+│   │                                    test_all_stages_have_water_requirements()
+│   │                                    test_organic_fertilizer_exists_for_all_stages()
 │   └── test_integration.py           ← Full flow: register → create project → verify plan
 │
 ├── requirements.txt                  ← Python dependencies

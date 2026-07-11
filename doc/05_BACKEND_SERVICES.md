@@ -188,25 +188,72 @@ async def create_project(data: ProjectCreateRequest, farmer_id: str):
 ```
 
 ### Dashboard Aggregation Endpoint
-**`GET /projects/{id}/dashboard`** — Returns ALL data blocks in one call:
+**`GET /projects/{id}/dashboard`** — Returns ALL data blocks in one call.
+
+**⚠️ Performance Rule:** Use `asyncio.gather()` for parallel queries. Never run these 11 queries sequentially — it would take 500ms+. Target: <200ms fresh, instant from cache.
 
 ```python
-async def get_dashboard(project_id: str):
-    return {
-        "project": get_project_detail(project_id),
-        "current_stage": get_current_stage(project_id),
-        "farming_circle": get_all_stages_with_progress(project_id),
-        "todays_activities": get_todays_activities(project_id),
-        "upcoming_activities": get_upcoming_activities(project_id, days=7),
-        "weather": get_5day_forecast(project_id),
-        "weather_alerts": get_active_weather_alerts(project_id),
-        "soil_status": get_latest_soil_summary(project_id),
-        "active_issues": get_open_issues(project_id),
-        "market_price": get_latest_price(project_id),
-        "notifications": get_unread_notifications(project_id),
-        "ai_summary": get_latest_ai_summary(project_id)  # Cached AI summary
+# modules/project/dashboard.py
+import asyncio
+
+async def get_dashboard(project_id: str, db: AsyncSession):
+    # Layer 1: Check Redis cache first (3-minute TTL)
+    cache_key = f"dashboard:{project_id}"
+    cached = await redis.get(cache_key)
+    if cached:
+        return json.loads(cached)  # Instant response
+
+    # Layer 2: Run ALL 11 queries in parallel
+    (
+        project_detail, farming_circle, todays_activities,
+        upcoming_activities, weather_data, weather_alerts,
+        soil_status, active_issues, market_price,
+        notifications, ai_summary,
+    ) = await asyncio.gather(
+        get_project_detail(project_id, db),
+        get_all_stages_with_progress(project_id, db),
+        get_todays_activities(project_id, db),
+        get_upcoming_activities(project_id, db, days=7),
+        get_5day_forecast(project_id),          # Redis first
+        get_active_weather_alerts(project_id, db),
+        get_latest_soil_summary(project_id, db),
+        get_open_issues(project_id, db),
+        get_latest_price(project_id, db),
+        get_unread_notifications(project_id, db),
+        get_latest_ai_summary(project_id, db),  # DB cache only, never calls Gemini
+    )
+
+    result = {
+        "project": project_detail,
+        "current_stage": get_current_stage(project_detail),
+        "farming_circle": farming_circle,
+        "todays_activities": todays_activities,
+        "upcoming_activities": upcoming_activities,
+        "weather": weather_data,
+        "weather_alerts": weather_alerts,
+        "soil_status": soil_status,
+        "active_issues": active_issues,
+        "market_price": market_price,
+        "notifications": notifications,
+        "ai_summary": ai_summary
     }
+
+    # Cache for 3 minutes
+    await redis.setex(cache_key, 180, json.dumps(result, default=str))
+    return result
+
+
+async def invalidate_dashboard_cache(project_id: str):
+    """Call this after any mutation that changes dashboard data."""
+    await redis.delete(f"dashboard:{project_id}")
 ```
+
+**Call `invalidate_dashboard_cache(project_id)` from:**
+- `PATCH /planner/activities/{id}/complete`
+- `PATCH /planner/activities/{id}/skip`
+- `POST /soil/tests` (new soil test submitted)
+- `POST /ai/summary/{id}` (new AI summary generated)
+- `tasks/weather_tasks.py` after `adjust_plan_for_weather` modifies activities
 
 ---
 
@@ -333,6 +380,17 @@ def compute_soil_recommendations(soil_test_id: str, project_id: str):
     return recommendations
 ```
 
+### Revenue Calculator Service (Master Plan Alignment)
+
+The master plan requires farmers to see an estimated revenue calculation (Expected Yield × Current Market Price) so they know exactly what their crop is worth before talking to middlemen.
+
+**Calculation Logic (runs on project creation/dashboard load):**
+1. **Expected Yield:** `Project.area` (in acres) × `Plant.expected_yield_per_acre_kg`. This value is saved to `Project.expected_yield_kg`.
+2. **Current Price:** Fetch the latest `MarketPrice.price_per_kg` for this `plant_id` in the farmer's `district`.
+3. **Expected Revenue:** `Project.expected_yield_kg` × `MarketPrice.price_per_kg`. Saved to `Project.expected_revenue`.
+
+The dashboard endpoint aggregates this and returns it inside the `market_price` block.
+
 ---
 
 ## SERVICE 6: Activity Planner ⭐ (Critical Engine)
@@ -348,22 +406,36 @@ def compute_soil_recommendations(soil_test_id: str, project_id: str):
 | PATCH | `/planner/activities/{id}/skip` | Skip with reason | Bearer |
 
 ### Full-Season Plan Generator (Deterministic Engine)
+
+**⚠️ Architecture Rule:** The engine function lives in `modules/planner/engine.py` as a pure `async def` with NO Celery dependency. The Celery task in `tasks/planner_tasks.py` is a thin wrapper. This allows the engine to be called directly in tests without Docker/Celery.
+
 ```python
-def generate_season_plan(project_id: str):
+# modules/planner/engine.py — pure async, no Celery import
+async def generate_season_plan(project_id: str, db: AsyncSession):
     """
-    Called on project creation. Generates 50-100+ activities
-    for the entire growing season based on:
-    - Plant stages (from plant_stages table)
-    - Water requirements per stage
-    - Fertilizer schedule per stage
-    - Disease watch calendar per stage
+    Called on project creation via Celery, or directly in tests.
+    Generates 50-100+ activities for the entire growing season.
     """
-    project = get_project(project_id)
+    project = await get_project(project_id, db)
     plant = project.plant
-    stages = get_plant_stages(plant.id)  # Ordered by stage_order
+    stages = await get_plant_stages(plant.id, db)  # Ordered by stage_order
     area = float(project.area)
     farming_method = project.farming_method.code
     planting_date = project.planting_date
+
+    # PRE-FLIGHT CHECK: Handle missing or broken stage data
+    if not stages:
+        log.warning(f"No stages for plant '{plant.common_name}'. Using generic 3-stage fallback.")
+        stages = build_generic_stages(plant)  # Planting / Growing / Harvest
+    else:
+        # Validate stage continuity — auto-patch gaps
+        for i in range(len(stages) - 1):
+            if stages[i].end_day != stages[i+1].start_day:
+                log.error(
+                    f"Stage gap: {plant.common_name} stage {i+1} ends day {stages[i].end_day}, "
+                    f"stage {i+2} starts day {stages[i+1].start_day}. Auto-patching."
+                )
+                stages[i].end_day = stages[i+1].start_day  # Patch gap
 
     activities = []
 
@@ -373,7 +445,7 @@ def generate_season_plan(project_id: str):
         stage_days = stage.end_day - stage.start_day
 
         # 1. Generate watering activities
-        water = get_water_requirements(plant.id, stage.id)
+        water = await get_water_requirements(plant.id, stage.id, db)
         if water:
             interval = water.irrigation_frequency_days or 2
             for day_offset in range(0, stage_days, interval):
@@ -386,18 +458,18 @@ def generate_season_plan(project_id: str):
                     title=f"Water plants — {round(daily_water)}L",
                     description=f"Irrigate via {project.land_detail.irrigation_type or 'manual'}",
                     scheduled_date=activity_date,
-                    scheduled_time=time(6, 0),  # Morning
+                    scheduled_time=time(6, 0),
                     priority=2
                 ))
 
-        # 2. Generate fertilizer activities
-        fert_recs = get_fertilizer_recommendations(plant.id, stage.id)
+        # 2. Generate fertilizer activities (filtered by farming method)
+        fert_recs = await get_fertilizer_recommendations(plant.id, stage.id, db)
         for fert in fert_recs:
             if farming_method == "organic" and not fert.is_organic:
-                continue
+                continue  # Skip conventional for organic farms
             if farming_method == "inorganic" and fert.is_organic:
-                continue
-            # Apply at start of each stage
+                continue  # Skip organic for conventional farms
+            # "integrated" uses both — no filter
             qty = float(fert.quantity_per_acre) * area
             activities.append(FarmingActivity(
                 project_id=project_id,
@@ -424,23 +496,39 @@ def generate_season_plan(project_id: str):
             ))
 
     # Bulk insert all activities
-    db.bulk_save_objects(activities)
-    db.commit()
-```
+    db.add_all(activities)
+    await db.commit()
+    return len(activities)
+
+
+# tasks/planner_tasks.py — thin wrapper only
+@celery_app.task(bind=True, max_retries=3)
+def generate_season_plan_task(self, project_id: str):
+    """Celery wrapper. Engine logic lives in modules/planner/engine.py."""
+    try:
+        asyncio.run(generate_season_plan(project_id, get_sync_db()))
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=60)  # Exponential backoff
 
 ---
 
-## SERVICE 7: Disease Module
+## 6. Disease Management & Diagnostics
 
-**Path:** `/disease`, `/issues`
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/disease/diagnose` | Rule-based keyword matching | Bearer |
+| POST | `/disease/identify-image` | **[FUTURE]** Upload photo for Computer Vision analysis | Bearer |
+| POST | `/disease/resolve/{id}` | Mark issue as resolved | Bearer |
 
-### Endpoints
-| Method | Endpoint | Purpose | Auth |
-|--------|----------|---------|------|
-| POST | `/issues` | Report a problem | Bearer |
-| GET | `/issues/{project_id}` | List issues for project | Bearer |
-| GET | `/disease/search` | Search diseases by symptoms | Bearer |
+### Computer Vision (Future Hook)
+The master plan mandates a unified diagnostic tool. When a farmer uploads an image to `POST /disease/identify-image`, the system will:
+1. Run computer vision to extract visual features (e.g., "brown spots with yellow halos").
+2. Pass these visual features to the rule-based keyword matcher.
+3. If confidence is low, fallback to the AI (LLM Vision) for deep diagnosis.
+
 | GET | `/disease/{id}/solutions` | Get treatment solutions | Bearer |
+
+### Keyword Matcher (`get_disease_diagnosis`)
 
 ### Disease Matching Logic
 ```python

@@ -51,6 +51,9 @@ async def _refresh_weather_cache():
         await db.commit()
         logger.info(f"Refreshed weather for {len(location_ids)} locations.")
 
+from modules.weather.rules import should_skip_watering, should_postpone_fertilizing, should_postpone_spraying
+from core.cache import invalidate_dashboard_cache
+
 async def _adjust_plan_for_weather():
     async with async_session() as db:
         today = date.today()
@@ -86,22 +89,40 @@ async def _adjust_plan_for_weather():
             )
             activities = act_res.scalars().all()
             
+            project_updated = False
             for act in activities:
-                if act.activity_type == "watering" and rain_today > 5.0:
-                    act.status = "skipped"
-                    act.ai_reasoning = f"Skipped due to sufficient rain forecast ({round(rain_today, 1)}mm)"
-                    logger.info(f"Skipped watering for project {project.id}")
-                elif act.activity_type == "fertilizing" and rain_today > 25.0:
-                    act.due_date = today + timedelta(days=1)
-                    act.ai_reasoning = f"Postponed 1 day due to heavy rain risk ({round(rain_today, 1)}mm)"
-                    logger.info(f"Postponed fertilizing for project {project.id}")
-                elif act.activity_type == "spraying" and wind_today > 20.0:
-                    act.due_date = today + timedelta(days=1)
-                    act.ai_reasoning = f"Postponed 1 day due to high winds ({round(wind_today, 1)} km/h)"
-                    
+                if act.activity_type == "watering":
+                    skip, msg = should_skip_watering(rain_today)
+                    if skip:
+                        act.status = "skipped"
+                        act.ai_reasoning = msg
+                        logger.info(f"Skipped watering for project {project.id}")
+                        project_updated = True
+                        
+                elif act.activity_type == "fertilizing":
+                    postpone, msg = should_postpone_fertilizing(rain_today)
+                    if postpone:
+                        act.due_date = today + timedelta(days=1)
+                        act.ai_reasoning = msg
+                        logger.info(f"Postponed fertilizing for project {project.id}")
+                        project_updated = True
+                        
+                elif act.activity_type == "spraying":
+                    postpone, msg = should_postpone_spraying(wind_today)
+                    if postpone:
+                        act.due_date = today + timedelta(days=1)
+                        act.ai_reasoning = msg
+                        project_updated = True
+                        
+            if project_updated:
+                await invalidate_dashboard_cache(project.id)
+                
         await db.commit()
 
 async def _check_weather_alerts():
+    from modules.weather.rules import evaluate_weather_alerts
+    from core.cache import invalidate_dashboard_cache
+    
     async with async_session() as db:
         today = date.today()
         
@@ -122,14 +143,9 @@ async def _check_weather_alerts():
             hum_tomorrow = [item.get("main", {}).get("humidity", 50) for item in cache.data.get("list", []) if datetime.fromtimestamp(item["dt"]).date() == today + timedelta(days=1)]
             avg_hum = (sum(hum_tomorrow) / len(hum_tomorrow)) if hum_tomorrow else 50
             
-            alerts = []
-            if rain_tomorrow > 50.0:
-                alerts.append(("heavy_rain", "high", f"Heavy rain expected tomorrow ({round(rain_tomorrow,1)}mm). Risk of flooding or runoff."))
-            if min_temp < 10.0:
-                alerts.append(("frost", "high", f"Frost warning tomorrow. Minimum temperature will drop to {round(min_temp, 1)}°C."))
-            if avg_hum > 85.0:
-                alerts.append(("disease_risk", "medium", f"High humidity tomorrow ({round(avg_hum, 1)}%). Increased risk of fungal diseases like Blight."))
-                
+            alerts = evaluate_weather_alerts(rain_tomorrow, min_temp, avg_hum)
+            
+            project_updated = False
             for a_type, severity, msg in alerts:
                 # Check if alert already exists for tomorrow
                 existing_res = await db.execute(
@@ -148,6 +164,10 @@ async def _check_weather_alerts():
                         target_date=today + timedelta(days=1)
                     )
                     db.add(new_alert)
+                    project_updated = True
+                    
+            if project_updated:
+                await invalidate_dashboard_cache(project.id)
                     
         await db.commit()
 

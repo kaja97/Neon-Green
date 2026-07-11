@@ -24,6 +24,14 @@ async def get_issues(project_id: uuid.UUID, current_user: Account = Depends(get_
 async def search_diseases(q: str = Query(...), current_user: Account = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     return await service.search_diseases(db, q)
 
+@router.post("/identify-image")
+async def identify_image(image_url: str, current_user: Account = Depends(get_current_user)):
+    """
+    Placeholder for Phase 6: Computer Vision Integration.
+    Will eventually take a base64 image or S3 URL and pass it to Gemini Vision.
+    """
+    return {"message": "CV processing not yet implemented. Requires Gemini Vision integration in Phase 6.", "identified_disease": None}
+
 @router.get("/{disease_id}/solutions", response_model=List[schemas.DiseaseSolutionResponse])
 async def get_solutions(disease_id: uuid.UUID, farming_method: str = Query("conventional"), current_user: Account = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     return await service.get_disease_solutions(db, disease_id, farming_method)

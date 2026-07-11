@@ -79,13 +79,13 @@ async def create_project(db: AsyncSession, account_id: uuid.UUID, data: ProjectC
     db.add(project)
     await db.flush()
     
-    # Generate activity plan synchronously (no Celery needed)
+    # Generate activity plan via Celery
     try:
-        from modules.planner.sync_planner import generate_plan_for_project
-        activity_count = await generate_plan_for_project(db, project.id)
-        logger.info(f"Generated {activity_count} activities for project {project.id}")
+        from tasks.planner_tasks import generate_season_plan_task
+        generate_season_plan_task.delay(str(project.id))
+        logger.info(f"Dispatched Celery task to generate plan for project {project.id}")
     except Exception as e:
-        logger.error(f"Failed to generate plan: {e}")
+        logger.error(f"Failed to dispatch plan generation task: {e}")
         project.plan_generation_status = "failed"
     
     await db.commit()
