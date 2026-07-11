@@ -7,8 +7,8 @@ from models.account import Account, FarmerProfile
 from models.farmer import FarmerLocation, FarmerLandDetail
 from .schemas import (
     FarmerProfileUpdate, FarmerProfileResponse,
-    LocationCreate, LocationResponse,
-    LandDetailCreate, LandDetailResponse
+    LocationCreate, LocationResponse, LocationUpdate,
+    LandDetailCreate, LandDetailResponse, LandDetailUpdate
 )
 from typing import List
 
@@ -127,3 +127,43 @@ async def get_land_details(
 
     result = await db.execute(select(FarmerLandDetail).where(FarmerLandDetail.farmer_id == profile.id))
     return result.scalars().all()
+
+from . import service
+import uuid
+from fastapi import status
+
+@router.put("/locations/{location_id}", response_model=LocationResponse)
+async def update_location(
+    location_id: uuid.UUID,
+    update_data: LocationUpdate,
+    current_user: Account = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return await service.update_location(db, current_user.id, location_id, update_data)
+
+@router.delete("/locations/{location_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_location(
+    location_id: uuid.UUID,
+    current_user: Account = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await service.delete_location(db, current_user.id, location_id)
+    return None
+
+@router.put("/land/{land_id}", response_model=LandDetailResponse)
+async def update_land_detail(
+    land_id: uuid.UUID,
+    update_data: LandDetailUpdate,
+    current_user: Account = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return await service.update_land_detail(db, current_user.id, land_id, update_data)
+
+@router.delete("/land/{land_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_land_detail(
+    land_id: uuid.UUID,
+    current_user: Account = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await service.delete_land_detail(db, current_user.id, land_id)
+    return None

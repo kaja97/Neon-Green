@@ -6,7 +6,7 @@ from database import get_db
 from dependencies import get_current_user
 from models.account import Account
 from .schemas import (
-    ProjectCreate, ProjectResponse, ProjectStatusUpdate,
+    ProjectCreate, ProjectResponse, ProjectStatusUpdate, ProjectUpdate,
     DashboardResponse, PlantResponse, PlantStageResponse,
     FarmingMethodResponse
 )
@@ -61,6 +61,26 @@ async def update_status(
     current_user: Account = Depends(get_current_user)
 ):
     return await service.update_project_status(db, project_id, current_user.id, status_data)
+
+from fastapi import status
+
+@router.put("/{project_id}", response_model=ProjectResponse)
+async def update_project(
+    project_id: uuid.UUID,
+    update_data: ProjectUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Account = Depends(get_current_user)
+):
+    return await service.update_project(db, project_id, current_user.id, update_data)
+
+@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_project(
+    project_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: Account = Depends(get_current_user)
+):
+    await service.delete_project(db, project_id, current_user.id)
+    return None
 
 @router.get("/{project_id}/dashboard", response_model=DashboardResponse)
 async def get_project_dashboard(

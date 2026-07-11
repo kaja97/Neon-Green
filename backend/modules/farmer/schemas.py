@@ -61,3 +61,17 @@ class LandDetailResponse(BaseModel):
     irrigation_type: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class LocationUpdate(BaseModel):
+    name: Optional[str] = None
+    district: Optional[str] = None
+    address: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    is_primary: Optional[bool] = None
+
+class LandDetailUpdate(BaseModel):
+    total_area: Optional[float] = None
+    area_unit: Optional[str] = None
+    soil_type: Optional[str] = None
+    irrigation_type: Optional[str] = None

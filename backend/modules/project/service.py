@@ -49,7 +49,7 @@ async def create_project(db: AsyncSession, account_id: uuid.UUID, data: ProjectC
     # Validate location belongs to farmer
     location = await db.get(FarmerLocation, data.location_id)
     if not location or location.farmer_id != profile.id:
-        raise HTTPException(status_code=404, detail="Location not found")
+        raise HTTPException(status_code=400, detail="Invalid Location ID: You must create a farm location before creating a project.")
         
     # Find first stage
     result = await db.execute(
@@ -112,3 +112,20 @@ async def update_project_status(db: AsyncSession, project_id: uuid.UUID, account
     await db.commit()
     await db.refresh(project)
     return project
+
+from .schemas import ProjectUpdate
+
+async def update_project(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID, update_data: ProjectUpdate):
+    project = await get_project(db, project_id, account_id)
+    
+    for key, value in update_data.model_dump(exclude_unset=True).items():
+        setattr(project, key, value)
+        
+    await db.commit()
+    await db.refresh(project)
+    return project
+
+async def delete_project(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
+    project = await get_project(db, project_id, account_id)
+    await db.delete(project)
+    await db.commit()

@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException, status
 from models.account import Account, FarmerProfile
-from .schemas import RegisterRequest, LoginRequest, TokenResponse
+from .schemas import RegisterRequest, LoginRequest, TokenResponse, AccountUpdate
 from core.security import get_password_hash, verify_password, create_access_token, create_refresh_token
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
@@ -90,3 +90,42 @@ async def login_user(db: AsyncSession, login_data: LoginRequest) -> TokenRespons
     await _store_refresh_token(str(account.id), refresh_token)
 
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+
+async def update_account(db: AsyncSession, account_id: str, update_data: AccountUpdate) -> Account:
+    result = await db.execute(select(Account).where(Account.id == account_id))
+    account = result.scalars().first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    if update_data.email or update_data.phone:
+        conditions = []
+        if update_data.email:
+            conditions.append(Account.email == update_data.email)
+        if update_data.phone:
+            conditions.append(Account.phone == update_data.phone)
+        
+        # Check if another user has this email/phone
+        query = select(Account).where(or_(*conditions)).where(Account.id != account_id)
+        exists = await db.execute(query)
+        if exists.scalars().first():
+            raise HTTPException(status_code=409, detail="Email or phone already in use")
+
+    if update_data.email:
+        account.email = update_data.email
+    if update_data.phone:
+        account.phone = update_data.phone
+    if update_data.password:
+        account.password_hash = get_password_hash(update_data.password)
+
+    await db.commit()
+    await db.refresh(account)
+    return account
+
+async def delete_account(db: AsyncSession, account_id: str) -> None:
+    result = await db.execute(select(Account).where(Account.id == account_id))
+    account = result.scalars().first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+        
+    account.is_active = False
+    await db.commit()

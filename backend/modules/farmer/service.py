@@ -3,7 +3,7 @@ from sqlalchemy.future import select
 from fastapi import HTTPException
 from models.account import FarmerProfile
 from models.farmer import FarmerLocation, FarmerLandDetail
-from .schemas import FarmerProfileUpdate, LocationCreate, LandDetailCreate
+from .schemas import FarmerProfileUpdate, LocationCreate, LandDetailCreate, LocationUpdate, LandDetailUpdate
 import uuid
 
 async def get_profile(db: AsyncSession, account_id: uuid.UUID):
@@ -84,3 +84,73 @@ async def list_land_details(db: AsyncSession, account_id: uuid.UUID):
     profile = await get_profile(db, account_id)
     result = await db.execute(select(FarmerLandDetail).where(FarmerLandDetail.farmer_id == profile.id))
     return result.scalars().all()
+
+async def update_location(db: AsyncSession, account_id: uuid.UUID, location_id: uuid.UUID, update_data: LocationUpdate):
+    profile = await get_profile(db, account_id)
+    result = await db.execute(select(FarmerLocation).where(
+        FarmerLocation.id == location_id,
+        FarmerLocation.farmer_id == profile.id
+    ))
+    location = result.scalars().first()
+    
+    if not location:
+        raise HTTPException(status_code=404, detail="Location not found")
+        
+    if update_data.is_primary:
+        # Reset other primary locations
+        locs_result = await db.execute(select(FarmerLocation).where(FarmerLocation.farmer_id == profile.id))
+        for loc in locs_result.scalars().all():
+            loc.is_primary = False
+            
+    for key, value in update_data.model_dump(exclude_unset=True).items():
+        setattr(location, key, value)
+        
+    await db.commit()
+    await db.refresh(location)
+    return location
+
+async def delete_location(db: AsyncSession, account_id: uuid.UUID, location_id: uuid.UUID):
+    profile = await get_profile(db, account_id)
+    result = await db.execute(select(FarmerLocation).where(
+        FarmerLocation.id == location_id,
+        FarmerLocation.farmer_id == profile.id
+    ))
+    location = result.scalars().first()
+    
+    if not location:
+        raise HTTPException(status_code=404, detail="Location not found")
+        
+    await db.delete(location)
+    await db.commit()
+
+async def update_land_detail(db: AsyncSession, account_id: uuid.UUID, land_id: uuid.UUID, update_data: LandDetailUpdate):
+    profile = await get_profile(db, account_id)
+    result = await db.execute(select(FarmerLandDetail).where(
+        FarmerLandDetail.id == land_id,
+        FarmerLandDetail.farmer_id == profile.id
+    ))
+    land = result.scalars().first()
+    
+    if not land:
+        raise HTTPException(status_code=404, detail="Land detail not found")
+        
+    for key, value in update_data.model_dump(exclude_unset=True).items():
+        setattr(land, key, value)
+        
+    await db.commit()
+    await db.refresh(land)
+    return land
+
+async def delete_land_detail(db: AsyncSession, account_id: uuid.UUID, land_id: uuid.UUID):
+    profile = await get_profile(db, account_id)
+    result = await db.execute(select(FarmerLandDetail).where(
+        FarmerLandDetail.id == land_id,
+        FarmerLandDetail.farmer_id == profile.id
+    ))
+    land = result.scalars().first()
+    
+    if not land:
+        raise HTTPException(status_code=404, detail="Land detail not found")
+        
+    await db.delete(land)
+    await db.commit()

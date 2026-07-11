@@ -59,6 +59,13 @@ class ProjectResponse(BaseModel):
 class ProjectStatusUpdate(BaseModel):
     status: str
 
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    area: Optional[float] = None
+    area_unit: Optional[str] = None
+    farming_method: Optional[str] = None
+    status: Optional[str] = None
+
 # --- Dashboard Schemas ---
 class StageProgress(BaseModel):
     stage: PlantStageResponse

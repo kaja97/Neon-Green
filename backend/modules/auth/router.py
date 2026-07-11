@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from dependencies import get_current_user
 from models.account import Account
-from .schemas import RegisterRequest, LoginRequest, TokenResponse, UserResponse
+from .schemas import RegisterRequest, LoginRequest, TokenResponse, UserResponse, AccountUpdate
 from . import service
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -38,6 +38,13 @@ async def login(login_data: LoginRequest, response: Response, db: AsyncSession =
         max_age=30 * 24 * 60 * 60 # 30 days
     )
     return tokens
+
+from fastapi.security import OAuth2PasswordRequestForm
+
+@router.post("/docs-login", response_model=TokenResponse, include_in_schema=False)
+async def docs_login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
+    login_data = LoginRequest(email_or_phone=form_data.username, password=form_data.password)
+    return await login(login_data, response, db)
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh(request: Request, response: Response):
@@ -84,3 +91,19 @@ async def refresh(request: Request, response: Response):
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: Account = Depends(get_current_user)):
     return current_user
+
+@router.put("/account", response_model=UserResponse)
+async def update_my_account(
+    update_data: AccountUpdate,
+    current_user: Account = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return await service.update_account(db, str(current_user.id), update_data)
+
+@router.delete("/account", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_my_account(
+    current_user: Account = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await service.delete_account(db, str(current_user.id))
+    return None
