@@ -11,7 +11,7 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U agrifarm"]
+      test: ["CMD-SHELL", "pg_isready -U agrifarm -d agrifarm_db"]
       interval: 5s
       retries: 5
 
@@ -34,6 +34,10 @@ services:
       REDIS_URL: redis://redis:6379/0
       GOOGLE_AI_STUDIO_API_KEY: ${GOOGLE_AI_STUDIO_API_KEY:-}
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-123}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_EMAIL: ${VAPID_EMAIL:-admin@agrifarm.app}
     depends_on:
       postgres:
         condition: service_healthy
@@ -46,11 +50,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: celery -A core.celery_app worker --loglevel=info -P solo
+    command: celery -A tasks.celery_app worker --loglevel=info -P solo
     environment:
       DATABASE_URL: postgresql+asyncpg://agrifarm:dev_password@postgres:5432/agrifarm_db
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-123}
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,27 +68,32 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: celery -A core.celery_app beat --loglevel=info
+    command: celery -A tasks.celery_app beat --loglevel=info
     environment:
+      DATABASE_URL: postgresql+asyncpg://agrifarm:dev_password@postgres:5432/agrifarm_db
+      REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-123}
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_started
     volumes:
       - ./backend:/app
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   command: npm run dev
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
 volumes:
   pgdata:

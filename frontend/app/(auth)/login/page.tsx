@@ -34,12 +34,9 @@ export default function LoginPage() {
     setError(null)
     try {
       // Must use form-data since OAuth2PasswordRequestForm in FastAPI expects it
-      const formData = new FormData()
-      formData.append('username', data.email)
-      formData.append('password', data.password)
-      
-      const res = await api.post("/auth/login", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+      const res = await api.post("/auth/login", {
+        email_or_phone: data.email,
+        password: data.password
       })
       
       const { access_token, refresh_token } = res.data

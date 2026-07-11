@@ -11,7 +11,7 @@ class LocationData(BaseModel):
 class RegisterRequest(BaseModel):
     email: EmailStr
     phone: Optional[str] = None
-    password: str = Field(..., min_length=8)
+    password: str = Field(..., min_length=8, max_length=72)
     
     full_name: str
     farming_method: str = Field(..., description="organic, conventional, or integrated")
@@ -21,7 +21,7 @@ class RegisterRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     email_or_phone: str
-    password: str
+    password: str = Field(..., max_length=72)
 
 class TokenResponse(BaseModel):
     access_token: str

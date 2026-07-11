@@ -23,12 +23,13 @@ async def register_user(db: AsyncSession, user_data: RegisterRequest) -> TokenRe
     if not user_data.email and not user_data.phone:
         raise HTTPException(status_code=400, detail="Must provide either email or phone")
 
-    query = select(Account).where(
-        or_(
-            (Account.email == user_data.email) & (Account.email != None),
-            (Account.phone == user_data.phone) & (Account.phone != None)
-        )
-    )
+    conditions = []
+    if user_data.email:
+        conditions.append(Account.email == user_data.email)
+    if user_data.phone:
+        conditions.append(Account.phone == user_data.phone)
+
+    query = select(Account).where(or_(*conditions))
     result = await db.execute(query)
     existing_user = result.scalars().first()
     

@@ -38,15 +38,15 @@ export default function RegisterPage() {
       await api.post("/auth/register", {
         email: data.email,
         password: data.password,
+        full_name: data.name,
+        farming_method: "conventional",
+        primary_language: "English"
       })
       
       // Auto login
-      const formData = new FormData()
-      formData.append('username', data.email)
-      formData.append('password', data.password)
-      
-      const loginRes = await api.post("/auth/login", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+      const loginRes = await api.post("/auth/login", {
+        email_or_phone: data.email,
+        password: data.password
       })
       
       const { access_token, refresh_token } = loginRes.data
@@ -68,7 +68,8 @@ export default function RegisterPage() {
       router.push("/dashboard")
       
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to register. Email may already be in use.")
+      const msg = err.response?.data?.detail;
+      setError(typeof msg === 'string' ? msg : "Failed to register. Please check your inputs or email may already be in use.");
     }
   }
 
