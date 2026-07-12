@@ -36,6 +36,12 @@ export default function TopBar() {
               Offline
             </div>
           )}
+          {user?.role === "admin" && (
+            <Link href="/admin/dashboard" className="flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-xl text-sm font-semibold hover:bg-purple-200 transition-colors">
+              <ShieldAlert className="w-4 h-4" />
+              <span className="hidden sm:inline">Admin</span>
+            </Link>
+          )}
           <Link href="/notifications" className="relative p-2 text-slate-500 hover:text-slate-800 transition-colors">
             <Bell className="h-6 w-6" />
             {unreadCount > 0 && (
