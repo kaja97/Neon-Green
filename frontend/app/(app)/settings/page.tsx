@@ -1,24 +1,26 @@
 "use client";
 
-import { ArrowLeft, Bell, BellOff, Loader2, Shield, Smartphone, ChevronRight, LogOut, Globe } from "lucide-react";
+import { ArrowLeft, Settings, User, Map, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { useRouter } from "next/navigation";
 import { usePushNotifications } from "@/lib/hooks/usePushNotifications";
 import { useTranslation } from "@/lib/hooks/useTranslation";
+import { useState } from "react";
+import { clsx } from "clsx";
+
+import ProfileSection from "@/components/settings/ProfileSection";
+import LocationSection from "@/components/settings/LocationSection";
+import LandSection from "@/components/settings/LandSection";
+import LivestockSection from "@/components/settings/LivestockSection";
+import { Globe, Bell, Smartphone, ChevronRight, LogOut, Shield } from "lucide-react";
 
 export default function SettingsPage() {
   const logout = useAuthStore(state => state.logout);
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"profile" | "farm" | "preferences">("profile");
   
-  const {
-    isSupported,
-    isSubscribed,
-    isLoading,
-    subscribe,
-    unsubscribe
-  } = usePushNotifications();
-
+  const { isSupported, isSubscribed, isLoading, subscribe, unsubscribe } = usePushNotifications();
   const { t, language, setLanguage } = useTranslation();
 
   const handleTogglePush = async () => {
@@ -26,7 +28,6 @@ export default function SettingsPage() {
       alert("Push notifications are not supported in this browser.");
       return;
     }
-
     if (isSubscribed) {
       await unsubscribe();
     } else {
@@ -51,124 +52,145 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-8 bg-slate-50 min-h-screen text-slate-900 pb-24">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 bg-slate-50 min-h-screen text-slate-900 pb-24">
       <header className="flex items-center gap-4">
-        <Link href="/dashboard" className="p-2 bg-white shadow-sm hover:bg-slate-100 rounded-full transition-colors">
+        <Link href="/dashboard" className="p-2 bg-white shadow-sm hover:bg-slate-100 rounded-full transition-colors border border-slate-200">
           <ArrowLeft className="w-5 h-5 text-slate-700" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t.settings.title}</h1>
-          <p className="text-slate-500 text-sm">{t.settings.subtitle}</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">Account Hub</h1>
+          <p className="text-slate-500 font-medium mt-1">Manage your profile, farm data, and settings.</p>
         </div>
       </header>
 
-      {/* Preferences Section */}
-      <section>
-        <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 px-2">Preferences</h2>
-        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-          <div className="p-4 flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-50 rounded-xl">
-                <Globe className="w-5 h-5 text-indigo-500" />
+      {/* Tabs */}
+      <div className="flex space-x-2 bg-slate-200/50 p-1 rounded-2xl w-full max-w-md">
+        <button
+          onClick={() => setActiveTab("profile")}
+          className={clsx(
+            "flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all",
+            activeTab === "profile" ? "bg-white text-green-700 shadow-sm" : "text-slate-600 hover:text-slate-800"
+          )}
+        >
+          <User className="w-4 h-4" />
+          Profile
+        </button>
+        <button
+          onClick={() => setActiveTab("farm")}
+          className={clsx(
+            "flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all",
+            activeTab === "farm" ? "bg-white text-green-700 shadow-sm" : "text-slate-600 hover:text-slate-800"
+          )}
+        >
+          <Map className="w-4 h-4" />
+          Farm Data
+        </button>
+        <button
+          onClick={() => setActiveTab("preferences")}
+          className={clsx(
+            "flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all",
+            activeTab === "preferences" ? "bg-white text-green-700 shadow-sm" : "text-slate-600 hover:text-slate-800"
+          )}
+        >
+          <Settings className="w-4 h-4" />
+          Preferences
+        </button>
+      </div>
+
+      <div className="mt-8 space-y-8">
+        {activeTab === "profile" && (
+          <div className="space-y-6">
+            <ProfileSection />
+          </div>
+        )}
+
+        {activeTab === "farm" && (
+          <div className="space-y-6">
+            <LocationSection />
+            <LandSection />
+            <LivestockSection />
+          </div>
+        )}
+
+        {activeTab === "preferences" && (
+          <div className="space-y-6">
+            <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm p-6">
+              <h2 className="text-xl font-bold text-slate-800 mb-6">App Preferences</h2>
+              
+              {/* Language */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-slate-100 gap-4 mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-indigo-50 rounded-2xl">
+                    <Globe className="w-6 h-6 text-indigo-500" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800 text-lg">{t.settings.language}</p>
+                    <p className="text-sm text-slate-500">{t.settings.language_desc}</p>
+                  </div>
+                </div>
+                <div className="flex items-center bg-slate-100 p-1.5 rounded-2xl">
+                  {['en', 'si', 'ta'].map(lang => (
+                    <button
+                      key={lang}
+                      onClick={() => setLanguage(lang as any)}
+                      className={clsx(
+                        "px-4 py-2 rounded-xl text-sm font-bold transition-colors",
+                        language === lang ? "bg-white shadow-sm text-indigo-600" : "text-slate-500 hover:text-slate-700"
+                      )}
+                    >
+                      {lang === 'en' ? 'English' : lang === 'si' ? 'සිංහල' : 'தமிழ்'}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div>
-                <p className="font-semibold text-slate-800">{t.settings.language}</p>
-                <p className="text-xs text-slate-500">{t.settings.language_desc}</p>
+
+              {/* Push Notifications */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-slate-100 gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-50 rounded-2xl">
+                    <Bell className="w-6 h-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800 text-lg">{t.settings.push_notifications}</p>
+                    <p className="text-sm text-slate-500">{t.settings.push_desc}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleTogglePush}
+                  disabled={isLoading}
+                  className={clsx(
+                    "relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2",
+                    isSubscribed ? 'bg-green-500' : 'bg-slate-300'
+                  )}
+                >
+                  <span className={clsx(
+                    "inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-md",
+                    isSubscribed ? 'translate-x-7' : 'translate-x-1'
+                  )} />
+                </button>
               </div>
-            </div>
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl">
-              <button
-                onClick={() => setLanguage('en')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${language === 'en' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                English
-              </button>
-              <button
-                onClick={() => setLanguage('si')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${language === 'si' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                සිංහල
-              </button>
-              <button
-                onClick={() => setLanguage('ta')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${language === 'ta' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                தமிழ்
-              </button>
+
+              {/* Danger Zone */}
+              <div className="pt-6">
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Danger Zone</h3>
+                <button onClick={handleLogout} className="w-full p-4 flex items-center justify-between bg-red-50 hover:bg-red-100 rounded-2xl transition-colors text-left border border-red-100 group">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-red-100 group-hover:bg-red-200 rounded-xl transition-colors">
+                      <LogOut className="w-5 h-5 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-red-700">Logout of AgriFarm</p>
+                      <p className="text-xs text-red-500">You will need to sign in again.</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-red-400 group-hover:text-red-600 transition-colors" />
+                </button>
+              </div>
+
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Notifications Section */}
-      <section>
-        <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 px-2">{t.settings.notifications}</h2>
-        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-          <div className="p-4 flex items-center justify-between border-b border-slate-100">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-xl">
-                <Bell className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="font-semibold text-slate-800">{t.settings.push_notifications}</p>
-                <p className="text-xs text-slate-500">{t.settings.push_desc}</p>
-              </div>
-            </div>
-            <button
-              onClick={handleTogglePush}
-              disabled={isLoading}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isSubscribed ? 'bg-green-500' : 'bg-slate-300'
-              }`}
-            >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                isSubscribed ? 'translate-x-6' : 'translate-x-1'
-              }`} />
-            </button>
-          </div>
-          <Link href="/notifications" className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-slate-100 rounded-xl">
-                <Smartphone className="w-5 h-5 text-slate-500" />
-              </div>
-              <div>
-                <p className="font-semibold text-slate-800">{t.settings.history}</p>
-                <p className="text-xs text-slate-500">{t.settings.history_desc}</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-slate-400" />
-          </Link>
-        </div>
-      </section>
-
-      {/* Account Section */}
-      <section>
-        <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 px-2">{t.settings.account}</h2>
-        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-          <Link href="/profile" className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors border-b border-slate-100">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-slate-100 rounded-xl">
-                <Shield className="w-5 h-5 text-slate-500" />
-              </div>
-              <div>
-                <p className="font-semibold text-slate-800">{t.settings.details}</p>
-                <p className="text-xs text-slate-500">{t.settings.details_desc}</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-slate-400" />
-          </Link>
-          <button onClick={handleLogout} className="w-full p-4 flex items-center justify-between hover:bg-red-50 transition-colors text-left">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 rounded-xl">
-                <LogOut className="w-5 h-5 text-red-500" />
-              </div>
-              <div>
-                <p className="font-semibold text-red-600">{t.settings.logout}</p>
-              </div>
-            </div>
-          </button>
-        </div>
-      </section>
+        )}
+      </div>
     </div>
   );
 }

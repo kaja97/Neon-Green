@@ -26,56 +26,57 @@ export default function ProjectCard({
   const progress = Math.min(100, Math.round((day / totalDays) * 100));
 
   const colorVariants = {
-    emerald: "bg-green-600",
-    amber: "bg-amber-500",
-    blue: "bg-blue-500",
-    rose: "bg-rose-500",
+    emerald: "bg-green-500",
+    amber: "bg-amber-400",
+    blue: "bg-blue-400",
+    rose: "bg-rose-400",
   };
 
   const textVariants = {
-    emerald: "text-green-600",
-    amber: "text-amber-500",
-    blue: "text-blue-500",
-    rose: "text-rose-500",
+    emerald: "text-green-400",
+    amber: "text-amber-400",
+    blue: "text-blue-400",
+    rose: "text-rose-400",
   };
 
   const bgVariants = {
-    emerald: "bg-green-50",
-    amber: "bg-amber-50",
-    blue: "bg-blue-50",
-    rose: "bg-rose-50",
+    emerald: "bg-green-500/20",
+    amber: "bg-amber-400/20",
+    blue: "bg-blue-400/20",
+    rose: "bg-rose-400/20",
   };
 
   return (
     <Link
       href={`/projects/${id}`}
-      className="block group relative overflow-hidden rounded-3xl bg-white border border-slate-200 p-6 transition-all hover:border-slate-300 hover:shadow-xl hover:shadow-green-900/5 shadow-sm"
+      className="block group relative p-6 h-full"
     >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-50 to-transparent blur-3xl rounded-full -mr-10 -mt-10 opacity-50 group-hover:opacity-100 transition-opacity" />
+      {/* Internal ambient glow */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/20 to-transparent blur-3xl rounded-full -mr-10 -mt-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
       <div className="flex items-start justify-between relative z-10">
         <div className="flex items-center gap-4">
-          <div className={clsx("p-3 rounded-2xl flex items-center justify-center", bgVariants[color])}>
-            <Sprout className={clsx("w-7 h-7", textVariants[color])} />
+          <div className={clsx("p-3 rounded-2xl flex items-center justify-center border border-white/5", bgVariants[color])}>
+            <Sprout className={clsx("w-7 h-7 drop-shadow-md", textVariants[color])} />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-800 tracking-tight">{name}</h3>
-            <p className="text-sm font-medium text-slate-500">{area}</p>
+            <h3 className="text-xl font-bold text-white tracking-tight drop-shadow-md group-hover:text-green-400 transition-colors">{name}</h3>
+            <p className="text-sm font-medium text-slate-400">{area}</p>
           </div>
         </div>
-        <div className="p-2 bg-slate-50 rounded-full group-hover:bg-green-50 group-hover:text-green-600 text-slate-400 transition-colors">
+        <div className="p-2 bg-white/5 rounded-full border border-white/5 group-hover:bg-green-500/20 group-hover:border-green-500/30 group-hover:text-green-400 text-slate-400 transition-all duration-300">
           <ChevronRight className="w-5 h-5" />
         </div>
       </div>
 
       <div className="mt-8 relative z-10">
         <div className="flex items-center justify-between text-sm font-medium mb-3">
-          <span className="text-slate-700">{progress}% Complete</span>
-          <span className="text-slate-500">Day {day} of {totalDays}</span>
+          <span className="text-slate-300">{progress}% Complete</span>
+          <span className="text-slate-400">Day {day} of {totalDays}</span>
         </div>
-        <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="w-full h-2.5 bg-black/40 border border-white/5 rounded-full overflow-hidden shadow-inner">
           <div
-            className={clsx("h-full rounded-full transition-all duration-1000", colorVariants[color])}
+            className={clsx("h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(34,197,94,0.5)]", colorVariants[color])}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -83,12 +84,12 @@ export default function ProjectCard({
 
       <div className="mt-6 flex items-center justify-between text-sm relative z-10">
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 font-medium">
+          <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 font-medium">
             {stage}
           </span>
         </div>
         {tasksToday > 0 && (
-          <span className="font-semibold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">
+          <span className="font-bold text-green-400 bg-green-500/10 border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)] px-3 py-1 rounded-full">
             {tasksToday} {tasksToday === 1 ? 'task' : 'tasks'} today
           </span>
         )}
