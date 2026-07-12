@@ -25,24 +25,38 @@ Next.js 14 (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Recharts �
 app/
 ├── (auth)/
 │   ├── login/page.tsx
-│   ├── register/page.tsx
-│   └── forgot-password/page.tsx
+│   ├── register/
+│   │   ├── request-otp/page.tsx      ← Step 1: Request OTP
+│   │   └── verify/page.tsx           ← Step 2: Verify OTP & Create
+│   └── forgot-password/
+│       ├── request-otp/page.tsx      ← Step 1: Request OTP
+│       └── verify/page.tsx           ← Step 2: Verify OTP & Reset
+├── (admin)/                          ← Admin backoffice shell
+│   ├── layout.tsx                    ← Admin Sidebar + TopBar
+│   ├── dashboard/page.tsx            ← System stats
+│   ├── users/page.tsx                ← User management & roles
+│   └── projects/page.tsx             ← Global project oversight
 ├── (app)/
 │   ├── layout.tsx                    ← Main shell (TopBar + BottomNav)
 │   ├── dashboard/page.tsx            ← Landing: project list + quick actions
-│   ├── profile/page.tsx              ← Farmer profile settings
+│   ├── profile/
+│   │   ├── page.tsx                  ← Farmer profile overview
+│   │   └── settings/page.tsx         ← Edit profile, email/phone, password, livestock
 │   ├── notifications/page.tsx        ← Notification center
 │   └── projects/
 │       ├── new/page.tsx              ← Create project wizard (step-by-step)
 │       └── [id]/
 │           ├── page.tsx              ← Project dashboard (Farming Circle + blocks)
+│           ├── edit/page.tsx         ← Edit project details, delete project, manage services
 │           ├── weather/page.tsx      ← Weather detail
 │           ├── soil/page.tsx         ← Soil analysis detail
 │           ├── plan/page.tsx         ← Full activity plan timeline
-│           ├── disease/page.tsx      ← Disease watch + report issue
+│           ├── disease/
+│           │   ├── page.tsx          ← Disease watch
+│           │   └── report/page.tsx   ← Report problem flow
 │           ├── market/page.tsx       ← Market prices + revenue calculator
-│           ├── ai/page.tsx           ← AI Chat (free Gemini)
-│           └── report-issue/page.tsx ← Report problem flow
+│           └── ai/page.tsx           ← AI Chat (free Gemini)
+
 
 components/
 ├── ui/                               ← shadcn/ui base components
@@ -54,11 +68,16 @@ components/
 │   ├── ProjectCard.tsx               ← Project card (progress bar + crop icon)
 │   ├── QuickActions.tsx              ← Floating: "New Project", "Report Issue"
 │   └── EmptyState.tsx                ← First-time user empty dashboard
+├── profile/
+│   ├── ProfileEditForm.tsx           ← Edit name, language, method
+│   ├── LivestockManager.tsx          ← Add/Edit/Delete livestock
+│   └── AccountSettings.tsx           ← Change password, update email/phone
 ├── project/
 │   ├── FarmingCircle.tsx             ← Visual ring showing all growth stages
 │   ├── StageIndicator.tsx            ← Single stage dot on the circle
 │   ├── DayCounter.tsx                ← "Day 45 of 90" display
-│   └── ProgressRing.tsx              ← Circular progress (% complete)
+│   ├── ProgressRing.tsx              ← Circular progress (% complete)
+│   └── ProjectSettings.tsx           ← Edit project, delete project, toggle services
 ├── blocks/
 │   ├── WeatherBlock.tsx              ← Weather summary card
 │   ├── SoilBlock.tsx                 ← Soil status card
@@ -255,6 +274,18 @@ Step 5: Review & Create
   → Redirect to project dashboard
   → Shows "Generating your farm plan..." loading state
 ```
+
+### 5. Settings and Editing Views
+
+**Project Edit (`/projects/[id]/edit`)**:
+- Form to update Project details (`PUT /projects/{id}`).
+- Toggle individual project services (`PATCH /projects/{id}/services/{type}`).
+- Danger Zone: Delete project (`DELETE /projects/{id}`).
+
+**Profile Settings (`/profile/settings`)**:
+- Update Profile info (`PUT /farmer/profile`).
+- Manage Livestock (`POST/PUT/DELETE /farmer/livestock`).
+- Security: Change Password (`PATCH /auth/change-password`), Change Email/Phone (OTP verified).
 
 ---
 

@@ -30,14 +30,16 @@ The project is building through **8 phases** toward v1.0. Track what is done vs.
 **Week 2**
 
 ### What was completed:
-- `modules/auth/router.py` — `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `GET /auth/me`, `PUT /auth/account`, `DELETE /auth/account`
-- `modules/auth/service.py` — bcrypt password hashing, JWT creation, token validation, account update/soft-delete
-- `modules/auth/utils.py` — JWT encode/decode helpers
-- `modules/auth/schemas.py` — `RegisterRequest`, `LoginRequest`, `TokenResponse`, `AccountUpdate`
-- `modules/farmer/` — farmer profile CRUD, full location management (POST, GET, PUT, DELETE), full land details (POST, GET, PUT, DELETE)
+- `modules/auth/router.py` — Auth refactored to support OTP verification (`request-otp` and `verify`). Includes login, refresh, change-password.
+- `modules/auth/service.py` — bcrypt password hashing, JWT creation with RBAC roles (`farmer`, `admin`), token validation.
+- `core/otp.py` and `core/rate_limiter.py` added for secure, rate-limited SMS/Email OTP flow.
+- `tasks/otp_tasks.py` — Celery background tasks for email and SMS dispatch.
+- `modules/auth/schemas.py` — updated schemas for OTP-based requests.
+- `modules/farmer/` — farmer profile CRUD, full location management (POST, GET, PUT, DELETE), full land details (POST, GET, PUT, DELETE). Added livestock endpoints.
 
 ### DO NOT re-implement:
-- JWT authentication is working. Do not change the auth flow.
+- JWT authentication with RBAC is working. Do not change the auth flow.
+- OTP mechanisms are centrally handled via Redis.
 - Do not change the `modules/auth/` files unless fixing a specific bug.
 
 ---
@@ -187,8 +189,22 @@ Farmer gets push "🌱 3 tasks today" → taps → app scrolls to activity block
 
 ---
 
-## PHASE 8 — Polish, Testing, Deploy
-**Weeks 13–14**
+## PHASE 8 — Admin Roles & Backoffice Features
+**Week 13**
+
+### What needs to be built:
+- [ ] `modules/admin/router.py` — `/admin/users`, `/admin/stats`, `/admin/projects`, etc.
+- [ ] `dependencies.py` — `get_admin_user` dependency enforcement
+- [ ] Admin panel frontend pages (user list, project monitoring, stats)
+- [ ] Role toggling (`farmer` ↔ `admin`) and account deactivation functionality
+
+### Deliverable:
+System admin can securely log in, list all users, view platform usage, and deactivate abusive accounts.
+
+---
+
+## PHASE 9 — Polish, Testing, Deploy
+**Weeks 14–15**
 
 ### What needs to be built:
 - [ ] `tests/test_planner.py` — assert 77 activities generated, organic filtering works (call `engine.py` directly, no Celery)

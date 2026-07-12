@@ -23,17 +23,29 @@ app/
 ├── globals.css                       ← Tailwind base only
 ├── (auth)/                           ← Route group, no main nav
 │   ├── login/page.tsx
-│   ├── register/page.tsx
-│   └── forgot-password/page.tsx
+│   ├── register/
+│   │   ├── request-otp/page.tsx
+│   │   └── verify/page.tsx
+│   └── forgot-password/
+│       ├── request-otp/page.tsx
+│       └── verify/page.tsx
+├── (admin)/                          ← Admin backoffice shell
+│   ├── layout.tsx                    ← Admin Sidebar + TopBar
+│   ├── dashboard/page.tsx            ← System stats
+│   ├── users/page.tsx                ← User management & roles
+│   └── projects/page.tsx             ← Global project oversight
 └── (app)/                            ← Route group, has TopBar + BottomNav
     ├── layout.tsx                    ← AppShell wrapper
     ├── dashboard/page.tsx            ← Project cards list
-    ├── profile/page.tsx
+    ├── profile/
+    │   ├── page.tsx                  ← Profile overview
+    │   └── settings/page.tsx         ← Settings (edit profile, password, livestock)
     ├── notifications/page.tsx
     └── projects/
         ├── new/page.tsx              ← 5-step create wizard
         └── [id]/
             ├── page.tsx              ← Project dashboard (THE core page)
+            ├── edit/page.tsx         ← Edit/Delete project & services toggle
             ├── weather/page.tsx
             ├── soil/page.tsx
             ├── plan/page.tsx         ← Full activity timeline
@@ -55,11 +67,16 @@ components/
 │   ├── ProjectCard.tsx    ← Progress bar + crop icon + stage + task count
 │   ├── QuickActions.tsx   ← "New Project" FAB
 │   └── EmptyState.tsx     ← First-time empty dashboard state
+├── profile/
+│   ├── ProfileEditForm.tsx   ← Edit name, language, method
+│   ├── LivestockManager.tsx  ← Add/Edit/Delete livestock
+│   └── AccountSettings.tsx   ← Change password, update email/phone
 ├── project/
 │   ├── FarmingCircle.tsx  ← SVG ring: all growth stages with progress indicator
 │   ├── StageIndicator.tsx ← Single stage dot on the ring
 │   ├── DayCounter.tsx     ← "Day 45 of 90 · 50%"
-│   └── ProgressRing.tsx   ← Circular progress %
+│   ├── ProgressRing.tsx   ← Circular progress %
+│   └── ProjectSettings.tsx ← Edit project, delete project, toggle services
 ├── blocks/                ← Dashboard service cards (horizontal scroll on mobile)
 │   ├── WeatherBlock.tsx   ← Current temp + 5-day mini forecast
 │   ├── SoilBlock.tsx      ← pH + N/P/K status badges

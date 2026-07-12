@@ -150,15 +150,19 @@ async def _send_via_google_api(
             service_account_file,
             scopes=SCOPES,
         )
-        # Delegate to the actual sender email
-        delegated_creds = credentials.with_subject(delegated_email)
+        
+        # Delegate to the actual sender email (Domain-Wide Delegation only)
+        if delegated_email:
+            credentials = credentials.with_subject(delegated_email)
 
-        service = build("gmail", "v1", credentials=delegated_creds, cache_discovery=False)
+        service = build("gmail", "v1", credentials=credentials, cache_discovery=False)
 
         # Build MIME message
+        sender_email = delegated_email if delegated_email else credentials.service_account_email
+        
         msg = MIMEMultipart("alternative")
         msg["To"] = to
-        msg["From"] = delegated_email
+        msg["From"] = sender_email
         msg["Subject"] = subject
 
         if plain_body:

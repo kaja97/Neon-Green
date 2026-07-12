@@ -57,12 +57,17 @@ All code is structured to support future expansion from day one.
 
 ### Backend
 - [ ] Auth Module:
-  - [ ] `POST /auth/register` — create account + farmer_profile
-  - [ ] `POST /auth/login` — email/phone + password → JWT pair
+  - [ ] `POST /auth/register/request-otp` — send OTP via Celery
+  - [ ] `POST /auth/register/verify` — complete account + farmer_profile
+  - [ ] `POST /auth/login` — email/phone + password → JWT pair (includes role)
   - [ ] `POST /auth/refresh` — refresh token rotation
   - [ ] `GET /auth/me` — current user info
-  - [ ] JWT middleware (RS256, 15-min access, 30-day refresh in Redis)
-  - [ ] bcrypt password hashing
+  - [ ] `PATCH /auth/change-password`
+  - [ ] `POST /auth/forgot-password/request-otp` & `verify`
+  - [ ] JWT middleware (RS256, 15-min access, 30-day refresh in Redis) with RBAC roles support (`farmer`, `admin`)
+  - [ ] `core/otp.py` — Redis-backed OTP system
+  - [ ] `core/rate_limiter.py` — Redis sliding window rate limiter
+  - [ ] `tasks/otp_tasks.py` — `send_otp_email_task`, `send_otp_sms_task` (Celery background tasks)
 - [ ] Farmer Module:
   - [ ] `GET /farmer/profile` — get own profile
   - [ ] `PUT /farmer/profile` — update profile
@@ -74,14 +79,16 @@ All code is structured to support future expansion from day one.
   - [ ] `GET /farmer/land` — list land details
   - [ ] `PUT /farmer/land/{id}` — update land details
   - [ ] `DELETE /farmer/land/{id}` — delete land details
+  - [ ] `POST/GET/PUT/DELETE /farmer/livestock` — manage livestock
 
 ### Frontend
 - [ ] Login page (`/login`)
-- [ ] Register page (`/register`) — multi-step: account → profile → first location
+- [ ] Register page (`/register`) — multi-step: OTP request → OTP verify → account → profile → first location
+- [ ] Forgot password flow
 - [ ] Profile page (`/profile`) — edit farmer info
 - [ ] Location management page — add/edit locations with Leaflet map picker
 
-**✅ Deliverable:** Farmer can register, login, add farm locations, and manage profile
+**✅ Deliverable:** Farmer can register with OTP verification, login, add farm locations, and manage profile
 
 ---
 
@@ -282,8 +289,31 @@ All code is structured to support future expansion from day one.
 
 ---
 
-## PHASE 8 — Polish, Testing & PWA
-**Duration:** Weeks 13–14
+## PHASE 8 — Admin Roles & Backoffice Features
+**Duration:** Week 13
+**Goal:** Admin role access and platform management
+
+### Backend
+- [ ] Admin Module (`modules/admin/`):
+  - [ ] `GET /admin/users` — List and filter all users
+  - [ ] `GET /admin/users/{id}` — View user detail
+  - [ ] `PATCH /admin/users/{id}/deactivate` / `reactivate`
+  - [ ] `PATCH /admin/users/{id}/role` — Change user role (farmer ↔ admin)
+  - [ ] `GET /admin/stats` — Platform aggregates
+  - [ ] `GET /admin/projects` — List all projects
+  - [ ] `GET /admin/ai/usage` — AI metrics dashboard
+
+### Frontend
+- [ ] Admin layout and sidebar navigation
+- [ ] Users management table with role toggling
+- [ ] System metrics dashboard
+
+**✅ Deliverable:** System admin can manage farmers and view platform usage securely.
+
+---
+
+## PHASE 9 — Polish, Testing & PWA
+**Duration:** Weeks 14–15
 **Goal:** Production-ready v1.0
 
 ### Testing

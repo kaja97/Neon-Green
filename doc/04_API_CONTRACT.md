@@ -38,15 +38,33 @@ Authorization: Bearer <JWT_ACCESS_TOKEN>
 
 ## AUTH ENDPOINTS
 
-### Register
+### Request Registration OTP
 ```
-POST /auth/register
+POST /auth/register/request-otp
 Body: {
   "email": "farmer@example.com",
-  "phone": "+94771234567",
+  "phone": "+94771234567"
+}
+Response 200: {
+  "success": true,
+  "data": {
+    "message": "Verification code sent to farmer@example.com",
+    "otp_sent_to": "farmer@example.com",
+    "expires_in_seconds": 300
+  }
+}
+```
+
+### Complete Registration
+```
+POST /auth/register/verify
+Body: {
+  "email": "farmer@example.com",
+  "otp_code": "123456",
   "password": "secure123",
   "full_name": "Nimal Perera",
-  "district": "Colombo"
+  "farming_method": "organic",
+  "primary_language": "en"
 }
 Response 201: {
   "success": true,
@@ -54,8 +72,8 @@ Response 201: {
     "account_id": "uuid",
     "farmer_profile_id": "uuid",
     "access_token": "eyJ...",
-    "refresh_token": "eyJ...",
-    "token_type": "bearer"
+    "token_type": "bearer",
+    "expires_in": 900
   }
 }
 ```
@@ -64,16 +82,16 @@ Response 201: {
 ```
 POST /auth/login
 Body: {
-  "email": "farmer@example.com",
+  "email_or_phone": "farmer@example.com",
   "password": "secure123"
 }
 Response 200: {
   "success": true,
   "data": {
     "access_token": "eyJ...",
-    "refresh_token": "eyJ...",
     "token_type": "bearer",
-    "expires_in": 900
+    "expires_in": 900,
+    "role": "farmer"
   }
 }
 ```
@@ -102,13 +120,31 @@ Response 200: {
 }
 ```
 
-### Update Account (Email/Phone)
+### Update Account (Change Password)
 ```
-PUT /auth/account
+PATCH /auth/change-password
 Headers: Authorization: Bearer <token>
 Body: {
-  "phone": "+94777123456"
+  "current_password": "old_password",
+  "new_password": "new_password"
 }
+Response 200: {
+  "success": true,
+  "data": {
+    "message": "Password changed successfully.",
+    "access_token": "new_eyJ...",
+    "token_type": "bearer"
+  }
+}
+```
+
+### Forgot Password
+```
+POST /auth/forgot-password/request-otp
+Body: { "email_or_phone": "farmer@example.com" }
+
+POST /auth/forgot-password/verify
+Body: { "email_or_phone": "farmer@example.com", "otp_code": "123456", "new_password": "new_password" }
 ```
 
 ### Delete Account (Soft Delete)
@@ -650,6 +686,40 @@ Response 200: {
     { "id": "uuid", "code": "inorganic", "name": "Conventional Farming" },
     { "id": "uuid", "code": "integrated", "name": "Integrated Farming" }
   ]
+}
+```
+
+---
+
+## ADMIN ENDPOINTS ⭐ (New Module)
+
+### List Users
+```
+GET /admin/users
+Headers: Authorization: Bearer <token_with_admin_role>
+Response 200: {
+  "data": [
+    {
+      "id": "uuid",
+      "email": "farmer@example.com",
+      "role": "farmer",
+      "is_active": true,
+      "project_count": 3
+    }
+  ]
+}
+```
+
+### Dashboard Stats
+```
+GET /admin/stats
+Headers: Authorization: Bearer <token_with_admin_role>
+Response 200: {
+  "data": {
+    "users": { "total": 150, "active": 142 },
+    "projects": { "total": 287 },
+    "ai": { "calls_today": 34 }
+  }
 }
 ```
 

@@ -27,7 +27,7 @@ Optional module-level sub-files (use when needed):
 ## 2. Implemented Modules (DO NOT scaffold these from scratch)
 
 The following modules already exist and have working code:
-- `modules/auth/` — register, login, refresh, JWT
+- `modules/auth/` — register, login, refresh, JWT (includes OTP flows)
 - `modules/farmer/` — profile, locations, land details
 - `modules/project/` — project CRUD, dashboard aggregation
 - `modules/planner/` — season plan generation, today's tasks
@@ -37,6 +37,7 @@ The following modules already exist and have working code:
 - `modules/ai/` — Gemini integration, chat, summary
 - `modules/market/` — price tracking, trends
 - `modules/notification/` — push notifications, notification center
+- `modules/admin/` — user and project management for admin role
 
 ## 3. Shared Infrastructure (DO NOT recreate)
 
@@ -44,9 +45,11 @@ These already exist at the backend root:
 - `main.py` — FastAPI app, all routers mounted at `/api/v1`
 - `database.py` — async SQLAlchemy engine, `get_db()` dependency
 - `config.py` — `settings` object via Pydantic BaseSettings (reads `.env`)
-- `dependencies.py` — `get_db`, `get_current_user` shared dependencies
+- `dependencies.py` — `get_db`, `get_current_user`, `get_current_farmer`, `get_admin_user`
 - `models/base.py` — `BaseModel` with `id` (UUID), `created_at`, `updated_at`
 - `core/cache.py` — Redis helpers: `invalidate_dashboard_cache(project_id)`, `DASHBOARD_CACHE_TTL = 180`
+- `core/otp.py` — Redis-backed OTP generation and verification
+- `core/rate_limiter.py` — Sliding window rate limiter
 
 ## 4. All Models Live in `backend/models/`
 
