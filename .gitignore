@@ -80,3 +80,6 @@ Thumbs.db
 frontend_temp/
 frontend/node_modules/
 .env.example
+
+credentials.json
+token.json
