@@ -72,3 +72,24 @@ async def get_disease_solutions(db: AsyncSession, disease_id: uuid.UUID, farming
         )
     )
     return result.scalars().all()
+
+async def resolve_issue(db: AsyncSession, issue_id: uuid.UUID, account_id: uuid.UUID):
+    result = await db.execute(
+        select(ProjectIssue, Project)
+        .join(Project, ProjectIssue.project_id == Project.id)
+        .where(ProjectIssue.id == issue_id)
+    )
+    row = result.first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Issue not found")
+        
+    issue, project = row
+    if project.farmer_id != account_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    issue.status = "resolved"
+    issue.resolved_date = date.today()
+    
+    await db.commit()
+    await db.refresh(issue)
+    return issue

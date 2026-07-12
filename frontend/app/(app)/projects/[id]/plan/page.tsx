@@ -7,12 +7,17 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useCompleteActivity, useSkipActivity } from "@/lib/hooks/useActivities";
 import { useState } from "react";
-
+import Modal from "@/components/ui/Modal";
 
 export default function PlanPage({ params }: { params: { id: string } }) {
   const completeMutation = useCompleteActivity(params.id);
   const skipMutation = useSkipActivity(params.id);
   const [optimisticStatus, setOptimisticStatus] = useState<Record<string, string>>({});
+  
+  const [completingTask, setCompletingTask] = useState<any>(null);
+  const [actualWater, setActualWater] = useState("");
+  const [actualFertilizer, setActualFertilizer] = useState("");
+  const [notes, setNotes] = useState("");
 
   const { data: activities, isLoading, error } = useQuery({
     queryKey: ["all-activities", params.id],
@@ -30,19 +35,37 @@ export default function PlanPage({ params }: { params: { id: string } }) {
     },
   });
 
-  const handleComplete = (id: string, status: string) => {
-    if (status !== "completed" && status !== "skipped" && !optimisticStatus[id]) {
-      setOptimisticStatus(prev => ({ ...prev, [id]: "completed" }));
-      completeMutation.mutate(id, {
-        onError: () => {
-          setOptimisticStatus(prev => {
-            const next = { ...prev };
-            delete next[id];
-            return next;
-          });
-        }
-      });
+  const handleCompleteClick = (task: any, status: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (status !== "completed" && status !== "skipped" && !optimisticStatus[task.id]) {
+      setCompletingTask(task);
+      setActualWater("");
+      setActualFertilizer("");
+      setNotes("");
     }
+  };
+
+  const confirmComplete = () => {
+    if (!completingTask) return;
+    const id = completingTask.id;
+    
+    setOptimisticStatus(prev => ({ ...prev, [id]: "completed" }));
+    
+    const data: any = {};
+    if (actualWater) data.actual_water_liters = parseFloat(actualWater);
+    if (actualFertilizer) data.actual_fertilizer_kg = parseFloat(actualFertilizer);
+    if (notes) data.notes = notes;
+
+    completeMutation.mutate({ activityId: id, data }, {
+      onError: () => {
+        setOptimisticStatus(prev => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+      }
+    });
+    setCompletingTask(null);
   };
 
   const handleSkip = (id: string, status: string, e: React.MouseEvent) => {
@@ -152,7 +175,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                   return (
                     <div
                       key={task.id}
-                      onClick={() => handleComplete(task.id, status)}
+                      onClick={() => handleCompleteClick(task, status)}
                       className={clsx(
                         "flex items-center gap-4 p-4 rounded-2xl border transition-colors cursor-pointer shadow-sm",
                         isDone && "bg-slate-100 border-slate-200",
@@ -180,7 +203,11 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                         {isDone && <CheckCircle2 className="w-6 h-6 text-green-600" />}
                         {(!isDone && !isSkipped) && (
                           <div className="flex gap-2">
-                            <button className="p-1.5 bg-green-100 rounded-lg text-green-700 hover:bg-green-200 transition-colors" title="Complete">
+                            <button 
+                              onClick={(e) => handleCompleteClick(task, status, e)} 
+                              className="p-1.5 bg-green-100 rounded-lg text-green-700 hover:bg-green-200 transition-colors" 
+                              title="Complete"
+                            >
                               <CheckCircle2 className="w-5 h-5" />
                             </button>
                             <button onClick={(e) => handleSkip(task.id, status, e)} className="p-1.5 bg-slate-100 rounded-lg text-slate-500 hover:bg-slate-200 transition-colors" title="Skip">
@@ -198,6 +225,62 @@ export default function PlanPage({ params }: { params: { id: string } }) {
           )
         })
       )}
+
+      {/* Completion Modal */}
+      <Modal isOpen={!!completingTask} onClose={() => setCompletingTask(null)} title="Complete Activity">
+        {completingTask && (
+          <div className="space-y-4">
+            <div className="p-3 bg-green-50 text-green-800 rounded-xl mb-4 text-sm">
+              <span className="font-bold">Task:</span> {completingTask.title}
+            </div>
+
+            {completingTask.activity_type === "irrigation" && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-700">Actual Water Used (Liters)</label>
+                <input 
+                  type="number" 
+                  value={actualWater} 
+                  onChange={e => setActualWater(e.target.value)} 
+                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" 
+                  placeholder="Optional"
+                />
+              </div>
+            )}
+
+            {completingTask.activity_type === "fertilizer" && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-700">Actual Fertilizer Used (Kg)</label>
+                <input 
+                  type="number" 
+                  value={actualFertilizer} 
+                  onChange={e => setActualFertilizer(e.target.value)} 
+                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" 
+                  placeholder="Optional"
+                />
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-700">Notes / Observations</label>
+              <textarea 
+                value={notes} 
+                onChange={e => setNotes(e.target.value)} 
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none h-24" 
+                placeholder="Any unusual signs?"
+              />
+            </div>
+
+            <button
+              onClick={confirmComplete}
+              disabled={completeMutation.isPending}
+              className="w-full bg-green-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-green-700 transition-all flex items-center justify-center gap-2 mt-4"
+            >
+              {completeMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+              Confirm Completion
+            </button>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

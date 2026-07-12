@@ -205,3 +205,59 @@ async def get_admin_stats(db: AsyncSession) -> dict:
             "total": total_notifications,
         },
     }
+
+# --- Master Data Management ---
+from models.plant_health import Plant, PlantDisease, PlantPest
+from .schemas import PlantCreate, PlantUpdate, DiseaseCreate, DiseaseUpdate
+import uuid
+from fastapi import HTTPException
+
+async def create_plant(db: AsyncSession, data: PlantCreate) -> Plant:
+    plant = Plant(**data.model_dump())
+    db.add(plant)
+    await db.commit()
+    await db.refresh(plant)
+    return plant
+
+async def update_plant(db: AsyncSession, plant_id: uuid.UUID, data: PlantUpdate) -> Plant:
+    plant = await db.get(Plant, plant_id)
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    for k, v in data.model_dump(exclude_unset=True).items():
+        setattr(plant, k, v)
+    await db.commit()
+    await db.refresh(plant)
+    return plant
+
+async def delete_plant(db: AsyncSession, plant_id: uuid.UUID) -> dict:
+    plant = await db.get(Plant, plant_id)
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    await db.delete(plant)
+    await db.commit()
+    return {"message": "Plant deleted"}
+
+async def create_disease(db: AsyncSession, data: DiseaseCreate) -> PlantDisease:
+    disease = PlantDisease(**data.model_dump())
+    db.add(disease)
+    await db.commit()
+    await db.refresh(disease)
+    return disease
+
+async def update_disease(db: AsyncSession, disease_id: uuid.UUID, data: DiseaseUpdate) -> PlantDisease:
+    disease = await db.get(PlantDisease, disease_id)
+    if not disease:
+        raise HTTPException(status_code=404, detail="Disease not found")
+    for k, v in data.model_dump(exclude_unset=True).items():
+        setattr(disease, k, v)
+    await db.commit()
+    await db.refresh(disease)
+    return disease
+
+async def delete_disease(db: AsyncSession, disease_id: uuid.UUID) -> dict:
+    disease = await db.get(PlantDisease, disease_id)
+    if not disease:
+        raise HTTPException(status_code=404, detail="Disease not found")
+    await db.delete(disease)
+    await db.commit()
+    return {"message": "Disease deleted"}

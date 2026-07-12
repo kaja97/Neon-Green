@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, LayoutDashboard, Bot, User } from "lucide-react";
+import { Home, PlusCircle, Bell, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
@@ -10,9 +10,10 @@ export default function BottomNav() {
 
   const links = [
     { href: "/dashboard", label: "Home", icon: Home },
-    { href: "/projects/1", label: "Projects", icon: LayoutDashboard },
-    { href: "/projects/1/ai", label: "AI", icon: Bot },
+    { href: "/projects/new", label: "New Project", icon: PlusCircle },
+    { href: "/notifications", label: "Alerts", icon: Bell },
     { href: "/profile", label: "Profile", icon: User },
+    { href: "/settings", label: "Profile", icon: User },
   ];
 
   return (

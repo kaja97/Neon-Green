@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Link from "next/link";
-import { ArrowLeft, Bug, Search, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Bug, Search, Loader2, AlertTriangle, ShieldCheck, CheckCircle } from "lucide-react";
 
 export default function DiseasePage({ params }: { params: { id: string } }) {
   const queryClient = useQueryClient();
@@ -48,6 +48,16 @@ export default function DiseasePage({ params }: { params: { id: string } }) {
       queryClient.invalidateQueries({ queryKey: ["project_issues", params.id] });
       setSearchQuery("");
       setSearchResults([]);
+    }
+  });
+
+  const resolveIssueMutation = useMutation({
+    mutationFn: async (issueId: string) => {
+      const res = await api.patch(`/disease/issues/${issueId}/resolve`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project_issues", params.id] });
     }
   });
 
@@ -133,10 +143,22 @@ export default function DiseasePage({ params }: { params: { id: string } }) {
                   </span>
                 </div>
                 <p className="text-sm text-slate-600 mb-4 ml-2">{issue.description}</p>
-                <div className="flex items-center gap-2 text-sm text-slate-500 ml-2">
-                  <span>Reported: {new Date(issue.reported_date).toLocaleDateString()}</span>
-                  <span>•</span>
-                  <span className="capitalize">Severity: {issue.severity}</span>
+                <div className="flex items-center justify-between ml-2">
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <span>Reported: {new Date(issue.reported_date).toLocaleDateString()}</span>
+                    <span>•</span>
+                    <span className="capitalize">Severity: {issue.severity}</span>
+                  </div>
+                  {issue.status !== "resolved" && (
+                    <button
+                      onClick={() => resolveIssueMutation.mutate(issue.id)}
+                      disabled={resolveIssueMutation.isPending}
+                      className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-green-100 transition-colors disabled:opacity-50"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Mark as Solved
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

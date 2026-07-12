@@ -35,3 +35,7 @@ async def identify_image(image_url: str, current_user: Account = Depends(get_cur
 @router.get("/{disease_id}/solutions", response_model=List[schemas.DiseaseSolutionResponse])
 async def get_solutions(disease_id: uuid.UUID, farming_method: str = Query("conventional"), current_user: Account = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     return await service.get_disease_solutions(db, disease_id, farming_method)
+
+@router.patch("/issues/{issue_id}/resolve", response_model=schemas.IssueResponse)
+async def resolve_issue(issue_id: uuid.UUID, current_user: Account = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    return await service.resolve_issue(db, issue_id, current_user.id)

@@ -169,3 +169,65 @@ async def get_project_detail(
         "plan_generation_status": project.plan_generation_status,
         "created_at": project.created_at.isoformat(),
     })
+
+
+# ─── Master Data Management ─────────────────────────────
+
+from .schemas import PlantCreate, PlantUpdate, DiseaseCreate, DiseaseUpdate
+import uuid
+
+@router.post("/plants", status_code=201)
+async def create_plant(
+    data: PlantCreate,
+    admin: Account = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await service.create_plant(db, data)
+    return success_response({"id": str(result.id), "common_name": result.common_name})
+
+@router.put("/plants/{plant_id}", status_code=200)
+async def update_plant(
+    plant_id: uuid.UUID,
+    data: PlantUpdate,
+    admin: Account = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await service.update_plant(db, plant_id, data)
+    return success_response({"id": str(result.id), "message": "Updated successfully"})
+
+@router.delete("/plants/{plant_id}", status_code=200)
+async def delete_plant(
+    plant_id: uuid.UUID,
+    admin: Account = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await service.delete_plant(db, plant_id)
+    return success_response(result)
+
+@router.post("/diseases", status_code=201)
+async def create_disease(
+    data: DiseaseCreate,
+    admin: Account = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await service.create_disease(db, data)
+    return success_response({"id": str(result.id), "name": result.name})
+
+@router.put("/diseases/{disease_id}", status_code=200)
+async def update_disease(
+    disease_id: uuid.UUID,
+    data: DiseaseUpdate,
+    admin: Account = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await service.update_disease(db, disease_id, data)
+    return success_response({"id": str(result.id), "message": "Updated successfully"})
+
+@router.delete("/diseases/{disease_id}", status_code=200)
+async def delete_disease(
+    disease_id: uuid.UUID,
+    admin: Account = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await service.delete_disease(db, disease_id)
+    return success_response(result)
