@@ -1,169 +1,214 @@
-from fastapi import APIRouter, Depends, HTTPException
+"""
+Farmer router — 15 endpoints for profile, locations, land details, and livestock.
+All endpoints scoped to the authenticated farmer.
+"""
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from database import get_db
-from dependencies import get_current_user
-from models.account import Account, FarmerProfile
-from models.farmer import FarmerLocation, FarmerLandDetail
+from dependencies import get_current_farmer
+from models.account import Account
+from core.response import success_response, created_response, message_response
+from . import service
 from .schemas import (
     FarmerProfileUpdate, FarmerProfileResponse,
-    LocationCreate, LocationResponse, LocationUpdate,
-    LandDetailCreate, LandDetailResponse, LandDetailUpdate
+    LocationCreate, LocationUpdate, LocationResponse,
+    LandDetailCreate, LandDetailUpdate, LandDetailResponse,
+    LivestockCreate, LivestockUpdate, LivestockResponse,
 )
-from typing import List
+import uuid
 
 router = APIRouter(prefix="/farmer", tags=["farmer"])
 
-@router.get("/profile", response_model=FarmerProfileResponse)
-async def get_profile(current_user: Account = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == current_user.id))
-    profile = result.scalars().first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    return profile
 
-@router.put("/profile", response_model=FarmerProfileResponse)
+# ── Profile ──────────────────────────────────────────────
+
+@router.get("/profile", status_code=200)
+async def get_profile(
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get current farmer's profile."""
+    profile = await service.get_profile(db, current_user.id)
+    return success_response(FarmerProfileResponse.model_validate(profile).model_dump())
+
+
+@router.put("/profile", status_code=200)
 async def update_profile(
-    profile_update: FarmerProfileUpdate,
-    current_user: Account = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    data: FarmerProfileUpdate,
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == current_user.id))
-    profile = result.scalars().first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
+    """Update current farmer's profile."""
+    profile = await service.update_profile(db, current_user.id, data)
+    return success_response(FarmerProfileResponse.model_validate(profile).model_dump())
 
-    update_data = profile_update.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(profile, key, value)
 
-    await db.commit()
-    await db.refresh(profile)
-    return profile
+# ── Locations ────────────────────────────────────────────
 
-@router.post("/locations", response_model=LocationResponse)
+@router.post("/locations", status_code=201)
 async def add_location(
-    location_data: LocationCreate,
-    current_user: Account = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    data: LocationCreate,
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == current_user.id))
-    profile = result.scalars().first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
+    """Add a new farm location."""
+    loc = await service.create_location(db, current_user.id, data)
+    return created_response(LocationResponse.model_validate(loc).model_dump())
 
-    if location_data.is_primary:
-        locs_result = await db.execute(select(FarmerLocation).where(FarmerLocation.farmer_id == profile.id))
-        for loc in locs_result.scalars().all():
-            loc.is_primary = False
 
-    new_location = FarmerLocation(
-        farmer_id=profile.id,
-        name=location_data.name,
-        address=location_data.address,
-        district=location_data.district,
-        latitude=location_data.latitude,
-        longitude=location_data.longitude,
-        is_primary=location_data.is_primary
-    )
-    db.add(new_location)
-    await db.commit()
-    await db.refresh(new_location)
-    return new_location
-
-@router.get("/locations", response_model=List[LocationResponse])
-async def get_locations(
-    current_user: Account = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+@router.get("/locations", status_code=200)
+async def list_locations(
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == current_user.id))
-    profile = result.scalars().first()
-    if not profile:
-        return []
+    """List all farm locations."""
+    locs = await service.list_locations(db, current_user.id)
+    return success_response([LocationResponse.model_validate(l).model_dump() for l in locs])
 
-    locs_result = await db.execute(select(FarmerLocation).where(FarmerLocation.farmer_id == profile.id))
-    return locs_result.scalars().all()
 
-@router.post("/land", response_model=LandDetailResponse)
-async def add_land_detail(
-    land_data: LandDetailCreate,
-    current_user: Account = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+@router.get("/locations/{location_id}", status_code=200)
+async def get_location(
+    location_id: uuid.UUID,
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == current_user.id))
-    profile = result.scalars().first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
+    """Get a specific location by ID."""
+    loc = await service.get_location(db, current_user.id, location_id)
+    return success_response(LocationResponse.model_validate(loc).model_dump())
 
-    # Verify location belongs to this farmer
-    loc_result = await db.execute(
-        select(FarmerLocation).where(FarmerLocation.id == land_data.location_id, FarmerLocation.farmer_id == profile.id)
-    )
-    if not loc_result.scalars().first():
-        raise HTTPException(status_code=404, detail="Location not found")
 
-    new_land = FarmerLandDetail(
-        farmer_id=profile.id,
-        location_id=land_data.location_id,
-        total_area=land_data.total_area,
-        area_unit=land_data.area_unit,
-        soil_type=land_data.soil_type,
-        irrigation_type=land_data.irrigation_type
-    )
-    db.add(new_land)
-    await db.commit()
-    await db.refresh(new_land)
-    return new_land
-
-@router.get("/land", response_model=List[LandDetailResponse])
-async def get_land_details(
-    current_user: Account = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == current_user.id))
-    profile = result.scalars().first()
-    if not profile:
-        return []
-
-    result = await db.execute(select(FarmerLandDetail).where(FarmerLandDetail.farmer_id == profile.id))
-    return result.scalars().all()
-
-from . import service
-import uuid
-from fastapi import status
-
-@router.put("/locations/{location_id}", response_model=LocationResponse)
+@router.put("/locations/{location_id}", status_code=200)
 async def update_location(
     location_id: uuid.UUID,
-    update_data: LocationUpdate,
-    current_user: Account = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    data: LocationUpdate,
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
 ):
-    return await service.update_location(db, current_user.id, location_id, update_data)
+    """Update a farm location."""
+    loc = await service.update_location(db, current_user.id, location_id, data)
+    return success_response(LocationResponse.model_validate(loc).model_dump())
+
 
 @router.delete("/locations/{location_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_location(
     location_id: uuid.UUID,
-    current_user: Account = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
 ):
+    """Delete a farm location. Fails if it has active projects."""
     await service.delete_location(db, current_user.id, location_id)
     return None
 
-@router.put("/land/{land_id}", response_model=LandDetailResponse)
+
+# ── Land Details ─────────────────────────────────────────
+
+@router.post("/land", status_code=201)
+async def add_land_detail(
+    data: LandDetailCreate,
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
+):
+    """Add a land detail to a location."""
+    land = await service.create_land_detail(db, current_user.id, data)
+    return created_response(LandDetailResponse.model_validate(land).model_dump())
+
+
+@router.get("/land", status_code=200)
+async def list_land_details(
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all land details."""
+    lands = await service.list_land_details(db, current_user.id)
+    return success_response([LandDetailResponse.model_validate(l).model_dump() for l in lands])
+
+
+@router.get("/land/{land_id}", status_code=200)
+async def get_land_detail(
+    land_id: uuid.UUID,
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a specific land detail."""
+    land = await service.get_land_detail(db, current_user.id, land_id)
+    return success_response(LandDetailResponse.model_validate(land).model_dump())
+
+
+@router.put("/land/{land_id}", status_code=200)
 async def update_land_detail(
     land_id: uuid.UUID,
-    update_data: LandDetailUpdate,
-    current_user: Account = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    data: LandDetailUpdate,
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
 ):
-    return await service.update_land_detail(db, current_user.id, land_id, update_data)
+    """Update a land detail."""
+    land = await service.update_land_detail(db, current_user.id, land_id, data)
+    return success_response(LandDetailResponse.model_validate(land).model_dump())
+
 
 @router.delete("/land/{land_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_land_detail(
     land_id: uuid.UUID,
-    current_user: Account = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
 ):
+    """Delete a land detail."""
     await service.delete_land_detail(db, current_user.id, land_id)
+    return None
+
+
+# ── Livestock ────────────────────────────────────────────
+
+@router.post("/livestock", status_code=201)
+async def add_livestock(
+    data: LivestockCreate,
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
+):
+    """Add a livestock record."""
+    ls = await service.create_livestock(db, current_user.id, data)
+    return created_response(LivestockResponse.model_validate(ls).model_dump())
+
+
+@router.get("/livestock", status_code=200)
+async def list_livestock(
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all livestock records."""
+    livestock = await service.list_livestock(db, current_user.id)
+    return success_response([LivestockResponse.model_validate(l).model_dump() for l in livestock])
+
+
+@router.get("/livestock/{livestock_id}", status_code=200)
+async def get_livestock(
+    livestock_id: uuid.UUID,
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a specific livestock record."""
+    ls = await service.get_livestock(db, current_user.id, livestock_id)
+    return success_response(LivestockResponse.model_validate(ls).model_dump())
+
+
+@router.put("/livestock/{livestock_id}", status_code=200)
+async def update_livestock(
+    livestock_id: uuid.UUID,
+    data: LivestockUpdate,
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update a livestock record."""
+    ls = await service.update_livestock(db, current_user.id, livestock_id, data)
+    return success_response(LivestockResponse.model_validate(ls).model_dump())
+
+
+@router.delete("/livestock/{livestock_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_livestock(
+    livestock_id: uuid.UUID,
+    current_user: Account = Depends(get_current_farmer),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a livestock record."""
+    await service.delete_livestock(db, current_user.id, livestock_id)
     return None

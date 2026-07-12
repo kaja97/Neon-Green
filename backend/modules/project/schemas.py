@@ -1,10 +1,12 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Any, Dict
 from datetime import date
+from core.enums import ProjectStatus, FarmingMethod, ServiceType
 import uuid
 
 # --- Master Data Schemas ---
 class PlantResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     common_name: str
     local_name: Optional[str] = None
@@ -17,6 +19,7 @@ class PlantResponse(BaseModel):
     description: Optional[str] = None
 
 class PlantStageResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     plant_id: uuid.UUID
     stage_name: str
@@ -31,16 +34,17 @@ class FarmingMethodResponse(BaseModel):
 
 # --- Project Schemas ---
 class ProjectCreate(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=255)
     plant_id: uuid.UUID
     location_id: uuid.UUID
     land_detail_id: Optional[uuid.UUID] = None
-    area: float
-    area_unit: str = "acres"
-    farming_method: str
+    area: float = Field(..., gt=0)
+    area_unit: str = Field(default="acres", max_length=20)
+    farming_method: FarmingMethod
     planting_date: date
 
 class ProjectResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     farmer_id: uuid.UUID
     plant_id: uuid.UUID
@@ -55,16 +59,31 @@ class ProjectResponse(BaseModel):
     current_stage_id: Optional[uuid.UUID] = None
     plan_generation_status: str
     expected_harvest_date: Optional[date] = None
+    actual_harvest_date: Optional[date] = None
 
 class ProjectStatusUpdate(BaseModel):
-    status: str
+    """Status change with state machine enforcement."""
+    status: ProjectStatus
+    harvest_date: Optional[date] = None  # Required when status = harvested
 
 class ProjectUpdate(BaseModel):
-    name: Optional[str] = None
-    area: Optional[float] = None
-    area_unit: Optional[str] = None
-    farming_method: Optional[str] = None
-    status: Optional[str] = None
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    area: Optional[float] = Field(None, gt=0)
+    area_unit: Optional[str] = Field(None, max_length=20)
+    farming_method: Optional[FarmingMethod] = None
+
+# --- Project Service Schema ---
+class ProjectServiceToggle(BaseModel):
+    """Enable/disable a service for a project."""
+    service_type: ServiceType
+    is_enabled: bool = True
+
+class ProjectServiceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    project_id: uuid.UUID
+    service_type: str
+    is_enabled: bool
 
 # --- Dashboard Schemas ---
 class StageProgress(BaseModel):
