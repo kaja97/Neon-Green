@@ -5,13 +5,11 @@ Tests project CRUD, status transitions, and validation
 against the real Docker PostgreSQL.
 """
 import pytest
-import pytest_asyncio
 import uuid
 from datetime import date, timedelta
 from httpx import AsyncClient
-from sqlalchemy import text
 
-from tests.conftest import create_test_account, make_auth_headers, TestData, TestSession
+from tests.conftest import create_test_account, make_auth_headers, TestData
 
 
 # ── Helpers ──────────────────────────────────────────────
@@ -70,10 +68,10 @@ async def test_list_farming_methods(client: AsyncClient):
 # ══════════════════════════════════════════════════════════
 
 @pytest.mark.asyncio
-async def test_create_project(client: AsyncClient, db):
+async def test_create_project(client: AsyncClient):
     """POST /projects — create a project."""
-    account, _ = await create_test_account(db, email="proj_create@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="proj_create@test.com")
+    headers = make_auth_headers(account_id)
     loc_id = await _create_location_for_test(client, headers)
     plant_id = await _get_first_plant_id(client)
 
@@ -94,10 +92,10 @@ async def test_create_project(client: AsyncClient, db):
 
 
 @pytest.mark.asyncio
-async def test_list_projects(client: AsyncClient, db):
+async def test_list_projects(client: AsyncClient):
     """GET /projects — list user's projects."""
-    account, _ = await create_test_account(db, email="proj_list@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="proj_list@test.com")
+    headers = make_auth_headers(account_id)
     loc_id = await _create_location_for_test(client, headers)
     plant_id = await _get_first_plant_id(client)
 
@@ -110,6 +108,7 @@ async def test_list_projects(client: AsyncClient, db):
         "farming_method": "organic",
         "planting_date": str(date.today()),
     })
+    assert create_resp.status_code == 200, create_resp.text
     TestData.project_ids.append(uuid.UUID(create_resp.json()["id"]))
 
     # List
@@ -118,10 +117,10 @@ async def test_list_projects(client: AsyncClient, db):
 
 
 @pytest.mark.asyncio
-async def test_get_project(client: AsyncClient, db):
+async def test_get_project(client: AsyncClient):
     """GET /projects/{id} — get specific project."""
-    account, _ = await create_test_account(db, email="proj_get@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="proj_get@test.com")
+    headers = make_auth_headers(account_id)
     loc_id = await _create_location_for_test(client, headers)
     plant_id = await _get_first_plant_id(client)
 
@@ -133,6 +132,7 @@ async def test_get_project(client: AsyncClient, db):
         "farming_method": "integrated",
         "planting_date": str(date.today()),
     })
+    assert create_resp.status_code == 200, create_resp.text
     proj_id = create_resp.json()["id"]
     TestData.project_ids.append(uuid.UUID(proj_id))
 
@@ -142,10 +142,10 @@ async def test_get_project(client: AsyncClient, db):
 
 
 @pytest.mark.asyncio
-async def test_update_project(client: AsyncClient, db):
+async def test_update_project(client: AsyncClient):
     """PUT /projects/{id} — update project fields."""
-    account, _ = await create_test_account(db, email="proj_upd@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="proj_upd@test.com")
+    headers = make_auth_headers(account_id)
     loc_id = await _create_location_for_test(client, headers)
     plant_id = await _get_first_plant_id(client)
 
@@ -157,6 +157,7 @@ async def test_update_project(client: AsyncClient, db):
         "farming_method": "organic",
         "planting_date": str(date.today()),
     })
+    assert create_resp.status_code == 200, create_resp.text
     proj_id = create_resp.json()["id"]
     TestData.project_ids.append(uuid.UUID(proj_id))
 
@@ -169,10 +170,10 @@ async def test_update_project(client: AsyncClient, db):
 
 
 @pytest.mark.asyncio
-async def test_delete_project(client: AsyncClient, db):
+async def test_delete_project(client: AsyncClient):
     """DELETE /projects/{id} — delete a project."""
-    account, _ = await create_test_account(db, email="proj_del@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="proj_del@test.com")
+    headers = make_auth_headers(account_id)
     loc_id = await _create_location_for_test(client, headers)
     plant_id = await _get_first_plant_id(client)
 
@@ -184,6 +185,7 @@ async def test_delete_project(client: AsyncClient, db):
         "farming_method": "inorganic",
         "planting_date": str(date.today()),
     })
+    assert create_resp.status_code == 200, create_resp.text
     proj_id = create_resp.json()["id"]
 
     resp = await client.delete(f"/api/v1/projects/{proj_id}", headers=headers)
@@ -199,10 +201,10 @@ async def test_delete_project(client: AsyncClient, db):
 # ══════════════════════════════════════════════════════════
 
 @pytest.mark.asyncio
-async def test_status_transition_active_to_harvested(client: AsyncClient, db):
+async def test_status_transition_active_to_harvested(client: AsyncClient):
     """PATCH /projects/{id}/status — active → harvested."""
-    account, _ = await create_test_account(db, email="status_harv@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="status_harv@test.com")
+    headers = make_auth_headers(account_id)
     loc_id = await _create_location_for_test(client, headers)
     plant_id = await _get_first_plant_id(client)
 
@@ -214,6 +216,7 @@ async def test_status_transition_active_to_harvested(client: AsyncClient, db):
         "farming_method": "organic",
         "planting_date": str(date.today() - timedelta(days=90)),
     })
+    assert create_resp.status_code == 200, create_resp.text
     proj_id = create_resp.json()["id"]
     TestData.project_ids.append(uuid.UUID(proj_id))
 
@@ -226,10 +229,10 @@ async def test_status_transition_active_to_harvested(client: AsyncClient, db):
 
 
 @pytest.mark.asyncio
-async def test_invalid_status_transition(client: AsyncClient, db):
+async def test_invalid_status_transition(client: AsyncClient):
     """PATCH /projects/{id}/status — active → planning (invalid) should fail."""
-    account, _ = await create_test_account(db, email="status_inv@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="status_inv@test.com")
+    headers = make_auth_headers(account_id)
     loc_id = await _create_location_for_test(client, headers)
     plant_id = await _get_first_plant_id(client)
 
@@ -241,6 +244,7 @@ async def test_invalid_status_transition(client: AsyncClient, db):
         "farming_method": "organic",
         "planting_date": str(date.today()),
     })
+    assert create_resp.status_code == 200, create_resp.text
     proj_id = create_resp.json()["id"]
     TestData.project_ids.append(uuid.UUID(proj_id))
 
@@ -255,10 +259,10 @@ async def test_invalid_status_transition(client: AsyncClient, db):
 # ══════════════════════════════════════════════════════════
 
 @pytest.mark.asyncio
-async def test_cannot_delete_location_with_project(client: AsyncClient, db):
+async def test_cannot_delete_location_with_project(client: AsyncClient):
     """Cannot delete a location that has active projects."""
-    account, _ = await create_test_account(db, email="loc_proj_guard@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="loc_proj_guard@test.com")
+    headers = make_auth_headers(account_id)
     loc_id = await _create_location_for_test(client, headers)
     plant_id = await _get_first_plant_id(client)
 
@@ -271,6 +275,7 @@ async def test_cannot_delete_location_with_project(client: AsyncClient, db):
         "farming_method": "organic",
         "planting_date": str(date.today()),
     })
+    assert create_resp.status_code == 200, create_resp.text
     proj_id = create_resp.json()["id"]
     TestData.project_ids.append(uuid.UUID(proj_id))
 
@@ -280,10 +285,10 @@ async def test_cannot_delete_location_with_project(client: AsyncClient, db):
 
 
 @pytest.mark.asyncio
-async def test_create_project_invalid_location(client: AsyncClient, db):
+async def test_create_project_invalid_location(client: AsyncClient):
     """Cannot create project with a non-existent location."""
-    account, _ = await create_test_account(db, email="proj_bad_loc@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="proj_bad_loc@test.com")
+    headers = make_auth_headers(account_id)
     plant_id = await _get_first_plant_id(client)
 
     resp = await client.post("/api/v1/projects", headers=headers, json={

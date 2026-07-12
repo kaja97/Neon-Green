@@ -1,31 +1,36 @@
 """
 Shared pytest fixtures for integration tests.
 
-Uses a separate DB session for test data setup (committed before HTTP calls)
-to avoid asyncpg "another operation is in progress" conflicts.
+Uses raw asyncpg for test data setup/cleanup to avoid SQLAlchemy
+session conflicts with the FastAPI app's own sessions.
 """
 import asyncio
 import uuid
 import pytest
 import pytest_asyncio
+import asyncpg
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy import text
 
 from main import app
 from config import settings
 from core.security import get_password_hash, create_access_token
 
 
-# ── Database ─────────────────────────────────────────────
+# ── Parse DB URL ─────────────────────────────────────────
 
-test_engine = create_async_engine(settings.DATABASE_URL, echo=False)
-TestSession = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
+def _parse_db_url(url: str) -> str:
+    """Convert SQLAlchemy async URL to standard postgres URL for asyncpg."""
+    # asyncpg+postgresql://... → postgresql://...
+    return url.replace("postgresql+asyncpg://", "postgresql://")
 
+
+RAW_DB_URL = _parse_db_url(settings.DATABASE_URL)
+
+
+# ── Event Loop ───────────────────────────────────────────
 
 @pytest.fixture(scope="session")
 def event_loop():
-    """Use a single event loop for the entire test session."""
     loop = asyncio.new_event_loop()
     yield loop
     loop.close()
@@ -35,12 +40,12 @@ def event_loop():
 
 class TestData:
     """Stores IDs created during tests for cleanup."""
-    account_ids: list[uuid.UUID] = []
-    profile_ids: list[uuid.UUID] = []
-    location_ids: list[uuid.UUID] = []
-    land_ids: list[uuid.UUID] = []
-    livestock_ids: list[uuid.UUID] = []
-    project_ids: list[uuid.UUID] = []
+    account_ids: list[str] = []
+    profile_ids: list[str] = []
+    location_ids: list[str] = []
+    land_ids: list[str] = []
+    livestock_ids: list[str] = []
+    project_ids: list[str] = []
 
     @classmethod
     def reset(cls):
@@ -52,7 +57,7 @@ class TestData:
         cls.project_ids = []
 
 
-# ── Helpers (use their own session, commit, close) ───────
+# ── Raw asyncpg helpers ──────────────────────────────────
 
 async def create_test_account(
     email: str = None,
@@ -60,41 +65,33 @@ async def create_test_account(
     password: str = "Test@12345",
 ) -> tuple:
     """
-    Create account + farmer profile directly in DB (bypass OTP).
-    Uses its own session that commits and closes before returning,
-    so the HTTP client can safely use a different session.
+    Create account + farmer profile via raw asyncpg (bypass OTP).
+    Fully commits and closes connection before returning.
 
-    Returns (account_id, profile_id, email, password).
+    Returns (account_id: str, profile_id: str, email: str, password: str).
     """
-    from models.account import Account, FarmerProfile
-
     email = email or f"test_{uuid.uuid4().hex[:8]}@test.com"
     phone = phone or f"+9477{uuid.uuid4().int % 10000000:07d}"
+    account_id = str(uuid.uuid4())
+    profile_id = str(uuid.uuid4())
+    pwd_hash = get_password_hash(password)
 
-    async with TestSession() as session:
-        account = Account(
-            email=email,
-            phone=phone,
-            password_hash=get_password_hash(password),
-            role="farmer",
-            is_verified=True,
-            is_active=True,
+    conn = await asyncpg.connect(RAW_DB_URL)
+    try:
+        await conn.execute(
+            """INSERT INTO accounts (id, email, phone, password_hash, role,
+               is_verified, is_active, created_at, updated_at)
+               VALUES ($1::uuid, $2, $3, $4, 'farmer', true, true, now(), now())""",
+            uuid.UUID(account_id), email, phone, pwd_hash,
         )
-        session.add(account)
-        await session.flush()
-
-        profile = FarmerProfile(
-            account_id=account.id,
-            full_name="Test Farmer",
-            farming_method="organic",
-            primary_language="en",
+        await conn.execute(
+            """INSERT INTO farmer_profiles (id, account_id, full_name,
+               farming_method, primary_language, created_at, updated_at)
+               VALUES ($1::uuid, $2::uuid, 'Test Farmer', 'organic', 'en', now(), now())""",
+            uuid.UUID(profile_id), uuid.UUID(account_id),
         )
-        session.add(profile)
-        await session.flush()
-        await session.commit()
-
-        account_id = account.id
-        profile_id = profile.id
+    finally:
+        await conn.close()
 
     TestData.account_ids.append(account_id)
     TestData.profile_ids.append(profile_id)
@@ -102,9 +99,9 @@ async def create_test_account(
     return account_id, profile_id, email, password
 
 
-def make_auth_headers(account_id: uuid.UUID, role: str = "farmer") -> dict:
+def make_auth_headers(account_id: str, role: str = "farmer") -> dict:
     """Generate JWT auth headers for a test user."""
-    token = create_access_token({"sub": str(account_id), "role": role})
+    token = create_access_token({"sub": account_id, "role": role})
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -122,11 +119,11 @@ async def client():
 
 @pytest_asyncio.fixture(autouse=True, scope="function")
 async def cleanup():
-    """Clean up test data after each test."""
+    """Clean up test data after each test using raw asyncpg."""
     TestData.reset()
     yield
-    # Cleanup in reverse dependency order
-    async with TestSession() as session:
+    conn = await asyncpg.connect(RAW_DB_URL)
+    try:
         for table, ids in [
             ("projects", TestData.project_ids),
             ("farmer_land_details", TestData.land_ids),
@@ -137,10 +134,11 @@ async def cleanup():
         ]:
             for id_ in ids:
                 try:
-                    await session.execute(
-                        text(f"DELETE FROM {table} WHERE id = :id"),
-                        {"id": id_},
+                    await conn.execute(
+                        f"DELETE FROM {table} WHERE id = $1::uuid",
+                        uuid.UUID(id_),
                     )
                 except Exception:
                     pass
-        await session.commit()
+    finally:
+        await conn.close()

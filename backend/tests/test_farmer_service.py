@@ -5,7 +5,6 @@ Tests profile CRUD, location CRUD, land detail CRUD, and livestock CRUD
 against the real Docker PostgreSQL.
 """
 import pytest
-import pytest_asyncio
 import uuid
 from httpx import AsyncClient
 
@@ -17,10 +16,10 @@ from tests.conftest import create_test_account, make_auth_headers, TestData
 # ══════════════════════════════════════════════════════════
 
 @pytest.mark.asyncio
-async def test_get_farmer_profile(client: AsyncClient, db):
+async def test_get_farmer_profile(client: AsyncClient):
     """GET /farmer/profile — returns farmer profile."""
-    account, _ = await create_test_account(db, email="profile_get@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="profile_get@test.com")
+    headers = make_auth_headers(account_id)
 
     resp = await client.get("/api/v1/farmer/profile", headers=headers)
     assert resp.status_code == 200, resp.text
@@ -30,10 +29,10 @@ async def test_get_farmer_profile(client: AsyncClient, db):
 
 
 @pytest.mark.asyncio
-async def test_update_farmer_profile(client: AsyncClient, db):
+async def test_update_farmer_profile(client: AsyncClient):
     """PUT /farmer/profile — update profile fields."""
-    account, _ = await create_test_account(db, email="profile_upd@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="profile_upd@test.com")
+    headers = make_auth_headers(account_id)
 
     resp = await client.put("/api/v1/farmer/profile", headers=headers, json={
         "full_name": "Updated Farmer",
@@ -52,10 +51,10 @@ async def test_update_farmer_profile(client: AsyncClient, db):
 # ══════════════════════════════════════════════════════════
 
 @pytest.mark.asyncio
-async def test_create_location(client: AsyncClient, db):
+async def test_create_location(client: AsyncClient):
     """POST /farmer/locations — create a farm location."""
-    account, _ = await create_test_account(db, email="loc_create@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="loc_create@test.com")
+    headers = make_auth_headers(account_id)
 
     resp = await client.post("/api/v1/farmer/locations", headers=headers, json={
         "name": "Main Farm",
@@ -77,10 +76,10 @@ async def test_create_location(client: AsyncClient, db):
 
 
 @pytest.mark.asyncio
-async def test_list_locations(client: AsyncClient, db):
+async def test_list_locations(client: AsyncClient):
     """GET /farmer/locations — list all locations."""
-    account, profile = await create_test_account(db, email="loc_list@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="loc_list@test.com")
+    headers = make_auth_headers(account_id)
 
     # Create two locations
     for name in ["Farm A", "Farm B"]:
@@ -101,10 +100,10 @@ async def test_list_locations(client: AsyncClient, db):
 
 
 @pytest.mark.asyncio
-async def test_update_location(client: AsyncClient, db):
+async def test_update_location(client: AsyncClient):
     """PUT /farmer/locations/{id} — update location."""
-    account, _ = await create_test_account(db, email="loc_upd@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="loc_upd@test.com")
+    headers = make_auth_headers(account_id)
 
     # Create
     create_resp = await client.post("/api/v1/farmer/locations", headers=headers, json={
@@ -128,10 +127,10 @@ async def test_update_location(client: AsyncClient, db):
 
 
 @pytest.mark.asyncio
-async def test_delete_location(client: AsyncClient, db):
+async def test_delete_location(client: AsyncClient):
     """DELETE /farmer/locations/{id} — delete location."""
-    account, _ = await create_test_account(db, email="loc_del@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="loc_del@test.com")
+    headers = make_auth_headers(account_id)
 
     # Create
     create_resp = await client.post("/api/v1/farmer/locations", headers=headers, json={
@@ -156,10 +155,10 @@ async def test_delete_location(client: AsyncClient, db):
 # ══════════════════════════════════════════════════════════
 
 @pytest.mark.asyncio
-async def test_land_detail_crud(client: AsyncClient, db):
+async def test_land_detail_crud(client: AsyncClient):
     """Full CRUD cycle for land details."""
-    account, _ = await create_test_account(db, email="land_crud@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="land_crud@test.com")
+    headers = make_auth_headers(account_id)
 
     # Create location first
     loc_resp = await client.post("/api/v1/farmer/locations", headers=headers, json={
@@ -213,10 +212,10 @@ async def test_land_detail_crud(client: AsyncClient, db):
 # ══════════════════════════════════════════════════════════
 
 @pytest.mark.asyncio
-async def test_livestock_crud(client: AsyncClient, db):
+async def test_livestock_crud(client: AsyncClient):
     """Full CRUD cycle for livestock."""
-    account, _ = await create_test_account(db, email="livestock_crud@test.com")
-    headers = make_auth_headers(account.id)
+    account_id, _, _, _ = await create_test_account(email="livestock_crud@test.com")
+    headers = make_auth_headers(account_id)
 
     # CREATE
     create_resp = await client.post("/api/v1/farmer/livestock", headers=headers, json={
