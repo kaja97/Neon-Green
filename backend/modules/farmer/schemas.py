@@ -1,5 +1,5 @@
 """Farmer module schemas — profile, locations, land, livestock."""
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing import Optional
 import uuid
 
@@ -59,6 +59,36 @@ class LocationResponse(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     is_primary: bool
+
+    @model_validator(mode="before")
+    @classmethod
+    def extract_lat_lon(cls, data):
+        """Extract latitude/longitude from PostGIS centroid geometry."""
+        # Handle ORM model objects
+        centroid = getattr(data, "centroid", None) if not isinstance(data, dict) else data.get("centroid")
+        if centroid is not None:
+            try:
+                from geoalchemy2.shape import to_shape
+                point = to_shape(centroid)
+                if not isinstance(data, dict):
+                    # ORM model — set as dict for Pydantic
+                    data_dict = {
+                        "id": data.id,
+                        "farmer_id": data.farmer_id,
+                        "name": data.name,
+                        "district": data.district,
+                        "address": data.address,
+                        "is_primary": data.is_primary,
+                        "latitude": point.y,
+                        "longitude": point.x,
+                    }
+                    return data_dict
+                else:
+                    data["latitude"] = point.y
+                    data["longitude"] = point.x
+            except Exception:
+                pass
+        return data
 
 
 # ── Land Detail ──────────────────────────────────────────

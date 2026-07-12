@@ -14,7 +14,6 @@ class Plant(BaseModel):
     sub_category: Mapped[str | None] = mapped_column(String(100), nullable=True)
     
     growth_duration_days: Mapped[int] = mapped_column(Integer)
-    expected_yield_per_acre_kg: Mapped[float] = mapped_column(Numeric(10, 2), default=0.0)
     
     planting_season: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     

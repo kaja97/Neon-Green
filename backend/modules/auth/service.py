@@ -152,6 +152,7 @@ async def verify_register_otp(
         primary_language=data.primary_language,
     )
     db.add(new_profile)
+    await db.flush()  # Populate new_profile.id before using it in FarmerLocation
 
     # Create location if provided
     if data.location:
@@ -171,8 +172,10 @@ async def verify_register_otp(
 
     try:
         await db.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         await db.rollback()
+        import logging
+        logging.getLogger("agrifarm.auth").error("Registration IntegrityError: %s", e.orig)
         raise AppException(ErrorCode.AUTH_REGISTER_EMAIL_EXISTS)
 
     # Generate tokens
