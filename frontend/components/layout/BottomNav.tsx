@@ -13,7 +13,6 @@ export default function BottomNav() {
     { href: "/projects/new", label: "New Project", icon: PlusCircle },
     { href: "/notifications", label: "Alerts", icon: Bell },
     { href: "/profile", label: "Profile", icon: User },
-    { href: "/settings", label: "Profile", icon: User },
   ];
 
   return (

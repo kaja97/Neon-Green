@@ -1,13 +1,15 @@
 "use client";
 
-import { Bell, UserCircle2, WifiOff } from "lucide-react";
+import { Bell, UserCircle2, WifiOff, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useOffline } from "@/lib/hooks/useOffline";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { useAuthStore } from "@/lib/stores/authStore";
 
 export default function TopBar() {
   const isOffline = useOffline();
+  const { user } = useAuthStore();
 
   // Try to fetch unread notification count, ignore if offline
   const { data: countData } = useQuery({
@@ -48,8 +50,8 @@ export default function TopBar() {
               <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white" />
             )}
           </Link>
-          <Link href="/settings" className="p-1 text-slate-500 hover:text-slate-800 transition-colors">
-            <UserCircle2 className="h-7 w-7" />
+          <Link href="/profile" className="p-1 text-slate-500 hover:text-slate-800 transition-colors">
+            <Settings className="w-5 h-5" />
           </Link>
         </div>
       </div>

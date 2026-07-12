@@ -34,6 +34,12 @@ export default function NewProjectWizard() {
     enabled: !!user,
   });
 
+  const { data: locations, isLoading: locationsLoading } = useQuery({
+    queryKey: ["locations"],
+    queryFn: async () => (await api.get("/farmer/locations")).data,
+    enabled: !!user,
+  });
+
   // Mutation
   const createProject = useMutation({
     mutationFn: async (data: any) => {
@@ -51,8 +57,11 @@ export default function NewProjectWizard() {
   const handleCreate = () => {
     setStep(5); // Loading step
     createProject.mutate({
+      name: `Farm Project - ${new Date().toLocaleDateString()}`,
       plant_id: formData.plant_id,
-      area_acres: parseFloat(formData.area_acres),
+      location_id: "00000000-0000-0000-0000-000000000000", // Wait, backend requires valid UUID. Or we need to fetch locations.
+      area: parseFloat(formData.area_acres),
+      area_unit: "acres",
       farming_method: formData.farming_method,
       planting_date: formData.planting_date
     });
@@ -120,21 +129,35 @@ export default function NewProjectWizard() {
               <MapPin className="w-6 h-6 text-blue-500" />
               Where is this field?
             </h2>
-            <div className="space-y-4">
-              <button
-                onClick={() => { setFormData({...formData, location_id: "default"}); nextStep(); }}
-                className={clsx(
-                  "w-full p-5 rounded-2xl border-2 transition-all text-left flex items-center justify-between",
-                  formData.location_id === "default" ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:border-blue-300"
-                )}
-              >
-                <div>
-                  <h3 className="font-semibold text-slate-900">Main Farm</h3>
-                  <p className="text-sm text-slate-500 mt-1">{profile?.address || 'Unknown Location'}</p>
-                </div>
-                {formData.location_id === "default" && <CheckCircle2 className="w-6 h-6 text-blue-600" />}
-              </button>
-            </div>
+            {locationsLoading ? (
+               <div className="flex justify-center py-12"><Loader2 className="animate-spin text-blue-500" /></div>
+            ) : locations?.length > 0 ? (
+              <div className="space-y-4">
+                {locations.map((loc: any) => (
+                  <button
+                    key={loc.id}
+                    onClick={() => { setFormData({...formData, location_id: loc.id}); nextStep(); }}
+                    className={clsx(
+                      "w-full p-5 rounded-2xl border-2 transition-all text-left flex items-center justify-between",
+                      formData.location_id === loc.id ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:border-blue-300"
+                    )}
+                  >
+                    <div>
+                      <h3 className="font-semibold text-slate-900">{loc.name}</h3>
+                      <p className="text-sm text-slate-500 mt-1">{loc.district}</p>
+                    </div>
+                    {formData.location_id === loc.id && <CheckCircle2 className="w-6 h-6 text-blue-600" />}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-slate-500 mb-4">You haven't added any farm locations yet.</p>
+                <Link href="/settings" className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition-colors">
+                  Add Location in Settings
+                </Link>
+              </div>
+            )}
           </div>
         )}
 

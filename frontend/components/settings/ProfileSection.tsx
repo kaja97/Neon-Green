@@ -1,7 +1,6 @@
 "use client";
 
-import { useForm } from "react-form-hook"; // Wait, I should use react-hook-form
-import { useForm as useRHForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -32,7 +31,7 @@ export default function ProfileSection() {
     },
   });
 
-  const form = useRHForm<ProfileFormValues>({
+  const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       full_name: "",

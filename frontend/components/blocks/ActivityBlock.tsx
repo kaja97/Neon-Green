@@ -12,7 +12,7 @@ export default function ActivityBlock({ projectId, activities }: { projectId: st
   const handleComplete = (id: string, status: string) => {
     if (status !== "completed" && !optimisticCompleted.includes(id)) {
       setOptimisticCompleted(prev => [...prev, id]);
-      completeMutation.mutate(id, {
+      completeMutation.mutate({ activityId: id, data: {} }, {
         onError: () => {
           setOptimisticCompleted(prev => prev.filter(v => v !== id));
         }

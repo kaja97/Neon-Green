@@ -8,21 +8,19 @@ import { clsx } from "clsx";
 import { LayoutDashboard, Users, Database, ArrowLeft, Loader2 } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuthStore();
+  const { user } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        router.push("/login");
-      } else if (user.role !== "admin") {
-        router.push("/dashboard");
-      }
+    if (!user) {
+      router.push("/login");
+    } else if (user.role !== "admin") {
+      router.push("/dashboard");
     }
-  }, [user, isLoading, router]);
+  }, [user, router]);
 
-  if (isLoading || !user || user.role !== "admin") {
+  if (!user || user.role !== "admin") {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
         <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
