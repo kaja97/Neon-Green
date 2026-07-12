@@ -25,9 +25,9 @@ class Settings(BaseSettings):
     VAPID_PRIVATE_KEY: Optional[str] = None
     VAPID_EMAIL: Optional[str] = None
 
-    # ── Email: Google Service Account (Primary) ──────────
-    GOOGLE_SERVICE_ACCOUNT_FILE: Optional[str] = None
-    GOOGLE_DELEGATED_EMAIL: Optional[str] = None
+    # ── Email: Google OAuth 2.0 (User Token - Primary) ───
+    GOOGLE_OAUTH_CREDENTIALS_FILE: Optional[str] = None
+    GOOGLE_OAUTH_TOKEN_FILE: Optional[str] = None
 
     # ── Email: SMTP Fallback ─────────────────────────────
     SMTP_HOST: Optional[str] = "smtp.gmail.com"

@@ -63,15 +63,14 @@ async def send_email(
             google_failures = 0
 
     # Try Google Gmail API first (if available and not in failure mode)
-    if google_failures < GOOGLE_FAILURE_THRESHOLD and settings.GOOGLE_SERVICE_ACCOUNT_FILE:
+    if google_failures < GOOGLE_FAILURE_THRESHOLD and settings.GOOGLE_OAUTH_TOKEN_FILE:
         try:
             success = await _send_via_google_api(
                 to=to,
                 subject=subject,
                 html_body=html_body,
                 plain_body=plain_body,
-                service_account_file=settings.GOOGLE_SERVICE_ACCOUNT_FILE,
-                delegated_email=settings.GOOGLE_DELEGATED_EMAIL,
+                token_file=settings.GOOGLE_OAUTH_TOKEN_FILE,
             )
             if success:
                 # Reset failure counter on success
@@ -115,7 +114,7 @@ async def send_email(
     # Neither provider available
     logger.error(
         "No email provider available. "
-        "Configure GOOGLE_SERVICE_ACCOUNT_FILE or SMTP_HOST in .env"
+        "Configure GOOGLE_OAUTH_TOKEN_FILE or SMTP_HOST in .env"
     )
     return False
 
@@ -125,40 +124,49 @@ async def _send_via_google_api(
     subject: str,
     html_body: str,
     plain_body: Optional[str],
-    service_account_file: str,
-    delegated_email: str,
+    token_file: str,
 ) -> bool:
     """
-    Send email via Google Gmail API using a Service Account with
-    domain-wide delegation.
+    Send email via Google Gmail API using OAuth 2.0 User Token (refresh token).
 
     Requires:
       - google-auth
+      - google-auth-oauthlib
       - google-api-python-client
-      - Service account with Gmail API + domain-wide delegation enabled
     """
     import asyncio
+    import os
     from functools import partial
 
     def _sync_send():
-        from google.oauth2 import service_account
+        from google.oauth2.credentials import Credentials
+        from google.auth.transport.requests import Request
         from googleapiclient.discovery import build
 
         SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
-        credentials = service_account.Credentials.from_service_account_file(
-            service_account_file,
-            scopes=SCOPES,
-        )
+        if not os.path.exists(token_file):
+            logger.error("OAuth token file not found at %s", token_file)
+            return False
+
+        credentials = Credentials.from_authorized_user_file(token_file, SCOPES)
         
-        # Delegate to the actual sender email (Domain-Wide Delegation only)
-        if delegated_email:
-            credentials = credentials.with_subject(delegated_email)
+        if not credentials.valid:
+            if credentials.expired and credentials.refresh_token:
+                logger.info("Refreshing expired Google OAuth token...")
+                credentials.refresh(Request())
+                # Save refreshed token
+                with open(token_file, "w") as token:
+                    token.write(credentials.to_json())
+            else:
+                logger.error("OAuth token is invalid and cannot be refreshed.")
+                return False
 
         service = build("gmail", "v1", credentials=credentials, cache_discovery=False)
 
         # Build MIME message
-        sender_email = delegated_email if delegated_email else credentials.service_account_email
+        sender_email = "me"  # 'me' refers to the authenticated user
+
         
         msg = MIMEMultipart("alternative")
         msg["To"] = to
