@@ -1,48 +1,166 @@
-import { Sprout, Mail } from "lucide-react";
-import Link from "next/link";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import api from '@/lib/api';
 
 export default function ForgotPasswordPage() {
+  const router = useRouter();
+  
+  const [step, setStep] = useState<1 | 2>(1);
+  const [identifier, setIdentifier] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRequestOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await api.post('/auth/forgot-password/request-otp', {
+        email_or_phone: identifier,
+      });
+
+      // Show OTP and new password fields
+      setStep(2);
+      
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error.message || 'Failed to request password reset');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyAndReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await api.post('/auth/forgot-password/verify', {
+        email_or_phone: identifier,
+        otp_code: otpCode,
+        new_password: newPassword,
+      });
+
+      // After successful reset, the user is automatically logged in 
+      // by the backend and tokens are returned.
+      // But for better UX per user instruction: "then redirect to Login page."
+      // Let's redirect to login page so they can test their new password.
+      
+      router.push('/login');
+      
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error.message || 'Reset failed');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 relative overflow-hidden">
-      <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-green-100 blur-3xl rounded-full pointer-events-none opacity-50" />
-
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-10">
-          <Link href="/" className="inline-flex items-center gap-3 mb-4">
-            <div className="p-3 bg-green-100 rounded-2xl">
-              <Sprout className="w-10 h-10 text-green-700" />
-            </div>
-          </Link>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Reset Password</h1>
-          <p className="text-slate-500 mt-2">We&apos;ll send you a reset link</p>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-          <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  type="email"
-                  placeholder="farmer@example.com"
-                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all placeholder:text-slate-400"
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Reset Password</CardTitle>
+          <CardDescription className="text-center">
+            {step === 1 ? 'Enter your email or phone to reset your password' : `Enter the OTP sent to ${identifier}`}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={step === 1 ? handleRequestOTP : handleVerifyAndReset} className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-500 bg-red-100 rounded-md">
+                {error}
+              </div>
+            )}
+            
+            {/* STEP 1: Enter Email/Phone */}
+            {step === 1 && (
+              <div className="space-y-2">
+                <Label htmlFor="identifier">Email or Phone</Label>
+                <Input
+                  id="identifier"
+                  type="text"
+                  placeholder="farmer@example.com or +9477..."
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  required
+                  disabled={isLoading}
                 />
               </div>
+            )}
+
+            {/* STEP 2: Verify OTP and Set New Password */}
+            {step === 2 && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="otpCode">6-Digit OTP Code</Label>
+                  <Input
+                    id="otpCode"
+                    type="text"
+                    maxLength={6}
+                    placeholder="123456"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    autoFocus
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="Enter a new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+              </>
+            )}
+
+            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+              {isLoading 
+                ? 'Processing...' 
+                : step === 1 
+                  ? 'Send OTP Code' 
+                  : 'Update Password'
+              }
+            </Button>
+            
+          </form>
+        </CardContent>
+        {step === 1 && (
+          <CardFooter className="flex flex-col space-y-2">
+            <div className="text-sm text-center text-gray-500">
+              Remember your password?{' '}
+              <Link href="/login" className="text-green-600 font-semibold hover:underline">
+                Back to Login
+              </Link>
             </div>
-
-            <button className="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold text-lg hover:bg-green-700 transition-all shadow-sm">
-              Send Reset Link
-            </button>
-          </div>
-
-          <div className="mt-8 text-center">
-            <Link href="/login" className="text-green-600 text-sm font-semibold hover:text-green-700 transition-colors">
-              ← Back to Sign In
-            </Link>
-          </div>
-        </div>
-      </div>
+          </CardFooter>
+        )}
+      </Card>
     </div>
   );
 }

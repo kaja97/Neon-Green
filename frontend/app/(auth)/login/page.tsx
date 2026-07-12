@@ -100,7 +100,7 @@ export default function LoginPage() {
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
                 <Link
-                  href="/forgot-password/request-otp"
+                  href="/forgot-password"
                   className="text-sm font-medium text-green-600 hover:underline"
                 >
                   Forgot password?
@@ -123,7 +123,7 @@ export default function LoginPage() {
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-gray-500">
             Don't have an account?{' '}
-            <Link href="/register/request-otp" className="text-green-600 font-semibold hover:underline">
+            <Link href="/register" className="text-green-600 font-semibold hover:underline">
               Register here
             </Link>
           </div>
