@@ -38,6 +38,7 @@ services:
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_EMAIL: ${VAPID_EMAIL:-admin@agrifarm.app}
+      GOOGLE_SERVICE_ACCOUNT_FILE: /app/keys/Google Service Token.json
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,6 +46,7 @@ services:
         condition: service_started
     volumes:
       - ./backend:/app
+      - ./keys:/app/keys
 
   celery_worker:
     build:
@@ -56,6 +58,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-123}
+      GOOGLE_SERVICE_ACCOUNT_FILE: /app/keys/Google Service Token.json
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,6 +66,7 @@ services:
         condition: service_started
     volumes:
       - ./backend:/app
+      - ./keys:/app/keys
 
   celery_beat:
     build:

@@ -102,11 +102,11 @@ async def request_register_otp(
     try:
         from tasks.otp_tasks import send_otp_email_task
         send_otp_email_task.delay(data.email, code, "register")
-    except Exception:
+    except Exception as exc:
         # If Celery is not running, log but don't fail (dev mode)
         import logging
         logging.getLogger("agrifarm.auth").warning(
-            "Celery not available. OTP code for %s: %s", data.email, code
+            "Celery not available (or eager execution failed). Error: %s. OTP code for %s: %s", exc, data.email, code
         )
 
     return {

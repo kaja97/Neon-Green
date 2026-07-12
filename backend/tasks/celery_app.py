@@ -5,7 +5,7 @@ celery_app = Celery(
     "agrifarm_tasks",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=["tasks.planner_tasks", "tasks.weather_tasks", "tasks.ai_tasks", "tasks.market_tasks", "tasks.notification_tasks"]
+    include=["tasks.planner_tasks", "tasks.weather_tasks", "tasks.ai_tasks", "tasks.market_tasks", "tasks.notification_tasks", "tasks.otp_tasks"]
 )
 
 celery_app.conf.update(
