@@ -1,13 +1,27 @@
+"""
+One-time setup script: Generate Google OAuth token for Gmail API.
+
+Run this once from the project root or backend/ directory to authenticate
+with Google and save a token.json for the email service.
+
+Usage:
+    python backend/scripts/generate_token.py   (from project root)
+    python scripts/generate_token.py           (from backend/)
+"""
 import os
 import sys
 
-# Ensure backend directory is in the python path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(project_root, "backend"))
+# ── Resolve project root (parent of backend/) ───────────
+_this_file = os.path.abspath(__file__)
+_scripts_dir = os.path.dirname(_this_file)        # backend/scripts/
+_backend_dir = os.path.dirname(_scripts_dir)       # backend/
+_project_root = os.path.dirname(_backend_dir)      # Neon Farming/
+
+sys.path.insert(0, _backend_dir)
 
 try:
     from dotenv import load_dotenv
-    load_dotenv(os.path.join(project_root, ".env"))
+    load_dotenv(os.path.join(_project_root, ".env"))
 except ImportError:
     pass
 
@@ -23,25 +37,30 @@ except ImportError:
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
-def main():
-    """Shows basic usage of the Gmail API."""
-    creds = None
-    
-    # Resolve absolute paths relative to project root directly to be safe
-    credentials_path = os.path.join(project_root, "keys", "credentials.json")
-    token_path = os.path.join(project_root, "keys", "token.json")
+# ── Keys live in <project_root>/keys/ — the folder Docker mounts ──
+KEYS_DIR = os.path.join(_project_root, "keys")
 
-    print(f"Using credentials from: {credentials_path}")
+
+def main():
+    """Authenticate with Google and save OAuth token."""
+    creds = None
+
+    credentials_path = os.path.join(KEYS_DIR, "credentials.json")
+    token_path = os.path.join(KEYS_DIR, "token.json")
+
+    print(f"Keys directory : {KEYS_DIR}")
+    print(f"Credentials    : {credentials_path}")
+    print(f"Token output   : {token_path}")
 
     if not os.path.exists(credentials_path):
-        print(f"Error: {credentials_path} not found.")
+        print(f"\nError: {credentials_path} not found.")
         print("Please download your OAuth 2.0 Client ID JSON from Google Cloud Console")
         print("and save it as 'credentials.json' in the keys/ folder.")
         sys.exit(1)
 
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
-        
+
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             print("Refreshing expired token...")
@@ -52,13 +71,15 @@ def main():
                 credentials_path, SCOPES
             )
             creds = flow.run_local_server(port=0)
-            
+
         # Save the credentials for the next run
+        os.makedirs(KEYS_DIR, exist_ok=True)
         with open(token_path, "w") as token:
             token.write(creds.to_json())
-            print(f"Successfully saved new refresh token to: {token_path}")
-            
+            print(f"Successfully saved token to: {token_path}")
+
     print("\n✅ Authentication successful! The email service is ready to use.")
+
 
 if __name__ == "__main__":
     main()

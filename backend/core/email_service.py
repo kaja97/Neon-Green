@@ -2,7 +2,7 @@
 Dual-provider email service.
 
 Strategy:
-  1. PRIMARY — Google Gmail API via Service Account JSON key
+  1. PRIMARY — Google Gmail API via OAuth 2.0 User Token (refresh token)
   2. FALLBACK — SMTP (Gmail app password) after 5 consecutive Google API failures
 
 Failure counter stored in Redis: "email:google_failures"
@@ -20,6 +20,7 @@ Usage:
     )
 """
 import logging
+import os
 import base64
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -30,6 +31,35 @@ logger = logging.getLogger("agrifarm.email")
 GOOGLE_FAILURE_KEY = "email:google_failures"
 GOOGLE_FAILURE_THRESHOLD = 5
 GOOGLE_FAILURE_TTL = 3600  # 1 hour — auto-reset
+
+
+def _resolve_token_file(token_file: str) -> Optional[str]:
+    """
+    Resolve the token file path, checking multiple possible locations.
+    Handles both Docker (/app/keys/token.json) and local (keys/token.json) paths.
+    Returns the resolved path if found, None otherwise.
+    """
+    # 1. Try as-is (absolute or relative to cwd)
+    if os.path.exists(token_file):
+        return os.path.abspath(token_file)
+
+    # 2. Try relative to this file's directory (core/ -> backend/ -> keys/)
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    backend_dir = os.path.dirname(this_dir)
+    project_root = os.path.dirname(backend_dir)
+
+    candidates = [
+        os.path.join(backend_dir, token_file),           # backend/keys/token.json
+        os.path.join(project_root, token_file),           # <root>/keys/token.json
+        os.path.join(project_root, "keys", "token.json"), # <root>/keys/token.json (hardcoded)
+    ]
+
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            logger.debug("Resolved token file %s -> %s", token_file, candidate)
+            return candidate
+
+    return None
 
 
 async def send_email(
@@ -46,7 +76,7 @@ async def send_email(
     3. If Google fails → increment counter, try SMTP
     4. If counter >= 5 → skip Google, go directly to SMTP
 
-    Returns True on success, raises on total failure.
+    Returns True on success, False on total failure.
     """
     from core.redis import get_redis_client
     from config import settings
@@ -64,29 +94,42 @@ async def send_email(
 
     # Try Google Gmail API first (if available and not in failure mode)
     if google_failures < GOOGLE_FAILURE_THRESHOLD and settings.GOOGLE_OAUTH_TOKEN_FILE:
-        try:
-            success = await _send_via_google_api(
-                to=to,
-                subject=subject,
-                html_body=html_body,
-                plain_body=plain_body,
-                token_file=settings.GOOGLE_OAUTH_TOKEN_FILE,
+        resolved_path = _resolve_token_file(settings.GOOGLE_OAUTH_TOKEN_FILE)
+        if resolved_path:
+            try:
+                success = await _send_via_google_api(
+                    to=to,
+                    subject=subject,
+                    html_body=html_body,
+                    plain_body=plain_body,
+                    token_file=resolved_path,
+                )
+                if success:
+                    # Reset failure counter on success
+                    if redis and google_failures > 0:
+                        await redis.delete(GOOGLE_FAILURE_KEY)
+                    return True
+                else:
+                    logger.warning("Google Gmail API returned False for %s", to)
+            except Exception as e:
+                logger.warning(
+                    "Google Gmail API failed (attempt %d): %s: %s",
+                    google_failures + 1, type(e).__name__, e,
+                )
+                # Increment failure counter
+                if redis:
+                    try:
+                        new_count = await redis.incr(GOOGLE_FAILURE_KEY)
+                        if new_count == 1:
+                            await redis.expire(GOOGLE_FAILURE_KEY, GOOGLE_FAILURE_TTL)
+                    except Exception:
+                        pass
+        else:
+            logger.warning(
+                "Google OAuth token file not found at '%s'. "
+                "Run 'python scripts/generate_token.py' to generate it.",
+                settings.GOOGLE_OAUTH_TOKEN_FILE,
             )
-            if success:
-                # Reset failure counter on success
-                if redis and google_failures > 0:
-                    await redis.delete(GOOGLE_FAILURE_KEY)
-                return True
-        except Exception as e:
-            logger.warning("Google Gmail API failed (attempt %d): %s", google_failures + 1, e)
-            # Increment failure counter
-            if redis:
-                try:
-                    new_count = await redis.incr(GOOGLE_FAILURE_KEY)
-                    if new_count == 1:
-                        await redis.expire(GOOGLE_FAILURE_KEY, GOOGLE_FAILURE_TTL)
-                except Exception:
-                    pass
     else:
         if google_failures >= GOOGLE_FAILURE_THRESHOLD:
             logger.info("Google API in fallback mode (%d failures). Using SMTP.", google_failures)
@@ -108,13 +151,13 @@ async def send_email(
             if success:
                 return True
         except Exception as e:
-            logger.error("SMTP fallback also failed: %s", e)
+            logger.error("SMTP fallback also failed: %s: %s", type(e).__name__, e)
             raise
 
     # Neither provider available
     logger.error(
         "No email provider available. "
-        "Configure GOOGLE_OAUTH_TOKEN_FILE or SMTP_HOST in .env"
+        "Configure GOOGLE_OAUTH_TOKEN_FILE or SMTP_HOST+SMTP_USER in .env"
     )
     return False
 
@@ -135,7 +178,6 @@ async def _send_via_google_api(
       - google-api-python-client
     """
     import asyncio
-    import os
     from functools import partial
 
     def _sync_send():
@@ -150,27 +192,32 @@ async def _send_via_google_api(
             return False
 
         credentials = Credentials.from_authorized_user_file(token_file, SCOPES)
-        
+
         if not credentials.valid:
             if credentials.expired and credentials.refresh_token:
                 logger.info("Refreshing expired Google OAuth token...")
                 credentials.refresh(Request())
-                # Save refreshed token
-                with open(token_file, "w") as token:
-                    token.write(credentials.to_json())
+                # Save refreshed token back
+                try:
+                    with open(token_file, "w") as f:
+                        f.write(credentials.to_json())
+                    logger.info("Refreshed token saved to %s", token_file)
+                except OSError as e:
+                    # In Docker, the volume may be read-only in some setups
+                    logger.warning("Could not save refreshed token: %s", e)
             else:
-                logger.error("OAuth token is invalid and cannot be refreshed.")
+                logger.error(
+                    "OAuth token is invalid and cannot be refreshed. "
+                    "Run 'python scripts/generate_token.py' to re-authenticate."
+                )
                 return False
 
         service = build("gmail", "v1", credentials=credentials, cache_discovery=False)
 
         # Build MIME message
-        sender_email = "me"  # 'me' refers to the authenticated user
-
-        
         msg = MIMEMultipart("alternative")
         msg["To"] = to
-        msg["From"] = sender_email
+        msg["From"] = "me"  # 'me' refers to the authenticated user
         msg["Subject"] = subject
 
         if plain_body:
@@ -189,7 +236,9 @@ async def _send_via_google_api(
     # Run synchronous Google API call in thread pool
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(None, _sync_send)
-    logger.info("Email sent via Google Gmail API to %s", to)
+
+    if result:
+        logger.info("Email sent via Google Gmail API to %s", to)
     return result
 
 

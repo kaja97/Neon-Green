@@ -905,14 +905,15 @@ def send_otp_email_task(self, email: str, code: str, purpose: str):
     """Send OTP via SMTP. Retry on failure."""
     try:
         subject_map = {
-            "register": "AgriFarm AI — Verify Your Email",
-            "forgot_password": "AgriFarm AI — Reset Your Password",
-            "change_email": "AgriFarm AI — Confirm New Email",
+            "register": "AgriFarm AI - Verify Your Email",
+            "forgot_password": "AgriFarm AI - Reset Your Password",
+            "change_email": "AgriFarm AI - Confirm New Email",
+            "change_phone": "AgriFarm AI - Confirm Phone Change",
         }
         # Use smtplib or SendGrid or any email provider
         send_email(
             to=email,
-            subject=subject_map.get(purpose, "AgriFarm AI — Verification Code"),
+            subject=subject_map.get(purpose, "AgriFarm AI - Verification Code"),
             body=f"Your verification code is: {code}\n\nThis code expires in 5 minutes.",
         )
     except Exception as exc:

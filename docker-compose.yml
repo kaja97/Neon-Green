@@ -29,6 +29,9 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       DATABASE_URL: postgresql+asyncpg://agrifarm:dev_password@postgres:5432/agrifarm_db
       REDIS_URL: redis://redis:6379/0
@@ -56,14 +59,24 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: celery -A tasks.celery_app worker --loglevel=info -P solo
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       DATABASE_URL: postgresql+asyncpg://agrifarm:dev_password@postgres:5432/agrifarm_db
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-123}
+      GOOGLE_AI_STUDIO_API_KEY: ${GOOGLE_AI_STUDIO_API_KEY:-}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
       GOOGLE_OAUTH_CREDENTIALS_FILE: /app/keys/credentials.json
       GOOGLE_OAUTH_TOKEN_FILE: /app/keys/token.json
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@agrifarm.app}
     depends_on:
       postgres:
         condition: service_healthy
@@ -78,6 +91,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: celery -A tasks.celery_app beat --loglevel=info
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       DATABASE_URL: postgresql+asyncpg://agrifarm:dev_password@postgres:5432/agrifarm_db
       REDIS_URL: redis://redis:6379/0

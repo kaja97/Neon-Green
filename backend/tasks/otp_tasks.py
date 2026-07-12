@@ -1,6 +1,7 @@
 """
 Celery background tasks for OTP delivery via email/SMS.
 """
+
 import asyncio
 import logging
 from .celery_app import celery_app
@@ -22,12 +23,12 @@ def send_otp_email_task(self, email: str, code: str, purpose: str):
         html_body, plain_body = otp_email(code=code, purpose=purpose)
 
         subject_map = {
-            "register": "AgriFarm AI — Verify Your Email",
-            "forgot_password": "AgriFarm AI — Reset Your Password",
-            "change_email": "AgriFarm AI — Confirm New Email",
-            "change_phone": "AgriFarm AI — Confirm Phone Change",
+            "register": "AgriFarm AI - Verify Your Email",
+            "forgot_password": "AgriFarm AI - Reset Your Password",
+            "change_email": "AgriFarm AI - Confirm New Email",
+            "change_phone": "AgriFarm AI - Confirm Phone Change",
         }
-        subject = subject_map.get(purpose, "AgriFarm AI — Verification Code")
+        subject = subject_map.get(purpose, "AgriFarm AI - Verification Code")
 
         # Run async email sender in sync context
         loop = asyncio.new_event_loop()
@@ -41,13 +42,20 @@ def send_otp_email_task(self, email: str, code: str, purpose: str):
                     plain_body=plain_body,
                 )
             )
-            logger.info("OTP email sent to %s for %s", email, purpose)
+            if result:
+                logger.info("OTP email sent to %s for %s", email, purpose)
+            else:
+                logger.warning(
+                    "OTP email failed to dispatch to %s for %s", email, purpose
+                )
             return result
         finally:
             loop.close()
 
     except Exception as exc:
-        logger.error("OTP email failed to %s: %s (retry %d)", email, exc, self.request.retries)
+        logger.error(
+            "OTP email failed to %s: %s (retry %d)", email, exc, self.request.retries
+        )
         raise self.retry(exc=exc)
 
 
@@ -71,7 +79,10 @@ def send_welcome_email_task(self, email: str, full_name: str):
                     plain_body=plain_body,
                 )
             )
-            logger.info("Welcome email sent to %s", email)
+            if result:
+                logger.info("Welcome email sent to %s", email)
+            else:
+                logger.warning("Welcome email failed to dispatch to %s", email)
             return result
         finally:
             loop.close()
@@ -101,7 +112,10 @@ def send_password_reset_email_task(self, email: str, full_name: str):
                     plain_body=plain_body,
                 )
             )
-            logger.info("Password reset email sent to %s", email)
+            if result:
+                logger.info("Password reset email sent to %s", email)
+            else:
+                logger.warning("Password reset email failed to dispatch to %s", email)
             return result
         finally:
             loop.close()
@@ -112,7 +126,14 @@ def send_password_reset_email_task(self, email: str, full_name: str):
 
 
 @celery_app.task(bind=True, max_retries=2, default_retry_delay=10)
-def send_alert_email_task(self, email: str, full_name: str, alert_title: str, alert_message: str, severity: str = "warning"):
+def send_alert_email_task(
+    self,
+    email: str,
+    full_name: str,
+    alert_title: str,
+    alert_message: str,
+    severity: str = "warning",
+):
     """Send alert notification email (weather, disease, market)."""
     try:
         from core.email_service import send_email
@@ -136,7 +157,12 @@ def send_alert_email_task(self, email: str, full_name: str, alert_title: str, al
                     plain_body=plain_body,
                 )
             )
-            logger.info("Alert email sent to %s: %s", email, alert_title)
+            if result:
+                logger.info("Alert email sent to %s: %s", email, alert_title)
+            else:
+                logger.warning(
+                    "Alert email failed to dispatch to %s: %s", email, alert_title
+                )
             return result
         finally:
             loop.close()
