@@ -156,12 +156,15 @@ async def verify_register_otp(
     # Create location if provided
     if data.location:
         from models.farmer import FarmerLocation
+        from geoalchemy2.elements import WKTElement
         new_location = FarmerLocation(
-            account_id=new_account.id,
-            label=data.location.label,
+            farmer_id=new_profile.id,
+            name=data.location.label,
             district=data.location.district,
-            latitude=data.location.latitude,
-            longitude=data.location.longitude,
+            centroid=WKTElement(
+                f"POINT({data.location.longitude} {data.location.latitude})",
+                srid=4326,
+            ),
             is_primary=True,
         )
         db.add(new_location)
