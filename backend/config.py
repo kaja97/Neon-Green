@@ -20,10 +20,26 @@ class Settings(BaseSettings):
     GOOGLE_AI_STUDIO_API_KEY: Optional[str] = None
     OPENWEATHER_API_KEY: Optional[str] = None
     
-    # Push
+    # Push Notifications (VAPID)
     VAPID_PUBLIC_KEY: Optional[str] = None
     VAPID_PRIVATE_KEY: Optional[str] = None
     VAPID_EMAIL: Optional[str] = None
+
+    # ── Email: Google Service Account (Primary) ──────────
+    GOOGLE_SERVICE_ACCOUNT_FILE: Optional[str] = None
+    GOOGLE_DELEGATED_EMAIL: Optional[str] = None
+
+    # ── Email: SMTP Fallback ─────────────────────────────
+    SMTP_HOST: Optional[str] = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_FROM_EMAIL: str = "noreply@agrifarm.app"
+
+    # ── OTP Settings ─────────────────────────────────────
+    OTP_LENGTH: int = 6
+    OTP_TTL_SECONDS: int = 300
+    OTP_MAX_ATTEMPTS: int = 3
 
     model_config = SettingsConfigDict(
         env_file="../.env",
