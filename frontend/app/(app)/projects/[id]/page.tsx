@@ -1,93 +1,176 @@
 "use client";
 
+import { useDashboard } from "@/lib/hooks/useDashboard";
+import { useRefreshAISummary } from "@/lib/hooks/useAISummary";
 import FarmingCircle from "@/components/project/FarmingCircle";
 import ActivityBlock from "@/components/blocks/ActivityBlock";
 import WeatherBlock from "@/components/blocks/WeatherBlock";
+import SoilBlock from "@/components/blocks/SoilBlock";
+import DiseaseBlock from "@/components/blocks/DiseaseBlock";
 import AlertBanner from "@/components/blocks/AlertBanner";
-import { ArrowLeft, Settings, AlertTriangle, Bot, CloudRain, FlaskConical, Calendar, Bug, TrendingUp, Loader2 } from "lucide-react";
+import { formatCurrency } from "@/lib/utils/formatters";
+import {
+  ArrowLeft,
+  Settings,
+  Bot,
+  FlaskConical,
+  Calendar,
+  Bug,
+  TrendingUp,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api";
 
-export default function ProjectDashboard({ params }: { params: { id: string } }) {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["dashboard", params.id],
-    queryFn: async () => {
-      const res = await api.get(`/projects/${params.id}/dashboard`);
-      return res.data;
-    },
-    refetchInterval: 5 * 60 * 1000,
-  });
+export default function ProjectDashboard({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const { data, isLoading, error } = useDashboard(params.id);
+  const refreshAI = useRefreshAISummary(params.id);
 
   if (isLoading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="p-8 text-center text-red-500">
-        Failed to load dashboard. Please try again.
+      <div className="flex h-[80vh] items-center justify-center p-4">
+        <div className="glass-card p-6 text-center max-w-sm">
+          <p className="text-red-400 font-medium">
+            Failed to load project dashboard. Please try again.
+          </p>
+          <Link
+            href="/dashboard"
+            className="inline-block mt-4 text-primary font-semibold text-sm hover:underline"
+          >
+            ← Back to Dashboard
+          </Link>
+        </div>
       </div>
     );
   }
 
-  const { project, stages, current_stage_index, day, total_days, active_alerts, market_price, todays_activities, ai_summary } = data;
+  const {
+    project,
+    farming_circle,
+    todays_activities,
+    weather_alerts,
+    soil_status,
+    market_price,
+    ai_summary,
+    active_issues,
+  } = data;
 
-  const circleStages = stages.map((s: any, idx: number) => ({
-    name: s.stage_name,
-    status: idx < current_stage_index ? "done" : idx === current_stage_index ? "current" : "pending"
-  }));
+  const circleStages = farming_circle?.stages?.map((s) => ({
+    name: s.name,
+    status: s.status === "completed" ? "done" as const : s.status === "current" ? "current" as const : "pending" as const,
+  })) || [];
 
-  const progress = Math.min(100, Math.round((day / total_days) * 100));
+  const progress = farming_circle?.progress_pct || 0;
+  const currentDay = farming_circle?.current_day || 0;
+  const totalDays = project.days_since_planting
+    ? Math.round(project.days_since_planting / (progress / 100 || 1))
+    : 90;
 
   const serviceBlocks = [
-    { href: `/projects/${params.id}/soil`, icon: FlaskConical, label: "Soil", value: "Test", sub: "Required", color: "text-amber-600", bg: "bg-amber-100" },
-    { href: `/projects/${params.id}/plan`, icon: Calendar, label: "Plan", value: `${todays_activities?.length || 0} Tasks`, sub: "Today", color: "text-violet-600", bg: "bg-violet-100" },
-    { href: `/projects/${params.id}/disease`, icon: Bug, label: "Disease", value: `${active_alerts?.length || 0} Alert`, sub: "Risks", color: "text-red-600", bg: "bg-red-100" },
-    { href: `/projects/${params.id}/market`, icon: TrendingUp, label: "Market", value: `LKR ${market_price || 0}`, sub: "Today", color: "text-green-600", bg: "bg-green-100" },
+    {
+      href: `/projects/${params.id}/soil`,
+      icon: FlaskConical,
+      label: "Soil",
+      value: soil_status ? `pH ${soil_status.ph}` : "No Test",
+      sub: soil_status?.nitrogen_status || "Add Test",
+      color: "text-amber-400",
+      bg: "bg-amber-500/10",
+    },
+    {
+      href: `/projects/${params.id}/plan`,
+      icon: Calendar,
+      label: "Plan",
+      value: `${todays_activities?.length || 0} Tasks`,
+      sub: "Today",
+      color: "text-violet-400",
+      bg: "bg-violet-500/10",
+    },
+    {
+      href: `/projects/${params.id}/disease`,
+      icon: Bug,
+      label: "Disease",
+      value: `${active_issues?.length || 0}`,
+      sub: "Issues",
+      color: "text-red-400",
+      bg: "bg-red-500/10",
+    },
+    {
+      href: `/projects/${params.id}/market`,
+      icon: TrendingUp,
+      label: "Market",
+      value: market_price
+        ? `${formatCurrency(market_price.price_per_kg)}/kg`
+        : "N/A",
+      sub: market_price?.trend || "—",
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/10",
+    },
   ];
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 bg-slate-50 min-h-screen text-slate-900">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 pb-24">
       {/* Header */}
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="p-2 bg-white shadow-sm hover:bg-slate-100 rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-slate-700" />
+      <header className="flex items-center justify-between animate-fade-in">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard"
+            className="p-2.5 glass-card rounded-xl hover:bg-surface-tertiary transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-text-secondary" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight capitalize">{project.plant?.common_name || "Farm"}</h1>
-            <p className="text-slate-500 text-sm">{project.area_acres} Acres · {project.farming_method}</p>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white capitalize">
+              {project.crop || project.plant?.common_name || "Farm"}
+            </h1>
+            <p className="text-text-muted text-sm">
+              {project.area} · {project.farming_method || "Farming"}
+            </p>
           </div>
         </div>
-        <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
-          <Settings className="w-6 h-6" />
-        </button>
+        <Link
+          href={`/projects/${params.id}/edit`}
+          className="p-2.5 glass-card rounded-xl hover:bg-surface-tertiary transition-colors"
+        >
+          <Settings className="w-5 h-5 text-text-secondary" />
+        </Link>
       </header>
 
       {/* Farming Circle */}
-      <section className="bg-white shadow-sm rounded-3xl border relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-green-50 to-transparent pointer-events-none" />
+      <section className="glass-card relative overflow-hidden animate-slide-up">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         <FarmingCircle stages={circleStages} />
-        <div className="text-center pb-6">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-green-100 text-green-700 font-bold text-sm tracking-wide">
-            DAY {day} OF {total_days} · {progress}%
+        <div className="text-center pb-6 relative z-10">
+          <span className="inline-block px-5 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-sm tracking-wide">
+            DAY {currentDay} OF {totalDays} · {Math.round(progress)}%
           </span>
         </div>
       </section>
 
       {/* Alerts */}
-      <section>
-        {active_alerts?.length > 0 && <AlertBanner projectId={params.id} alerts={active_alerts} />}
-      </section>
+      {weather_alerts && weather_alerts.length > 0 && (
+        <section className="animate-slide-up" style={{ animationDelay: "100ms" }}>
+          <AlertBanner projectId={params.id} alerts={weather_alerts} />
+        </section>
+      )}
 
       {/* Service Blocks Grid */}
-      <section>
-        <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Services</h2>
+      <section className="animate-slide-up" style={{ animationDelay: "150ms" }}>
+        <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">
+          Services
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <WeatherBlock projectId={params.id} />
           {serviceBlocks.map((block) => {
@@ -96,14 +179,18 @@ export default function ProjectDashboard({ params }: { params: { id: string } })
               <Link
                 key={block.label}
                 href={block.href}
-                className="bg-white border rounded-2xl p-4 hover:border-slate-300 transition-all hover:shadow-md group"
+                className="glass-card-hover p-4 group"
               >
-                <div className={`p-2 rounded-xl w-fit mb-3 ${block.bg} group-hover:scale-110 transition-transform`}>
+                <div
+                  className={`p-2 rounded-xl w-fit mb-3 ${block.bg} group-hover:scale-110 transition-transform`}
+                >
                   <Icon className={`w-5 h-5 ${block.color}`} />
                 </div>
-                <p className="text-xs text-slate-500 mb-0.5">{block.label}</p>
-                <p className="text-lg font-bold">{block.value}</p>
-                <p className="text-xs text-slate-400">{block.sub}</p>
+                <p className="text-xs text-text-muted mb-0.5">{block.label}</p>
+                <p className="text-base font-bold text-white">{block.value}</p>
+                <p className="text-xs text-text-muted capitalize">
+                  {block.sub}
+                </p>
               </Link>
             );
           })}
@@ -111,30 +198,45 @@ export default function ProjectDashboard({ params }: { params: { id: string } })
       </section>
 
       {/* Activity Block */}
-      <section>
-        <ActivityBlock projectId={params.id} activities={todays_activities} />
+      <section className="animate-slide-up" style={{ animationDelay: "200ms" }}>
+        <ActivityBlock
+          projectId={params.id}
+          activities={todays_activities}
+        />
       </section>
 
       {/* AI Summary Card */}
-      <section>
-        <div className="bg-gradient-to-br from-green-50 to-white border border-green-200 p-6 rounded-3xl relative overflow-hidden shadow-sm">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-green-100 blur-3xl rounded-full -mr-20 -mt-20 pointer-events-none" />
-          
+      <section className="animate-slide-up" style={{ animationDelay: "250ms" }}>
+        <div className="glass-card p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16 pointer-events-none" />
+
           <div className="flex items-center justify-between mb-4 relative z-10">
-            <div className="flex items-center gap-2 text-green-700">
-              <Bot className="w-6 h-6" />
-              <h3 className="font-bold text-lg">AI Insight</h3>
+            <div className="flex items-center gap-2 text-primary">
+              <Sparkles className="w-5 h-5" />
+              <h3 className="font-bold text-base">AI Insight</h3>
             </div>
+            <button
+              onClick={() => refreshAI.mutate()}
+              disabled={refreshAI.isPending}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${refreshAI.isPending ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </button>
           </div>
-          
-          <p className="text-slate-700 leading-relaxed relative z-10 mb-6">
-            {ai_summary || "Your AI assistant is analyzing your farm data to provide actionable insights. Generate your first summary now."}
+
+          <p className="text-text-secondary leading-relaxed relative z-10 mb-5 text-sm">
+            {ai_summary?.text ||
+              "Your AI assistant is analyzing your farm data. Generate your first summary now."}
           </p>
 
           <Link
             href={`/projects/${params.id}/ai`}
-            className="inline-flex items-center justify-center w-full md:w-auto px-6 py-3 bg-green-100 hover:bg-green-200 text-green-800 font-semibold rounded-xl transition-colors relative z-10"
+            className="inline-flex items-center justify-center w-full md:w-auto px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-xl transition-colors relative z-10 text-sm gap-2"
           >
+            <Bot className="w-4 h-4" />
             Chat with Assistant
           </Link>
         </div>
