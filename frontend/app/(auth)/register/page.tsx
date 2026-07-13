@@ -195,7 +195,7 @@ export default function RegisterPage() {
         <h2 className="text-2xl font-bold text-white">Create Account</h2>
         <p className="text-sm text-text-secondary">
           {step === 1
-            ? "Join AgriFarm AI — Zero-cost AI for farmers"
+            ? "Join Neon Agri"
             : step === 2
               ? `Enter the code sent to ${email}`
               : "Set up your farming profile"}

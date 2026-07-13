@@ -20,32 +20,32 @@ All code is structured to support future expansion from day one.
 **Goal:** Working dev environment + seeded database
 
 ### Backend Setup
-- [ ] Initialize Python project: `pyproject.toml`, virtual env (Python 3.11+)
-- [ ] Install FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2, Celery, Redis
-- [ ] Configure Docker Compose: PostgreSQL 16 (+ PostGIS + pgvector + pg_trgm), Redis 7
-- [ ] Create `database.py` (async engine, session factory)
-- [ ] Create `config.py` (Pydantic BaseSettings, env vars)
-- [ ] Create first Alembic migration with all core tables (Sections 1-10 from DB model)
-- [ ] Run migration, verify tables exist
+- [x] Initialize Python project: `pyproject.toml`, virtual env (Python 3.11+)
+- [x] Install FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2, Celery, Redis
+- [x] Configure Docker Compose: PostgreSQL 16 (+ PostGIS + pgvector + pg_trgm), Redis 7
+- [x] Create `database.py` (async engine, session factory)
+- [x] Create `config.py` (Pydantic BaseSettings, env vars)
+- [x] Create first Alembic migration with all core tables (Sections 1-10 from DB model)
+- [x] Run migration, verify tables exist
 
 ### Frontend Setup
-- [ ] Initialize Next.js 14 project with App Router, TypeScript
-- [ ] Install Tailwind CSS + shadcn/ui + Recharts + Zustand + React Query
-- [ ] Configure `next-pwa` for offline capability
-- [ ] Create AppShell layout (TopBar + BottomNav)
-- [ ] Create `lib/api.ts` (Axios instance, JWT interceptor, token refresh)
+- [x] Initialize Next.js 14 project with App Router, TypeScript
+- [x] Install Tailwind CSS + shadcn/ui + Recharts + Zustand + React Query
+- [x] Configure `next-pwa` for offline capability
+- [x] Create AppShell layout (TopBar + BottomNav)
+- [x] Create `lib/api.ts` (Axios instance, JWT interceptor, token refresh)
 
 ### Seed Data
-- [ ] Seed `farming_methods` (organic, inorganic, integrated)
-- [ ] Seed `plants` table with 5 priority crops: Tomato, Chili, Rice, Brinjal, Beans
-- [ ] Seed `plant_stages` for all 5 crops (6 stages each = 30 records)
-- [ ] Seed `plant_water_requirements` for all stages (30 records)
-- [ ] Seed `plant_nutrient_requirements` for all stages (30 records)
-- [ ] Seed `plant_fertilizer_recommendations` for all stages × organic + conventional (60 records)
-- [ ] Seed `plant_diseases` for Tomato (8 diseases) and Chili (5 diseases)
-- [ ] Seed `disease_solutions` for each disease × organic + conventional
-- [ ] Seed `plant_pests` for Tomato (6 pests) and Chili (4 pests)
-- [ ] Seed `pest_solutions` for each pest
+- [x] Seed `farming_methods` (organic, inorganic, integrated)
+- [x] Seed `plants` table with 5 priority crops: Tomato, Chili, Rice, Brinjal, Beans
+- [x] Seed `plant_stages` for all 5 crops (6 stages each = 30 records)
+- [x] Seed `plant_water_requirements` for all stages (30 records)
+- [x] Seed `plant_nutrient_requirements` for all stages (30 records)
+- [x] Seed `plant_fertilizer_recommendations` for all stages × organic + conventional (60 records)
+- [x] Seed `plant_diseases` for Tomato (8 diseases) and Chili (5 diseases)
+- [x] Seed `disease_solutions` for each disease × organic + conventional
+- [x] Seed `plant_pests` for Tomato (6 pests) and Chili (4 pests)
+- [x] Seed `pest_solutions` for each pest
 
 **✅ Deliverable:** `docker-compose up` → PostgreSQL running, all tables created, seed data loaded
 
@@ -56,37 +56,37 @@ All code is structured to support future expansion from day one.
 **Goal:** User can register, login, and manage their farm profile
 
 ### Backend
-- [ ] Auth Module:
-  - [ ] `POST /auth/register/request-otp` — send OTP via Celery
-  - [ ] `POST /auth/register/verify` — complete account + farmer_profile
-  - [ ] `POST /auth/login` — email/phone + password → JWT pair (includes role)
-  - [ ] `POST /auth/refresh` — refresh token rotation
-  - [ ] `GET /auth/me` — current user info
-  - [ ] `PATCH /auth/change-password`
-  - [ ] `POST /auth/forgot-password/request-otp` & `verify`
-  - [ ] JWT middleware (RS256, 15-min access, 30-day refresh in Redis) with RBAC roles support (`farmer`, `admin`)
-  - [ ] `core/otp.py` — Redis-backed OTP system
-  - [ ] `core/rate_limiter.py` — Redis sliding window rate limiter
-  - [ ] `tasks/otp_tasks.py` — `send_otp_email_task`, `send_otp_sms_task` (Celery background tasks)
-- [ ] Farmer Module:
-  - [ ] `GET /farmer/profile` — get own profile
-  - [ ] `PUT /farmer/profile` — update profile
-  - [ ] `POST /farmer/locations` — add GPS location
-  - [ ] `GET /farmer/locations` — list locations
-  - [ ] `PUT /farmer/locations/{id}` — update location
-  - [ ] `DELETE /farmer/locations/{id}` — delete location
-  - [ ] `POST /farmer/land` — add land details
-  - [ ] `GET /farmer/land` — list land details
-  - [ ] `PUT /farmer/land/{id}` — update land details
-  - [ ] `DELETE /farmer/land/{id}` — delete land details
-  - [ ] `POST/GET/PUT/DELETE /farmer/livestock` — manage livestock
+- [x] Auth Module:
+  - [x] `POST /auth/register/request-otp` — send OTP via Celery
+  - [x] `POST /auth/register/verify` — complete account + farmer_profile
+  - [x] `POST /auth/login` — email/phone + password → JWT pair (includes role)
+  - [x] `POST /auth/refresh` — refresh token rotation
+  - [x] `GET /auth/me` — current user info
+  - [x] `PATCH /auth/change-password`
+  - [x] `POST /auth/forgot-password/request-otp` & `verify`
+  - [x] JWT middleware (RS256, 15-min access, 30-day refresh in Redis) with RBAC roles support (`farmer`, `admin`)
+  - [x] `core/otp.py` — Redis-backed OTP system
+  - [x] `core/rate_limiter.py` — Redis sliding window rate limiter
+  - [x] `tasks/otp_tasks.py` — `send_otp_email_task`, `send_otp_sms_task` (Celery background tasks)
+- [x] Farmer Module:
+  - [x] `GET /farmer/profile` — get own profile
+  - [x] `PUT /farmer/profile` — update profile
+  - [x] `POST /farmer/locations` — add GPS location
+  - [x] `GET /farmer/locations` — list locations
+  - [x] `PUT /farmer/locations/{id}` — update location
+  - [x] `DELETE /farmer/locations/{id}` — delete location
+  - [x] `POST /farmer/land` — add land details
+  - [x] `GET /farmer/land` — list land details
+  - [x] `PUT /farmer/land/{id}` — update land details
+  - [x] `DELETE /farmer/land/{id}` — delete land details
+  - [x] `POST/GET/PUT/DELETE /farmer/livestock` — manage livestock
 
 ### Frontend
-- [ ] Login page (`/login`)
-- [ ] Register page (`/register`) — multi-step: OTP request → OTP verify → account → profile → first location
-- [ ] Forgot password flow
-- [ ] Profile page (`/profile`) — edit farmer info
-- [ ] Location management page — add/edit locations with Leaflet map picker
+- [x] Login page (`/login`)
+- [x] Register page (`/register`) — multi-step: OTP request → OTP verify → account → profile → first location
+- [x] Forgot password flow
+- [x] Profile page (`/profile`) — edit farmer info
+- [x] Location management page — add/edit locations with Leaflet map picker
 
 **✅ Deliverable:** Farmer can register with OTP verification, login, add farm locations, and manage profile
 
@@ -97,31 +97,31 @@ All code is structured to support future expansion from day one.
 **Goal:** Farmer can create a project and see the dashboard skeleton
 
 ### Backend
-- [ ] Project Module:
-  - [ ] `POST /projects` — create project (validate crop, location, land)
-  - [ ] `GET /projects` — list projects (with filter by status)
-  - [ ] `GET /projects/{id}` — project detail
-  - [ ] `PUT /projects/{id}` — update project details
-  - [ ] `DELETE /projects/{id}` — delete project
-  - [ ] `PATCH /projects/{id}/status` — change status
-  - [ ] `GET /projects/{id}/dashboard` — aggregated dashboard endpoint
-- [ ] Master Data endpoints:
-  - [ ] `GET /plants` — list crops with search
-  - [ ] `GET /plants/{id}/stages` — get growth stages
-  - [ ] `GET /farming-methods` — list methods
+- [x] Project Module:
+  - [x] `POST /projects` — create project (validate crop, location, land)
+  - [x] `GET /projects` — list projects (with filter by status)
+  - [x] `GET /projects/{id}` — project detail
+  - [x] `PUT /projects/{id}` — update project details
+  - [x] `DELETE /projects/{id}` — delete project
+  - [x] `PATCH /projects/{id}/status` — change status
+  - [x] `GET /projects/{id}/dashboard` — aggregated dashboard endpoint
+- [x] Master Data endpoints:
+  - [x] `GET /plants` — list crops with search
+  - [x] `GET /plants/{id}/stages` — get growth stages
+  - [x] `GET /farming-methods` — list methods
 
 ### Frontend
-- [ ] Dashboard page (`/dashboard`) — project card grid
-- [ ] Create Project Wizard (`/projects/new`) — 5-step wizard:
+- [x] Dashboard page (`/dashboard`) — project card grid
+- [x] Create Project Wizard (`/projects/new`) — 5-step wizard:
   1. Select crop (grid of crop cards)
   2. Select location
   3. Select land details + farming method
   4. Set planting date + area
   5. Review & create
-- [ ] Project Dashboard page (`/projects/[id]`) — skeleton with:
-  - [ ] FarmingCircle component (visual stage ring)
-  - [ ] DayCounter ("Day 45 of 90 — 50%")
-  - [ ] Service blocks placeholder (Weather, Soil, Activities, Market, AI)
+- [x] Project Dashboard page (`/projects/[id]`) — skeleton with:
+  - [x] FarmingCircle component (visual stage ring)
+  - [x] DayCounter ("Day 45 of 90 — 50%")
+  - [x] Service blocks placeholder (Weather, Soil, Activities, Market, AI)
 
 **✅ Deliverable:** Farmer creates "Tomato Farm — 1 Acre" project, sees Farming Circle on dashboard
 
@@ -132,21 +132,21 @@ All code is structured to support future expansion from day one.
 **Goal:** Full-season activity plan generated automatically, daily tasks visible
 
 ### Backend
-- [ ] Activity Planner Module:
-  - [ ] `generate_season_plan()` — Celery task triggered on project creation
-  - [ ] Generates watering, fertilizing, monitoring activities for all stages
-  - [ ] Scales quantities to farm area, filters by farming method
-  - [ ] `GET /planner/{project_id}/today` — today's pending activities
-  - [ ] `GET /planner/{project_id}/activities` — full plan with pagination
-  - [ ] `PATCH /planner/activities/{id}/complete` — mark done (with notes)
-  - [ ] `PATCH /planner/activities/{id}/skip` — skip with reason
+- [x] Activity Planner Module:
+  - [x] `generate_season_plan()` — Celery task triggered on project creation
+  - [x] Generates watering, fertilizing, monitoring activities for all stages
+  - [x] Scales quantities to farm area, filters by farming method
+  - [x] `GET /planner/{project_id}/today` — today's pending activities
+  - [x] `GET /planner/{project_id}/activities` — full plan with pagination
+  - [x] `PATCH /planner/activities/{id}/complete` — mark done (with notes)
+  - [x] `PATCH /planner/activities/{id}/skip` — skip with reason
 
 ### Frontend
-- [ ] ActivityBlock on project dashboard — today's task cards
-- [ ] Activity timeline view (`/projects/[id]/plan`) — vertical timeline
-- [ ] ActivityCard component — tap to expand, "Done" / "Skip" buttons
-- [ ] DoneButton with optional notes input
-- [ ] SkipDialog with required reason
+- [x] ActivityBlock on project dashboard — today's task cards
+- [x] Activity timeline view (`/projects/[id]/plan`) — vertical timeline
+- [x] ActivityCard component — tap to expand, "Done" / "Skip" buttons
+- [x] DoneButton with optional notes input
+- [x] SkipDialog with required reason
 
 **✅ Deliverable:** Creating a project generates 77 activities. Farmer sees daily tasks and marks them done.
 
@@ -157,26 +157,26 @@ All code is structured to support future expansion from day one.
 **Goal:** Weather data fetched, activities adjusted, alerts generated
 
 ### Backend
-- [ ] Weather Module:
-  - [ ] OpenWeatherMap free API integration (1000 calls/day)
-  - [ ] Redis caching (3-hour TTL, GPS rounded to 3 decimals)
-  - [ ] `GET /weather/{project_id}` — 5-day forecast
-  - [ ] `GET /weather/{project_id}/alerts` — active alerts
-- [ ] Celery Beat jobs:
-  - [ ] `refresh_weather_cache` — every 3 hours
-  - [ ] `adjust_plan_for_weather` — 5:00 AM daily
-  - [ ] `check_weather_alerts` — every 6 hours
-- [ ] Weather adjustment rules:
-  - [ ] Skip watering if rain > 5mm
-  - [ ] Reschedule fertilizer if rain > 25mm
-  - [ ] Reschedule spraying if wind > 20km/h
-  - [ ] Alert: flood (>50mm), frost (<10°C), disease risk (humidity >85%)
+- [x] Weather Module:
+  - [x] OpenWeatherMap free API integration (1000 calls/day)
+  - [x] Redis caching (3-hour TTL, GPS rounded to 3 decimals)
+  - [x] `GET /weather/{project_id}` — 5-day forecast
+  - [x] `GET /weather/{project_id}/alerts` — active alerts
+- [x] Celery Beat jobs:
+  - [x] `refresh_weather_cache` — every 3 hours
+  - [x] `adjust_plan_for_weather` — 5:00 AM daily
+  - [x] `check_weather_alerts` — every 6 hours
+- [x] Weather adjustment rules:
+  - [x] Skip watering if rain > 5mm
+  - [x] Reschedule fertilizer if rain > 25mm
+  - [x] Reschedule spraying if wind > 20km/h
+  - [x] Alert: flood (>50mm), frost (<10°C), disease risk (humidity >85%)
 
 ### Frontend
-- [ ] WeatherBlock on project dashboard — current + 5-day mini forecast
-- [ ] AlertBanner component — red/yellow strip for weather alerts
-- [ ] Weather detail page (`/projects/[id]/weather`) — full 5-day chart
-- [ ] Weather-adjusted activity badge (shows "⚡ Skipped by weather" on task card)
+- [x] WeatherBlock on project dashboard — current + 5-day mini forecast
+- [x] AlertBanner component — red/yellow strip for weather alerts
+- [x] Weather detail page (`/projects/[id]/weather`) — full 5-day chart
+- [x] Weather-adjusted activity badge (shows "⚡ Skipped by weather" on task card)
 
 **✅ Deliverable:** Activities auto-adjust based on weather. Farmer sees alerts.
 
@@ -187,31 +187,31 @@ All code is structured to support future expansion from day one.
 **Goal:** Soil test analysis + disease matching engine working
 
 ### Backend — Soil
-- [ ] Soil Module:
-  - [ ] `POST /soil/tests` — submit soil test with nutrient results
-  - [ ] `GET /soil/tests/{project_id}` — test history
-  - [ ] `GET /soil/recommendations/{project_id}` — computed recommendations
-  - [ ] Deterministic nutrient gap calculator:
-    - [ ] Compare actual vs. optimal (from `plant_nutrient_requirements`)
-    - [ ] Generate specific product + quantity recommendations
-    - [ ] Filter organic/conventional by project farming method
+- [x] Soil Module:
+  - [x] `POST /soil/tests` — submit soil test with nutrient results
+  - [x] `GET /soil/tests/{project_id}` — test history
+  - [x] `GET /soil/recommendations/{project_id}` — computed recommendations
+  - [x] Deterministic nutrient gap calculator:
+    - [x] Compare actual vs. optimal (from `plant_nutrient_requirements`)
+    - [x] Generate specific product + quantity recommendations
+    - [x] Filter organic/conventional by project farming method
 
 ### Backend — Disease
-- [ ] Disease Module:
-  - [ ] `POST /issues` — report a problem (symptoms + affected parts)
-  - [ ] `GET /issues/{project_id}` — issue history
-  - [ ] `GET /disease/search` — keyword search against `plant_diseases`
-  - [ ] `GET /disease/{id}/solutions` — solutions filtered by farming method
-  - [ ] PostgreSQL full-text search (`to_tsvector`, `ts_rank`)
-  - [ ] If keyword match confidence < threshold → route to AI (Phase 6)
+- [x] Disease Module:
+  - [x] `POST /issues` — report a problem (symptoms + affected parts)
+  - [x] `GET /issues/{project_id}` — issue history
+  - [x] `GET /disease/search` — keyword search against `plant_diseases`
+  - [x] `GET /disease/{id}/solutions` — solutions filtered by farming method
+  - [x] PostgreSQL full-text search (`to_tsvector`, `ts_rank`)
+  - [x] If keyword match confidence < threshold → route to AI (Phase 6)
 
 ### Frontend
-- [ ] SoilBlock on dashboard — pH, N/P/K status badges
-- [ ] Soil detail page — radar chart + recommendations list
-- [ ] Soil test form — manual entry of lab results
-- [ ] DiseaseBlock on dashboard — "No active issues" / issue count
-- [ ] Issue report flow — select symptoms → select affected parts → submit
-- [ ] Solutions display — organic tab / conventional tab
+- [x] SoilBlock on dashboard — pH, N/P/K status badges
+- [x] Soil detail page — radar chart + recommendations list
+- [x] Soil test form — manual entry of lab results
+- [x] DiseaseBlock on dashboard — "No active issues" / issue count
+- [x] Issue report flow — select symptoms → select affected parts → submit
+- [x] Solutions display — organic tab / conventional tab
 
 **✅ Deliverable:** Farmer submits soil test → gets "Apply 30kg Urea per acre". Reports "yellow spots" → matched to "Early Blight" with solutions.
 
@@ -222,39 +222,39 @@ All code is structured to support future expansion from day one.
 **Goal:** AI-powered summaries, chat, and smart database updates
 
 ### Backend
-- [ ] AI Module:
-  - [ ] `context_builder.py` — flatten all project tables into JSON context
-  - [ ] `prompts.py` — system prompts for summary, Q&A, diagnosis
-  - [ ] `service.py` — Google AI Studio integration:
-    - [ ] `pip install google-generativeai`
-    - [ ] Configure with free API key (no credit card needed)
-    - [ ] Use `gemini-2.0-flash` model
-  - [ ] `POST /ai/summary/{project_id}` — generate fresh AI summary
-  - [ ] `GET /ai/summary/{project_id}` — get cached summary
-  - [ ] `POST /ai/chat` — farmer Q&A with project context
-  - [ ] Intent classifier (regex-based, no AI):
-    - [ ] Weather questions → route to weather service
-    - [ ] Price questions → route to market service
-    - [ ] Schedule questions → route to planner service
-    - [ ] Complex questions → route to Gemini
-  - [ ] Rate limiting: 10 AI calls/day per farmer, 14 RPM global
-  - [ ] Error handling: fallback to deterministic summary if Gemini unavailable
-  - [ ] AI response parser: extract insights → update DB:
-    - [ ] Disease risk detection → create `project_issues` or `weather_alerts`
-    - [ ] Nutrient deficiency → create `soil_recommendations`
-    - [ ] Schedule suggestions → create `notifications`
-- [ ] Celery Beat:
-  - [ ] `generate_weekly_ai_summary` — Sundays 6 AM, flatten each project → Gemini
+- [x] AI Module:
+  - [x] `context_builder.py` — flatten all project tables into JSON context
+  - [x] `prompts.py` — system prompts for summary, Q&A, diagnosis
+  - [x] `service.py` — Google AI Studio integration:
+    - [x] `pip install google-generativeai`
+    - [x] Configure with free API key (no credit card needed)
+    - [x] Use `gemini-2.0-flash` model
+  - [x] `POST /ai/summary/{project_id}` — generate fresh AI summary
+  - [x] `GET /ai/summary/{project_id}` — get cached summary
+  - [x] `POST /ai/chat` — farmer Q&A with project context
+  - [x] Intent classifier (regex-based, no AI):
+    - [x] Weather questions → route to weather service
+    - [x] Price questions → route to market service
+    - [x] Schedule questions → route to planner service
+    - [x] Complex questions → route to Gemini
+  - [x] Rate limiting: 10 AI calls/day per farmer, 14 RPM global
+  - [x] Error handling: fallback to deterministic summary if Gemini unavailable
+  - [x] AI response parser: extract insights → update DB:
+    - [x] Disease risk detection → create `project_issues` or `weather_alerts`
+    - [x] Nutrient deficiency → create `soil_recommendations`
+    - [x] Schedule suggestions → create `notifications`
+- [x] Celery Beat:
+  - [x] `generate_weekly_ai_summary` — Sundays 6 AM, flatten each project → Gemini
 
 ### Frontend
-- [ ] AISummaryBlock on dashboard — latest cached AI summary
-- [ ] "🔄 Refresh AI" button — trigger fresh summary
-- [ ] AI Chat page (`/projects/[id]/ai`):
-  - [ ] Chat window with message bubbles
-  - [ ] Context badge ("Tomato Farm — Day 45")
-  - [ ] Remaining calls counter ("8 AI calls remaining today")
-  - [ ] "$0.00" cost badge (shows it's free)
-- [ ] ChatInput with send button
+- [x] AISummaryBlock on dashboard — latest cached AI summary
+- [x] "🔄 Refresh AI" button — trigger fresh summary
+- [x] AI Chat page (`/projects/[id]/ai`):
+  - [x] Chat window with message bubbles
+  - [x] Context badge ("Tomato Farm — Day 45")
+  - [x] Remaining calls counter ("8 AI calls remaining today")
+  - [x] "$0.00" cost badge (shows it's free)
+- [x] ChatInput with send button
 
 **✅ Deliverable:** Farmer taps "Get AI Summary" → sees "Your tomato is in Flowering stage, watch for blight due to humidity..." Farmer asks "Why are leaves yellow?" → AI answers using project soil + weather data.
 
@@ -265,25 +265,25 @@ All code is structured to support future expansion from day one.
 **Goal:** Crop price tracking and push notifications
 
 ### Backend
-- [ ] Market Module:
-  - [ ] `GET /market/prices/{plant_id}` — current price by district
-  - [ ] `GET /market/trends/{plant_id}` — 30-day trend
-  - [ ] Admin endpoint: `POST /market/admin/prices` — manual price entry
-  - [ ] Celery: `compute_market_trends` — daily trend calculation
-  - [ ] Price change alert trigger (>15% drop or >20% rise)
-- [ ] Notification Module:
-  - [ ] `GET /notifications` — list notifications (filter: unread)
-  - [ ] `PATCH /notifications/{id}/read` — mark as read
-  - [ ] `POST /notifications/subscribe` — register Web Push subscription
-  - [ ] Web Push via VAPID keys + Service Worker
-  - [ ] Celery Beat: `send_daily_notifications` — 5:30 AM
+- [x] Market Module:
+  - [x] `GET /market/prices/{plant_id}` — current price by district
+  - [x] `GET /market/trends/{plant_id}` — 30-day trend
+  - [x] Admin endpoint: `POST /market/admin/prices` — manual price entry
+  - [x] Celery: `compute_market_trends` — daily trend calculation
+  - [x] Price change alert trigger (>15% drop or >20% rise)
+- [x] Notification Module:
+  - [x] `GET /notifications` — list notifications (filter: unread)
+  - [x] `PATCH /notifications/{id}/read` — mark as read
+  - [x] `POST /notifications/subscribe` — register Web Push subscription
+  - [x] Web Push via VAPID keys + Service Worker
+  - [x] Celery Beat: `send_daily_notifications` — 5:30 AM
 
 ### Frontend
-- [ ] MarketBlock on dashboard — price + trend arrow
-- [ ] Market detail page — 30-day line chart + revenue calculator
-- [ ] Notification center (`/notifications`) — grouped by type
-- [ ] Push notification permission prompt on first login
-- [ ] Notification bell with unread count badge in TopBar
+- [x] MarketBlock on dashboard — price + trend arrow
+- [x] Market detail page — 30-day line chart + revenue calculator
+- [x] Notification center (`/notifications`) — grouped by type
+- [x] Push notification permission prompt on first login
+- [x] Notification bell with unread count badge in TopBar
 
 **✅ Deliverable:** Farmer sees tomato price 180 LKR/kg (↑12%). Gets push: "🌱 3 tasks today"
 
@@ -294,19 +294,19 @@ All code is structured to support future expansion from day one.
 **Goal:** Admin role access and platform management
 
 ### Backend
-- [ ] Admin Module (`modules/admin/`):
-  - [ ] `GET /admin/users` — List and filter all users
-  - [ ] `GET /admin/users/{id}` — View user detail
-  - [ ] `PATCH /admin/users/{id}/deactivate` / `reactivate`
-  - [ ] `PATCH /admin/users/{id}/role` — Change user role (farmer ↔ admin)
-  - [ ] `GET /admin/stats` — Platform aggregates
-  - [ ] `GET /admin/projects` — List all projects
-  - [ ] `GET /admin/ai/usage` — AI metrics dashboard
+- [x] Admin Module (`modules/admin/`):
+  - [x] `GET /admin/users` — List and filter all users
+  - [x] `GET /admin/users/{id}` — View user detail
+  - [x] `PATCH /admin/users/{id}/deactivate` / `reactivate`
+  - [x] `PATCH /admin/users/{id}/role` — Change user role (farmer ↔ admin)
+  - [x] `GET /admin/stats` — Platform aggregates
+  - [x] `GET /admin/projects` — List all projects
+  - [x] `GET /admin/ai/usage` — AI metrics dashboard
 
 ### Frontend
-- [ ] Admin layout and sidebar navigation
-- [ ] Users management table with role toggling
-- [ ] System metrics dashboard
+- [x] Admin layout and sidebar navigation
+- [x] Users management table with role toggling
+- [x] System metrics dashboard
 
 **✅ Deliverable:** System admin can manage farmers and view platform usage securely.
 
@@ -317,32 +317,32 @@ All code is structured to support future expansion from day one.
 **Goal:** Production-ready v1.0
 
 ### Testing
-- [ ] Unit tests (`pytest`):
-  - [ ] Activity planner: generate plan for tomato, assert 77 activities
-  - [ ] Soil calculator: input pH 5.5, assert lime recommendation
-  - [ ] Intent classifier: "What's the weather?" → routes to weather, not AI
-  - [ ] Weather adjustment: rain 30mm → watering skipped
-- [ ] Integration tests:
-  - [ ] Full project creation flow: register → login → create project → verify plan generated
-  - [ ] Dashboard aggregation: verify all blocks return data
-  - [ ] AI summary: mock Gemini response, verify DB updates
-- [ ] E2E tests (Playwright):
-  - [ ] Register → Create project → Mark task done → View dashboard
-  - [ ] Ask AI question → See response
+- [x] Unit tests (`pytest`):
+  - [x] Activity planner: generate plan for tomato, assert 77 activities
+  - [x] Soil calculator: input pH 5.5, assert lime recommendation
+  - [x] Intent classifier: "What's the weather?" → routes to weather, not AI
+  - [x] Weather adjustment: rain 30mm → watering skipped
+- [x] Integration tests:
+  - [x] Full project creation flow: register → login → create project → verify plan generated
+  - [x] Dashboard aggregation: verify all blocks return data
+  - [x] AI summary: mock Gemini response, verify DB updates
+- [x] E2E tests (Playwright):
+  - [x] Register → Create project → Mark task done → View dashboard
+  - [x] Ask AI question → See response
 
 ### PWA & Performance
-- [ ] Service Worker caching for daily plan and weather
-- [ ] Offline mode: show cached activities without internet
-- [ ] Optimistic updates: mark task done immediately, sync later
-- [ ] Lighthouse audit: target > 90 on all metrics
+- [x] Service Worker caching for daily plan and weather
+- [x] Offline mode: show cached activities without internet
+- [x] Optimistic updates: mark task done immediately, sync later
+- [x] Lighthouse audit: target > 90 on all metrics
 
 ### Deployment
-- [ ] Docker build for FastAPI + Celery worker + Celery Beat
-- [ ] Docker Compose: Nginx (reverse proxy) + FastAPI + PostgreSQL + Redis
-- [ ] GitHub Actions CI/CD pipeline
-- [ ] Deploy to VPS (DigitalOcean / Hetzner)
-- [ ] HTTPS via Let's Encrypt
-- [ ] Environment variables for production
+- [x] Docker build for FastAPI + Celery worker + Celery Beat
+- [x] Docker Compose: Nginx (reverse proxy) + FastAPI + PostgreSQL + Redis
+- [x] GitHub Actions CI/CD pipeline
+- [x] Deploy to VPS (DigitalOcean / Hetzner)
+- [x] HTTPS via Let's Encrypt
+- [x] Environment variables for production
 
 **✅ Deliverable:** v1.0 deployed. Farmer can register, create project, get daily guidance, ask AI questions — all for $0 AI cost.
 
@@ -416,6 +416,6 @@ CELERY_RESULT_BACKEND=redis://localhost:6379/2
 ```
 
 **Required API accounts (all FREE):**
-- [ ] Google AI Studio — free API key (no credit card): https://aistudio.google.com/apikey
-- [ ] OpenWeatherMap — free tier (1,000 calls/day): https://openweathermap.org/api
-- [ ] Generate VAPID keys: `npx web-push generate-vapid-keys`
+- [x] Google AI Studio — free API key (no credit card): https://aistudio.google.com/apikey
+- [x] OpenWeatherMap — free tier (1,000 calls/day): https://openweathermap.org/api
+- [x] Generate VAPID keys: `npx web-push generate-vapid-keys`

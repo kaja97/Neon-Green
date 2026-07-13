@@ -86,6 +86,9 @@ backend/
 | POST | `/auth/login` | Email/phone + password → JWT pair | Public |
 | POST | `/auth/refresh` | Refresh token → new access token | Refresh token |
 | GET | `/auth/me` | Get current user info | Bearer |
+| POST | `/auth/forgot-password/request-otp` | Request OTP for password reset | Public |
+| POST | `/auth/forgot-password/verify` | Verify OTP and set new password | Public |
+| PATCH | `/auth/change-password` | Change password for logged in user | Bearer |
 
 ### Logic
 ```python
@@ -614,3 +617,20 @@ See [07_AI_RAG_MCP.md](07_AI_RAG_MCP.md) for complete implementation.
 | `disease_risk` | High humidity + warm temp | "Blight risk high — inspect leaves today" |
 | `market_alert` | Price changes > 15% | "Tomato price rose 18% in Colombo!" |
 | `ai_insight` | Weekly AI summary generated | "Your weekly crop health report is ready" |
+
+---
+
+## SERVICE 11: Admin Module
+
+**Path:** `/admin`
+
+### Endpoints
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/admin/users` | List all users | Admin |
+| PATCH | `/admin/users/{id}/role` | Change user role | Admin |
+| PATCH | `/admin/users/{id}/deactivate` | Deactivate/reactivate user | Admin |
+| GET | `/admin/stats` | Platform statistics | Admin |
+| GET | `/admin/master-data/crops` | Manage crop master data | Admin |
+| GET | `/admin/master-data/diseases` | Manage disease master data | Admin |
+
