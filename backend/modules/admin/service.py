@@ -207,7 +207,8 @@ async def get_admin_stats(db: AsyncSession) -> dict:
     }
 
 # --- Master Data Management ---
-from models.plant_health import Plant, PlantDisease, PlantPest
+from models.plant import Plant
+from models.plant_health import PlantDisease, PlantPest
 from .schemas import PlantCreate, PlantUpdate, DiseaseCreate, DiseaseUpdate
 import uuid
 from fastapi import HTTPException
