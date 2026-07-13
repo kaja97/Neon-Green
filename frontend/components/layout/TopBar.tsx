@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, UserCircle2, WifiOff, ShieldAlert } from "lucide-react";
+import { Bell, User, WifiOff, ShieldAlert, Sprout } from "lucide-react";
 import Link from "next/link";
 import { useOffline } from "@/lib/hooks/useOffline";
 import { useQuery } from "@tanstack/react-query";
@@ -11,47 +11,83 @@ export default function TopBar() {
   const isOffline = useOffline();
   const { user } = useAuthStore();
 
-  // Try to fetch unread notification count, ignore if offline
+  // Fetch unread notification count
   const { data: countData } = useQuery({
     queryKey: ["notification_count"],
     queryFn: async () => {
-      const res = await api.get("/notifications/count");
-      return res.data;
+      const res = await api.get("/notifications", {
+        params: { unread_only: true },
+      });
+      return { count: res.data.data?.length || 0 };
     },
-    enabled: !isOffline,
+    enabled: !isOffline && !!user,
+    staleTime: 60 * 1000, // 1 minute
+    refetchInterval: 60 * 1000,
   });
 
   const unreadCount = countData?.count || 0;
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-xl shadow-sm">
-      <div className="flex h-16 items-center justify-between px-4">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <span className="text-xl font-extrabold tracking-tight text-green-700">
-            AgriFarm AI
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-surface-primary/80 backdrop-blur-xl">
+      <div className="flex h-16 items-center justify-between px-4 max-w-7xl mx-auto">
+        {/* Brand */}
+        <Link href="/dashboard" className="flex items-center gap-2.5 group">
+          <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 group-hover:glow-green transition-all">
+            <Sprout className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-lg font-extrabold tracking-tight text-white">
+            AgriFarm
+            <span className="text-primary"> AI</span>
           </span>
         </Link>
-        <div className="flex items-center gap-4">
+
+        <div className="flex items-center gap-3">
+          {/* Offline Indicator */}
           {isOffline && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-200 rounded-full text-amber-600 text-xs font-semibold shadow-sm">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-neon-gold/10 border border-neon-gold/20 rounded-full text-neon-gold text-xs font-semibold animate-pulse-glow">
               <WifiOff className="w-3.5 h-3.5" />
               Offline
             </div>
           )}
+
+          {/* Admin Link */}
           {user?.role === "admin" && (
-            <Link href="/admin/dashboard" className="flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-xl text-sm font-semibold hover:bg-purple-200 transition-colors">
-              <ShieldAlert className="w-4 h-4" />
+            <Link
+              href="/admin/dashboard"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-neon-purple/10 border border-neon-purple/20 text-neon-purple rounded-xl text-xs font-bold hover:bg-neon-purple/20 transition-colors"
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Admin</span>
             </Link>
           )}
-          <Link href="/notifications" className="relative p-2 text-slate-500 hover:text-slate-800 transition-colors">
-            <Bell className="h-6 w-6" />
+
+          {/* Notifications */}
+          <Link
+            href="/notifications"
+            className="relative p-2.5 rounded-xl text-text-secondary hover:text-white hover:bg-surface-tertiary transition-all"
+          >
+            <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white" />
+              <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 animate-pulse-glow">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
             )}
           </Link>
-          <Link href="/profile" className="p-1 text-slate-500 hover:text-slate-800 transition-colors">
-            <Settings className="w-5 h-5" />
+
+          {/* Profile Avatar */}
+          <Link
+            href="/profile"
+            className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-600/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-xs hover:border-primary/60 transition-all"
+          >
+            {initials}
           </Link>
         </div>
       </div>

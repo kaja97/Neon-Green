@@ -1,114 +1,168 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { useAuthStore } from '@/lib/stores/authStore';
-import api from '@/lib/api';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  UserPlus,
+} from "lucide-react";
+import { useAuthStore } from "@/lib/stores/authStore";
+import api from "@/lib/api";
+
+type Step = 1 | 2 | 3;
+
+const STEP_LABELS = ["Account Details", "Verify Identity", "Farm Profile"];
 
 export default function RegisterPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
-  
-  // Form State
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [password, setPassword] = useState('');
-  const [farmingMethod, setFarmingMethod] = useState('organic');
-  const [primaryLanguage, setPrimaryLanguage] = useState('en');
-  
-  // OTP State
-  const [step, setStep] = useState<1 | 2>(1);
-  const [otpCode, setOtpCode] = useState('');
+
+  // Step control
+  const [step, setStep] = useState<Step>(1);
+
+  // Step 1: Basic Info
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Step 2: OTP
+  const [otpCode, setOtpCode] = useState("");
   const [countdown, setCountdown] = useState(120);
-  
+
+  // Step 3: Farm Profile
+  const [farmingMethod, setFarmingMethod] = useState("organic");
+  const [experienceYears, setExperienceYears] = useState("");
+  const [primaryLanguage, setPrimaryLanguage] = useState("en");
+  const [farmingMethods, setFarmingMethods] = useState<
+    Array<{ id: string; code: string; name: string }>
+  >([]);
+
   // UI State
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Timer logic for step 2
+  // Timer for OTP countdown
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (step === 2 && countdown > 0) {
-      timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+      timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
     }
     return () => clearTimeout(timer);
   }, [step, countdown]);
 
-  const handleRequestOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+  // Fetch farming methods when step 3 is reached
+  useEffect(() => {
+    if (step === 3 && farmingMethods.length === 0) {
+      api
+        .get("/farming-methods")
+        .then((res) => {
+          setFarmingMethods(res.data.data || []);
+          if (res.data.data?.length > 0) {
+            setFarmingMethod(res.data.data[0].code);
+          }
+        })
+        .catch(() => {
+          // Fallback if endpoint not ready
+          setFarmingMethods([
+            { id: "1", code: "organic", name: "Organic Farming" },
+            { id: "2", code: "inorganic", name: "Conventional Farming" },
+            { id: "3", code: "integrated", name: "Integrated Farming" },
+          ]);
+        });
+    }
+  }, [step, farmingMethods.length]);
 
+  // Step 1: Request OTP
+  const handleStep1 = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      await api.post('/auth/register/request-otp', {
+      await api.post("/auth/register/request-otp", {
         email,
         phone: phone || undefined,
       });
-
-      // Transition to OTP step
       setStep(2);
       setCountdown(120);
     } catch (err: any) {
-      if (err.response && err.response.data && err.response.data.error) {
-        setError(err.response.data.error.message || 'Failed to request OTP');
-      } else {
-        setError('Something went wrong. Please try again.');
-      }
+      setError(
+        err.response?.data?.error?.message || "Failed to send verification code."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
+  // Step 2: Verify OTP → proceed to step 3
+  const handleStep2 = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
+
+    if (otpCode.length !== 6) {
+      setError("Please enter the complete 6-digit code.");
+      return;
+    }
+
+    // Just validate the OTP format locally, actual verification happens in step 3
+    setStep(3);
+  };
+
+  // Step 3: Complete registration
+  const handleStep3 = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
     setIsLoading(true);
 
     try {
-      const res = await api.post('/auth/register/verify', {
+      const res = await api.post("/auth/register/verify", {
         email,
         phone: phone || undefined,
         otp_code: otpCode,
         password,
         full_name: fullName,
         farming_method: farmingMethod,
-        primary_language: primaryLanguage
+        primary_language: primaryLanguage,
       });
 
       const { access_token } = res.data.data;
 
-      // Ensure account is set up, log user in, then redirect to dashboard
-      const meRes = await api.get('/auth/me', {
-        headers: { Authorization: `Bearer ${access_token}` }
+      // Fetch user profile
+      const meRes = await api.get("/auth/me", {
+        headers: { Authorization: `Bearer ${access_token}` },
       });
       const userData = meRes.data.data;
 
+      // Auto-login
       login(
         {
-          id: userData.id,
+          id: userData.id || userData.account_id,
           email: userData.email,
-          role: userData.role,
+          role: userData.role || "farmer",
           name: userData.farmer_profile?.full_name,
         },
         access_token
       );
 
-      // The user wants to redirect to login or dashboard? 
-      // "allow to login page to login" means redirect to /login
-      router.push('/login');
-      
+      // Redirect to dashboard (NOT login)
+      router.push("/dashboard");
     } catch (err: any) {
-      if (err.response && err.response.data && err.response.data.error) {
-        setError(err.response.data.error.message || 'Verification failed');
-      } else {
-        setError('Something went wrong. Please try again.');
-      }
+      setError(
+        err.response?.data?.error?.message || "Registration failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -116,180 +170,374 @@ export default function RegisterPage() {
 
   const handleResendOTP = async () => {
     if (countdown > 0) return;
-    setError('');
+    setError("");
     setIsLoading(true);
     try {
-      await api.post('/auth/register/request-otp', {
+      await api.post("/auth/register/request-otp", {
         email,
         phone: phone || undefined,
       });
-      setCountdown(120); // Reset timer
-    } catch (err: any) {
-      setError('Failed to resend OTP');
+      setCountdown(120);
+    } catch {
+      setError("Failed to resend OTP.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const formatCountdown = (s: number) =>
+    `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
-          <CardDescription className="text-center">
-            {step === 1 ? 'Join AgriFarm AI today.' : `Enter the 6-digit code sent to ${email}`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={step === 1 ? handleRequestOTP : handleVerifyOTP} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-red-500 bg-red-100 rounded-md">
-                {error}
+    <div className="glass-card p-8 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-white">Create Account</h2>
+        <p className="text-sm text-text-secondary">
+          {step === 1
+            ? "Join AgriFarm AI — Zero-cost AI for farmers"
+            : step === 2
+              ? `Enter the code sent to ${email}`
+              : "Set up your farming profile"}
+        </p>
+      </div>
+
+      {/* Step Progress Bar */}
+      <div className="flex items-center gap-2">
+        {STEP_LABELS.map((label, idx) => {
+          const stepNum = (idx + 1) as Step;
+          const isActive = step === stepNum;
+          const isDone = step > stepNum;
+
+          return (
+            <div key={label} className="flex-1 flex flex-col items-center gap-1.5">
+              <div className="w-full flex items-center gap-1">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                    isDone
+                      ? "bg-primary text-white glow-green"
+                      : isActive
+                        ? "bg-primary/20 text-primary ring-2 ring-primary"
+                        : "bg-surface-tertiary text-text-muted"
+                  }`}
+                >
+                  {isDone ? <Check className="w-4 h-4" /> : stepNum}
+                </div>
+                {idx < STEP_LABELS.length - 1 && (
+                  <div
+                    className={`flex-1 h-0.5 rounded-full transition-all duration-500 ${
+                      isDone ? "bg-primary" : "bg-surface-tertiary"
+                    }`}
+                  />
+                )}
+              </div>
+              <span
+                className={`text-[10px] font-medium ${
+                  isActive ? "text-primary" : "text-text-muted"
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400 animate-slide-down">
+          {error}
+        </div>
+      )}
+
+      {/* Step 1: Account Details */}
+      {step === 1 && (
+        <form onSubmit={handleStep1} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-secondary">
+              Full Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., Nimal Perera"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              disabled={isLoading}
+              className="w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-secondary">
+              Email Address <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="email"
+              placeholder="farmer@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+              className="w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-secondary">
+              Phone Number{" "}
+              <span className="text-text-muted">(optional)</span>
+            </label>
+            <input
+              type="text"
+              placeholder="+94771234567"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              disabled={isLoading}
+              className="w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-secondary">
+              Password <span className="text-red-400">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Minimum 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                disabled={isLoading}
+                className="w-full h-11 px-4 pr-12 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-text-secondary transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+            {/* Password strength indicator */}
+            {password.length > 0 && (
+              <div className="flex gap-1 mt-1.5">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                      password.length >= i * 3
+                        ? password.length >= 12
+                          ? "bg-primary"
+                          : password.length >= 8
+                            ? "bg-neon-gold"
+                            : "bg-red-400"
+                        : "bg-surface-tertiary"
+                    }`}
+                  />
+                ))}
               </div>
             )}
-            
-            {/* STEP 1: Registration Details */}
-            {step === 1 && (
+          </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-12 btn-primary flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="farmer@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number (Optional)</Label>
-                  <Input
-                    id="phone"
-                    type="text"
-                    placeholder="+94771234567"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Must be at least 8 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="farmingMethod">Farming Method</Label>
-                    <select
-                      id="farmingMethod"
-                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      value={farmingMethod}
-                      onChange={(e) => setFarmingMethod(e.target.value)}
-                      disabled={isLoading}
-                    >
-                      <option value="organic">Organic</option>
-                      <option value="conventional">Conventional</option>
-                      <option value="integrated">Integrated</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="primaryLanguage">Language</Label>
-                    <select
-                      id="primaryLanguage"
-                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      value={primaryLanguage}
-                      onChange={(e) => setPrimaryLanguage(e.target.value)}
-                      disabled={isLoading}
-                    >
-                      <option value="en">English</option>
-                      <option value="si">Sinhala</option>
-                      <option value="ta">Tamil</option>
-                    </select>
-                  </div>
-                </div>
+                Continue
+                <ArrowRight className="w-4 h-4" />
               </>
             )}
+          </button>
+        </form>
+      )}
 
-            {/* STEP 2: OTP Verification */}
-            {step === 2 && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="otpCode">6-Digit OTP Code</Label>
-                  <Input
-                    id="otpCode"
-                    type="text"
-                    maxLength={6}
-                    placeholder="123456"
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    required
-                    disabled={isLoading}
-                    autoFocus
-                  />
-                </div>
-              </div>
-            )}
-
-            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
-              {isLoading 
-                ? 'Processing...' 
-                : step === 1 
-                  ? 'Sign Up & Send Code' 
-                  : 'Verify & Create Account'
+      {/* Step 2: OTP Verification */}
+      {step === 2 && (
+        <form onSubmit={handleStep2} className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-secondary">
+              6-Digit Verification Code
+            </label>
+            <input
+              type="text"
+              maxLength={6}
+              placeholder="• • • • • •"
+              value={otpCode}
+              onChange={(e) =>
+                setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
               }
-            </Button>
-            
-            {step === 2 && (
-              <div className="flex justify-between items-center text-sm pt-2">
-                <span className="text-gray-500">
-                  {countdown > 0 ? `Resend code in ${Math.floor(countdown / 60)}:${(countdown % 60).toString().padStart(2, '0')}` : 'Did not receive code?'}
-                </span>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-green-600 p-0 h-auto font-medium"
-                  disabled={countdown > 0 || isLoading}
-                  onClick={handleResendOTP}
+              required
+              disabled={isLoading}
+              autoFocus
+              className="w-full h-14 px-4 rounded-xl bg-surface-tertiary border border-border text-white text-center text-2xl font-mono tracking-[0.5em] placeholder:text-text-muted placeholder:text-lg placeholder:tracking-[0.3em] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-text-muted">
+              {countdown > 0
+                ? `Code expires in ${formatCountdown(countdown)}`
+                : "Code expired"}
+            </span>
+            <button
+              type="button"
+              onClick={handleResendOTP}
+              disabled={countdown > 0 || isLoading}
+              className="font-semibold text-primary hover:text-primary/80 disabled:text-text-muted transition-colors"
+            >
+              Resend Code
+            </button>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="flex-1 h-12 btn-secondary flex items-center justify-center gap-2 text-sm"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+            <button
+              type="submit"
+              disabled={otpCode.length !== 6 || isLoading}
+              className="flex-[2] h-12 btn-primary flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+            >
+              Verify & Continue
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Step 3: Farm Profile */}
+      {step === 3 && (
+        <form onSubmit={handleStep3} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-secondary">
+              Farming Method
+            </label>
+            <div className="grid grid-cols-1 gap-2">
+              {(farmingMethods.length > 0
+                ? farmingMethods
+                : [
+                    { id: "1", code: "organic", name: "🌿 Organic Farming" },
+                    {
+                      id: "2",
+                      code: "inorganic",
+                      name: "🧪 Conventional Farming",
+                    },
+                    {
+                      id: "3",
+                      code: "integrated",
+                      name: "🔄 Integrated Farming",
+                    },
+                  ]
+              ).map((method) => (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => setFarmingMethod(method.code)}
+                  className={`p-3 rounded-xl border text-left text-sm font-medium transition-all ${
+                    farmingMethod === method.code
+                      ? "bg-primary/10 border-primary text-primary"
+                      : "bg-surface-tertiary border-border text-text-secondary hover:border-border-hover"
+                  }`}
                 >
-                  Resend OTP
-                </Button>
-              </div>
-            )}
-          </form>
-        </CardContent>
-        {step === 1 && (
-          <CardFooter className="flex flex-col space-y-2">
-            <div className="text-sm text-center text-gray-500">
-              Already have an account?{' '}
-              <Link href="/login" className="text-green-600 font-semibold hover:underline">
-                Sign In
-              </Link>
+                  {method.name}
+                </button>
+              ))}
             </div>
-          </CardFooter>
-        )}
-      </Card>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-secondary">
+              Years of Experience
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              placeholder="e.g., 5"
+              value={experienceYears}
+              onChange={(e) => setExperienceYears(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-secondary">
+              Preferred Language
+            </label>
+            <div className="flex gap-2">
+              {[
+                { code: "en", label: "English" },
+                { code: "si", label: "සිංහල" },
+                { code: "ta", label: "தமிழ்" },
+              ].map((lang) => (
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => setPrimaryLanguage(lang.code)}
+                  className={`flex-1 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                    primaryLanguage === lang.code
+                      ? "bg-primary/10 border-primary text-primary"
+                      : "bg-surface-tertiary border-border text-text-secondary hover:border-border-hover"
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="flex-1 h-12 btn-secondary flex items-center justify-center gap-2 text-sm"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex-[2] h-12 btn-primary flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4" />
+                  Create Account
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Footer */}
+      {step === 1 && (
+        <div className="text-center text-sm text-text-secondary">
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="font-semibold text-primary hover:text-primary/80 transition-colors"
+          >
+            Sign In
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
