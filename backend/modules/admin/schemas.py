@@ -1,5 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel, Field
+from typing import Optional, List
 
 class AccountRole(str, Enum):
     FARMER = "farmer"
@@ -11,9 +12,10 @@ class AdminRoleUpdate(BaseModel):
     role: AccountRole = Field(..., description="The new role to assign to the user")
 
 # --- Master Data Schemas ---
-from typing import Optional, List
 from datetime import date
 from pydantic import ConfigDict
+import uuid
+
 
 class PlantCreate(BaseModel):
     common_name: str
@@ -49,7 +51,18 @@ class PlantUpdate(BaseModel):
     compatible_soil_types: Optional[List[str]] = None
     description: Optional[str] = None
 
+
+class DiseaseSolutionInput(BaseModel):
+    """Nested solution payload when creating/updating a disease."""
+    farming_method: str  # organic, conventional
+    solution_type: str   # preventive, curative
+    treatment_name: str
+    dosage: str
+    instructions: str
+
+
 class DiseaseCreate(BaseModel):
+    plant_id: uuid.UUID  # Required — plant_diseases.plant_id is NOT NULL
     name: str
     symptoms: List[str]
     conditions: List[str]
@@ -57,8 +70,11 @@ class DiseaseCreate(BaseModel):
     scientific_name: Optional[str] = None
     description: Optional[str] = None
     image_url: Optional[str] = None
+    solutions: Optional[List[DiseaseSolutionInput]] = None
+
 
 class DiseaseUpdate(BaseModel):
+    plant_id: Optional[uuid.UUID] = None
     name: Optional[str] = None
     symptoms: Optional[List[str]] = None
     conditions: Optional[List[str]] = None
@@ -66,3 +82,4 @@ class DiseaseUpdate(BaseModel):
     scientific_name: Optional[str] = None
     description: Optional[str] = None
     image_url: Optional[str] = None
+    solutions: Optional[List[DiseaseSolutionInput]] = None

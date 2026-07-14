@@ -4,15 +4,31 @@ from fastapi import HTTPException
 import uuid
 
 from models.project import Project
+from models.account import FarmerProfile
 from models.soil import SoilTest, SoilNutrientResult, SoilRecommendation
 from .schemas import SoilTestCreate
 
 from .calculator import calculate_nutrient_gaps
 
+
+async def _get_farmer_id(db: AsyncSession, account_id: uuid.UUID) -> uuid.UUID:
+    """Resolve the authenticated account to its farmer profile id.
+
+    Project ownership is keyed on FarmerProfile.id, not Account.id (see
+    dependencies.get_current_user), so ownership checks must resolve through here.
+    """
+    result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == account_id))
+    profile = result.scalars().first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Farmer profile not found")
+    return profile.id
+
+
 async def submit_soil_test(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID, data: SoilTestCreate):
     # Verify project
+    farmer_id = await _get_farmer_id(db, account_id)
     project = await db.get(Project, project_id)
-    if not project or project.farmer_id != account_id:
+    if not project or project.farmer_id != farmer_id:
         raise HTTPException(status_code=404, detail="Project not found")
         
     # Create Test
@@ -47,8 +63,9 @@ async def submit_soil_test(db: AsyncSession, project_id: uuid.UUID, account_id: 
     return soil_test
 
 async def get_soil_tests(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
+    farmer_id = await _get_farmer_id(db, account_id)
     project = await db.get(Project, project_id)
-    if not project or project.farmer_id != account_id:
+    if not project or project.farmer_id != farmer_id:
         raise HTTPException(status_code=404, detail="Project not found")
         
     result = await db.execute(
@@ -72,8 +89,9 @@ async def get_soil_tests(db: AsyncSession, project_id: uuid.UUID, account_id: uu
     return tests
 
 async def get_soil_recommendations(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
+    farmer_id = await _get_farmer_id(db, account_id)
     project = await db.get(Project, project_id)
-    if not project or project.farmer_id != account_id:
+    if not project or project.farmer_id != farmer_id:
         raise HTTPException(status_code=404, detail="Project not found")
         
     # Get latest test

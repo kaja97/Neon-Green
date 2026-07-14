@@ -5,13 +5,29 @@ from datetime import date
 import uuid
 
 from models.project import Project
+from models.account import FarmerProfile
 from models.issue import ProjectIssue
 from models.plant_health import PlantDisease, DiseaseSolution
 from .schemas import IssueCreate
 
+
+async def _get_farmer_id(db: AsyncSession, account_id: uuid.UUID) -> uuid.UUID:
+    """Resolve the authenticated account to its farmer profile id.
+
+    Project ownership is keyed on FarmerProfile.id, not Account.id, so every
+    ownership check must go through this helper (see dependencies.get_current_user).
+    """
+    result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == account_id))
+    profile = result.scalars().first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Farmer profile not found")
+    return profile.id
+
+
 async def report_issue(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID, data: IssueCreate):
+    farmer_id = await _get_farmer_id(db, account_id)
     project = await db.get(Project, project_id)
-    if not project or project.farmer_id != account_id:
+    if not project or project.farmer_id != farmer_id:
         raise HTTPException(status_code=404, detail="Project not found")
         
     issue = ProjectIssue(
@@ -31,8 +47,9 @@ async def report_issue(db: AsyncSession, project_id: uuid.UUID, account_id: uuid
     return issue
 
 async def get_issues(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
+    farmer_id = await _get_farmer_id(db, account_id)
     project = await db.get(Project, project_id)
-    if not project or project.farmer_id != account_id:
+    if not project or project.farmer_id != farmer_id:
         raise HTTPException(status_code=404, detail="Project not found")
         
     result = await db.execute(
@@ -74,6 +91,7 @@ async def get_disease_solutions(db: AsyncSession, disease_id: uuid.UUID, farming
     return result.scalars().all()
 
 async def resolve_issue(db: AsyncSession, issue_id: uuid.UUID, account_id: uuid.UUID):
+    farmer_id = await _get_farmer_id(db, account_id)
     result = await db.execute(
         select(ProjectIssue, Project)
         .join(Project, ProjectIssue.project_id == Project.id)
@@ -82,9 +100,9 @@ async def resolve_issue(db: AsyncSession, issue_id: uuid.UUID, account_id: uuid.
     row = result.first()
     if not row:
         raise HTTPException(status_code=404, detail="Issue not found")
-        
+
     issue, project = row
-    if project.farmer_id != account_id:
+    if project.farmer_id != farmer_id:
         raise HTTPException(status_code=403, detail="Not authorized")
         
     issue.status = "resolved"

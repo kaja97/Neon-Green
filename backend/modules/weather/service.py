@@ -4,25 +4,53 @@ from fastapi import HTTPException
 import uuid
 from datetime import datetime, timedelta, date, timezone
 
+from geoalchemy2.shape import to_shape
+
 from models.project import Project
+from models.account import FarmerProfile
 from models.farmer import FarmerLocation
 from models.weather import WeatherCache, WeatherAlert
 from .client import fetch_weather_data
 from .schemas import WeatherResponse, WeatherCondition, ForecastDay
 
+
+async def _get_farmer_id(db: AsyncSession, account_id: uuid.UUID) -> uuid.UUID:
+    """Resolve the authenticated account to its farmer profile id.
+
+    Project ownership is keyed on FarmerProfile.id, not Account.id (see
+    dependencies.get_current_user), so ownership checks must resolve through here.
+    """
+    result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == account_id))
+    profile = result.scalars().first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Farmer profile not found")
+    return profile.id
+
+
+def _centroid_lat_lon(location: FarmerLocation) -> tuple[float, float]:
+    """Extract (lat, lon) from a FarmerLocation's PostGIS centroid point.
+
+    FarmerLocation has no latitude/longitude columns; it stores a geometry POINT
+    in `centroid`, so coordinates must be extracted via to_shape().
+    """
+    point = to_shape(location.centroid)
+    return float(point.y), float(point.x)
+
+
 async def get_weather_for_project(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID) -> WeatherResponse:
     # 1. Verify project & get location
+    farmer_id = await _get_farmer_id(db, account_id)
     result = await db.execute(
         select(Project, FarmerLocation)
         .join(FarmerLocation, Project.location_id == FarmerLocation.id)
-        .where(Project.id == project_id, Project.farmer_id == account_id)
+        .where(Project.id == project_id, Project.farmer_id == farmer_id)
     )
     row = result.first()
     if not row:
         raise HTTPException(status_code=404, detail="Project or location not found")
-        
+
     project, location = row
-    
+
     # 2. Check cache
     today = date.today()
     cache_result = await db.execute(
@@ -30,12 +58,13 @@ async def get_weather_for_project(db: AsyncSession, project_id: uuid.UUID, accou
         .where(WeatherCache.location_id == location.id, WeatherCache.forecast_date == today)
     )
     cache = cache_result.scalars().first()
-    
+
     if cache and cache.expires_at > datetime.now(timezone.utc):
         return _process_raw_data(location.id, cache.data)
-        
+
     # 3. Fetch new data
-    raw_data = await fetch_weather_data(float(location.latitude), float(location.longitude))
+    lat, lon = _centroid_lat_lon(location)
+    raw_data = await fetch_weather_data(lat, lon)
     
     # 4. Save to cache
     if cache:
@@ -123,8 +152,9 @@ def _process_raw_data(location_id: uuid.UUID, raw_data: dict) -> WeatherResponse
 
 async def get_alerts_for_project(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
     # Verify project
+    farmer_id = await _get_farmer_id(db, account_id)
     project = await db.get(Project, project_id)
-    if not project or project.farmer_id != account_id:
+    if not project or project.farmer_id != farmer_id:
         raise HTTPException(status_code=404, detail="Project not found")
         
     result = await db.execute(
