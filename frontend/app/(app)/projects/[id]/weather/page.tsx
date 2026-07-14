@@ -12,7 +12,7 @@ export default function WeatherPage({ params }: { params: { id: string } }) {
     queryKey: ["weather", params.id],
     queryFn: async () => {
       const res = await api.get(`/weather/${params.id}`);
-      return res.data;
+      return res.data.data;
     }
   });
 

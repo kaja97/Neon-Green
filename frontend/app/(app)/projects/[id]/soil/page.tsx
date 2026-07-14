@@ -11,7 +11,7 @@ export default function SoilPage({ params }: { params: { id: string } }) {
     queryKey: ["soil_tests", params.id],
     queryFn: async () => {
       const res = await api.get(`/soil/tests/${params.id}`);
-      return res.data;
+      return res.data.data;
     }
   });
 

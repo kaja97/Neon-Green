@@ -13,7 +13,7 @@ export default function MarketPage({ params }: { params: { id: string } }) {
     queryKey: ["dashboard", params.id],
     queryFn: async () => {
       const res = await api.get(`/projects/${params.id}/dashboard`);
-      return res.data;
+      return res.data.data;
     }
   });
 
@@ -24,7 +24,7 @@ export default function MarketPage({ params }: { params: { id: string } }) {
     queryKey: ["market_trend", plantId],
     queryFn: async () => {
       const res = await api.get(`/market/trends/${plantId}`);
-      return res.data;
+      return res.data.data;
     },
     enabled: !!plantId,
   });
@@ -34,7 +34,7 @@ export default function MarketPage({ params }: { params: { id: string } }) {
     queryKey: ["market_prices", plantId],
     queryFn: async () => {
       const res = await api.get(`/market/prices/${plantId}?days=30`);
-      return res.data;
+      return res.data.data;
     },
     enabled: !!plantId,
   });
@@ -44,7 +44,7 @@ export default function MarketPage({ params }: { params: { id: string } }) {
     queryKey: ["market_estimate", params.id],
     queryFn: async () => {
       const res = await api.get(`/market/estimate/${params.id}`);
-      return res.data;
+      return res.data.data;
     }
   });
 

@@ -1,29 +1,55 @@
 "use client";
 
-import { ArrowLeft, CheckCircle2, Circle, SkipForward, Clock, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, SkipForward, Clock, Loader2, Plus, Pencil, Trash2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { useCompleteActivity, useSkipActivity } from "@/lib/hooks/useActivities";
+import {
+  useCompleteActivity, useSkipActivity,
+  useCreateActivity, useUpdateActivity, useDeleteActivity,
+} from "@/lib/hooks/useActivities";
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
+
+const ACTIVITY_TYPES = [
+  { value: "irrigation", label: "💧 Irrigation" },
+  { value: "fertilizer", label: "🧪 Fertilizer" },
+  { value: "pest_control", label: "🐛 Pest Control" },
+  { value: "disease_check", label: "🔍 Disease Check" },
+  { value: "harvesting", label: "🌾 Harvesting" },
+  { value: "other", label: "📅 Other" },
+];
 
 export default function PlanPage({ params }: { params: { id: string } }) {
   const completeMutation = useCompleteActivity(params.id);
   const skipMutation = useSkipActivity(params.id);
+  const createMutation = useCreateActivity(params.id);
+  const updateMutation = useUpdateActivity(params.id);
+  const deleteMutation = useDeleteActivity(params.id);
   const [optimisticStatus, setOptimisticStatus] = useState<Record<string, string>>({});
-  
+
+  // Complete modal
   const [completingTask, setCompletingTask] = useState<any>(null);
   const [actualWater, setActualWater] = useState("");
   const [actualFertilizer, setActualFertilizer] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Add/Edit modal
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
+  const [taskForm, setTaskForm] = useState({
+    title: "",
+    activity_type: "irrigation",
+    description: "",
+    due_date: new Date().toISOString().split("T")[0],
+  });
+
   const { data: activities, isLoading, error } = useQuery({
     queryKey: ["all-activities", params.id],
     queryFn: async () => {
       const res = await api.get(`/planner/${params.id}/activities`);
-      return res.data;
+      return res.data.data;
     },
   });
 
@@ -31,7 +57,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
     queryKey: ["dashboard", params.id],
     queryFn: async () => {
       const res = await api.get(`/projects/${params.id}/dashboard`);
-      return res.data;
+      return res.data.data;
     },
   });
 
@@ -48,22 +74,15 @@ export default function PlanPage({ params }: { params: { id: string } }) {
   const confirmComplete = () => {
     if (!completingTask) return;
     const id = completingTask.id;
-    
     setOptimisticStatus(prev => ({ ...prev, [id]: "completed" }));
-    
+
     const data: any = {};
     if (actualWater) data.actual_water_liters = parseFloat(actualWater);
     if (actualFertilizer) data.actual_fertilizer_kg = parseFloat(actualFertilizer);
     if (notes) data.notes = notes;
 
     completeMutation.mutate({ activityId: id, data }, {
-      onError: () => {
-        setOptimisticStatus(prev => {
-          const next = { ...prev };
-          delete next[id];
-          return next;
-        });
-      }
+      onError: () => setOptimisticStatus(prev => { const n = { ...prev }; delete n[id]; return n; }),
     });
     setCompletingTask(null);
   };
@@ -73,14 +92,42 @@ export default function PlanPage({ params }: { params: { id: string } }) {
     if (status !== "completed" && status !== "skipped" && !optimisticStatus[id]) {
       setOptimisticStatus(prev => ({ ...prev, [id]: "skipped" }));
       skipMutation.mutate({ activityId: id, reason: "Skipped via timeline" }, {
-        onError: () => {
-          setOptimisticStatus(prev => {
-            const next = { ...prev };
-            delete next[id];
-            return next;
-          });
-        }
+        onError: () => setOptimisticStatus(prev => { const n = { ...prev }; delete n[id]; return n; }),
       });
+    }
+  };
+
+  const openAddModal = () => {
+    setEditingTask(null);
+    setTaskForm({ title: "", activity_type: "irrigation", description: "", due_date: new Date().toISOString().split("T")[0] });
+    setTaskModalOpen(true);
+  };
+
+  const openEditModal = (task: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingTask(task);
+    setTaskForm({
+      title: task.title || "",
+      activity_type: task.activity_type || "other",
+      description: task.description || "",
+      due_date: task.due_date ? new Date(task.due_date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+    });
+    setTaskModalOpen(true);
+  };
+
+  const submitTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingTask) {
+      updateMutation.mutate({ activityId: editingTask.id, data: taskForm }, { onSuccess: () => setTaskModalOpen(false) });
+    } else {
+      createMutation.mutate(taskForm, { onSuccess: () => setTaskModalOpen(false) });
+    }
+  };
+
+  const handleDelete = (task: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm(`Delete task "${task.title}"?`)) {
+      deleteMutation.mutate(task.id);
     }
   };
 
@@ -94,11 +141,9 @@ export default function PlanPage({ params }: { params: { id: string } }) {
 
   // Group activities by week
   const groupedActivities: Record<string, any[]> = {};
-  
   if (activities) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const getWeekNumber = (d: Date) => {
       const date = new Date(d.getTime());
       date.setHours(0, 0, 0, 0);
@@ -106,26 +151,19 @@ export default function PlanPage({ params }: { params: { id: string } }) {
       const week1 = new Date(date.getFullYear(), 0, 4);
       return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
     };
-
     const currentWeek = getWeekNumber(today);
 
     activities.forEach((task: any) => {
       const dueDate = new Date(task.due_date);
       dueDate.setHours(0, 0, 0, 0);
       let groupLabel = "";
-      
-      if (dueDate.getTime() < today.getTime()) {
-        groupLabel = "Past";
-      } else if (getWeekNumber(dueDate) === currentWeek && dueDate.getFullYear() === today.getFullYear()) {
-        groupLabel = "This Week";
-      } else {
+      if (dueDate.getTime() < today.getTime()) groupLabel = "Past";
+      else if (getWeekNumber(dueDate) === currentWeek && dueDate.getFullYear() === today.getFullYear()) groupLabel = "This Week";
+      else {
         const month = dueDate.toLocaleString('default', { month: 'short' });
         groupLabel = `Week of ${month} ${dueDate.getDate()}`;
       }
-
-      if (!groupedActivities[groupLabel]) {
-        groupedActivities[groupLabel] = [];
-      }
+      if (!groupedActivities[groupLabel]) groupedActivities[groupLabel] = [];
       groupedActivities[groupLabel].push(task);
     });
   }
@@ -138,26 +176,35 @@ export default function PlanPage({ params }: { params: { id: string } }) {
         <Link href={`/projects/${params.id}`} className="p-2 bg-white shadow-sm hover:bg-slate-100 rounded-full transition-colors">
           <ArrowLeft className="w-5 h-5 text-slate-700" />
         </Link>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Activity Plan</h1>
           <p className="text-slate-500 text-sm">Full timeline {dashboard?.project?.plant?.common_name ? `· ${dashboard.project.plant.common_name}` : ""}</p>
         </div>
+        <button
+          onClick={openAddModal}
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-green-700 transition-colors shadow-sm text-sm"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden md:inline">Add Task</span>
+        </button>
       </header>
 
       {error ? (
         <div className="p-8 text-center text-red-500">Failed to load timeline.</div>
       ) : Object.keys(groupedActivities).length === 0 ? (
         <div className="p-12 text-center border-2 border-dashed rounded-xl bg-white">
-           <h3 className="text-lg font-semibold mb-2">No activities planned</h3>
-           <p className="text-sm text-slate-500 max-w-sm mx-auto mb-6">
-             The AI is still generating your plan, or there are no activities remaining.
-           </p>
-         </div>
+          <h3 className="text-lg font-semibold mb-2">No activities planned</h3>
+          <p className="text-sm text-slate-500 max-w-sm mx-auto mb-6">
+            The AI is still generating your plan, or there are no activities remaining. Add a manual task to get started.
+          </p>
+          <button onClick={openAddModal} className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-green-700">
+            <Plus className="w-4 h-4" /> Add Task
+          </button>
+        </div>
       ) : (
         groupOrder.map((groupLabel) => {
           const tasks = groupedActivities[groupLabel];
           if (!tasks || tasks.length === 0) return null;
-
           return (
             <section key={groupLabel}>
               <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">{groupLabel}</h2>
@@ -166,31 +213,33 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                   const status = optimisticStatus[task.id] || task.status;
                   const isDone = status === "completed";
                   const isSkipped = status === "skipped";
-                  
-                  let typeIcon = "📅";
-                  if (task.activity_type === "irrigation") typeIcon = "💧";
-                  if (task.activity_type === "fertilizer") typeIcon = "🧪";
-                  if (task.activity_type === "disease_check") typeIcon = "🔍";
+                  const isManual = task.is_ai_recommended === false;
+                  const typeOpt = ACTIVITY_TYPES.find((t) => t.value === task.activity_type);
 
                   return (
                     <div
                       key={task.id}
                       onClick={() => handleCompleteClick(task, status)}
                       className={clsx(
-                        "flex items-center gap-4 p-4 rounded-2xl border transition-colors cursor-pointer shadow-sm",
+                        "flex items-center gap-4 p-4 rounded-2xl border transition-colors shadow-sm",
                         isDone && "bg-slate-100 border-slate-200",
                         !isDone && !isSkipped && "bg-white border-slate-200 hover:border-green-300 hover:shadow-md",
-                        isSkipped && "bg-red-50 border-red-200 opacity-60"
+                        isSkipped && "bg-red-50 border-red-200 opacity-60",
+                        "cursor-pointer"
                       )}
                     >
-                      <span className="text-xl w-8 text-center">{typeIcon}</span>
-                      <div className="flex-1">
-                        <h3 className={clsx(
-                          "font-medium",
-                          (isDone || isSkipped) ? "text-slate-500 line-through" : "text-slate-800"
-                        )}>
-                          {task.title}
-                        </h3>
+                      <span className="text-xl w-8 text-center">{typeOpt?.label.split(" ")[0] || "📅"}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className={clsx("font-medium truncate", (isDone || isSkipped) ? "text-slate-500 line-through" : "text-slate-800")}>
+                            {task.title}
+                          </h3>
+                          {isManual && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-violet-100 text-violet-700 shrink-0">
+                              <Sparkles className="w-2.5 h-2.5" /> Manual
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
                           <Clock className="w-3.5 h-3.5 text-slate-400" />
                           <span className="text-xs text-slate-500">
@@ -199,13 +248,35 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                           {isSkipped && <span className="text-xs text-red-500 font-medium ml-2">Skipped</span>}
                         </div>
                       </div>
+
+                      {/* Manual task actions: edit + delete */}
+                      {isManual && status === "pending" && (
+                        <div className="flex gap-1 shrink-0">
+                          <button
+                            onClick={(e) => openEditModal(task, e)}
+                            className="p-1.5 bg-slate-100 rounded-lg text-slate-500 hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                            title="Edit"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => handleDelete(task, e)}
+                            disabled={deleteMutation.isPending}
+                            className="p-1.5 bg-slate-100 rounded-lg text-slate-500 hover:bg-red-100 hover:text-red-600 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+
                       <div className="shrink-0">
                         {isDone && <CheckCircle2 className="w-6 h-6 text-green-600" />}
                         {(!isDone && !isSkipped) && (
                           <div className="flex gap-2">
-                            <button 
-                              onClick={(e) => handleCompleteClick(task, status, e)} 
-                              className="p-1.5 bg-green-100 rounded-lg text-green-700 hover:bg-green-200 transition-colors" 
+                            <button
+                              onClick={(e) => handleCompleteClick(task, status, e)}
+                              className="p-1.5 bg-green-100 rounded-lg text-green-700 hover:bg-green-200 transition-colors"
                               title="Complete"
                             >
                               <CheckCircle2 className="w-5 h-5" />
@@ -222,9 +293,65 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                 })}
               </div>
             </section>
-          )
+          );
         })
       )}
+
+      {/* Add/Edit Task Modal */}
+      <Modal isOpen={taskModalOpen} onClose={() => setTaskModalOpen(false)} title={editingTask ? "Edit Task" : "Add New Task"}>
+        <form onSubmit={submitTask} className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-700">Task Title</label>
+            <input
+              type="text"
+              required
+              value={taskForm.title}
+              onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+              placeholder="e.g. Apply compost to row 3"
+              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-700">Type</label>
+              <select
+                value={taskForm.activity_type}
+                onChange={(e) => setTaskForm({ ...taskForm, activity_type: e.target.value })}
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                {ACTIVITY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-700">Due Date</label>
+              <input
+                type="date"
+                required
+                value={taskForm.due_date}
+                onChange={(e) => setTaskForm({ ...taskForm, due_date: e.target.value })}
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-700">Description (optional)</label>
+            <textarea
+              value={taskForm.description}
+              onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none h-20"
+              placeholder="Notes about this task..."
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={createMutation.isPending || updateMutation.isPending}
+            className="w-full bg-green-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-green-700 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+          >
+            {(createMutation.isPending || updateMutation.isPending) ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+            {editingTask ? "Save Changes" : "Add Task"}
+          </button>
+        </form>
+      </Modal>
 
       {/* Completion Modal */}
       <Modal isOpen={!!completingTask} onClose={() => setCompletingTask(null)} title="Complete Activity">
@@ -233,47 +360,26 @@ export default function PlanPage({ params }: { params: { id: string } }) {
             <div className="p-3 bg-green-50 text-green-800 rounded-xl mb-4 text-sm">
               <span className="font-bold">Task:</span> {completingTask.title}
             </div>
-
             {completingTask.activity_type === "irrigation" && (
               <div className="space-y-1">
                 <label className="text-sm font-medium text-slate-700">Actual Water Used (Liters)</label>
-                <input 
-                  type="number" 
-                  value={actualWater} 
-                  onChange={e => setActualWater(e.target.value)} 
-                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" 
-                  placeholder="Optional"
-                />
+                <input type="number" value={actualWater} onChange={e => setActualWater(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Optional" />
               </div>
             )}
-
             {completingTask.activity_type === "fertilizer" && (
               <div className="space-y-1">
                 <label className="text-sm font-medium text-slate-700">Actual Fertilizer Used (Kg)</label>
-                <input 
-                  type="number" 
-                  value={actualFertilizer} 
-                  onChange={e => setActualFertilizer(e.target.value)} 
-                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" 
-                  placeholder="Optional"
-                />
+                <input type="number" value={actualFertilizer} onChange={e => setActualFertilizer(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Optional" />
               </div>
             )}
-
             <div className="space-y-1">
               <label className="text-sm font-medium text-slate-700">Notes / Observations</label>
-              <textarea 
-                value={notes} 
-                onChange={e => setNotes(e.target.value)} 
-                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none h-24" 
-                placeholder="Any unusual signs?"
-              />
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none h-24" placeholder="Any unusual signs?" />
             </div>
-
             <button
               onClick={confirmComplete}
               disabled={completeMutation.isPending}
-              className="w-full bg-green-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-green-700 transition-all flex items-center justify-center gap-2 mt-4"
+              className="w-full bg-green-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-green-700 transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
             >
               {completeMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
               Confirm Completion

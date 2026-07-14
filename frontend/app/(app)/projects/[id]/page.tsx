@@ -2,12 +2,14 @@
 
 import { useDashboard } from "@/lib/hooks/useDashboard";
 import { useRefreshAISummary } from "@/lib/hooks/useAISummary";
+import { useUpdateProject, useDeleteProject } from "@/lib/hooks/useProjectMutations";
 import FarmingCircle from "@/components/project/FarmingCircle";
 import ActivityBlock from "@/components/blocks/ActivityBlock";
 import WeatherBlock from "@/components/blocks/WeatherBlock";
 import SoilBlock from "@/components/blocks/SoilBlock";
 import DiseaseBlock from "@/components/blocks/DiseaseBlock";
 import AlertBanner from "@/components/blocks/AlertBanner";
+import Modal from "@/components/ui/Modal";
 import { formatCurrency } from "@/lib/utils/formatters";
 import {
   ArrowLeft,
@@ -20,8 +22,11 @@ import {
   Loader2,
   RefreshCw,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ProjectDashboard({
   params,
@@ -30,6 +35,34 @@ export default function ProjectDashboard({
 }) {
   const { data, isLoading, error } = useDashboard(params.id);
   const refreshAI = useRefreshAISummary(params.id);
+  const updateProject = useUpdateProject(params.id);
+  const deleteProject = useDeleteProject(params.id);
+  const router = useRouter();
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    area: 0,
+    area_unit: "acres",
+    farming_method: "organic",
+  });
+
+  const openEdit = () => {
+    const p = data?.project;
+    setEditForm({
+      name: p?.crop || p?.plant?.common_name || "",
+      area: p?.area_acres || 0,
+      area_unit: "acres",
+      farming_method: p?.farming_method || "organic",
+    });
+    setEditOpen(true);
+  };
+
+  const handleDelete = () => {
+    if (confirm(`Delete this project? This cannot be undone.`)) {
+      deleteProject.mutate(undefined, { onSuccess: () => router.push("/dashboard") });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -138,12 +171,23 @@ export default function ProjectDashboard({
             </p>
           </div>
         </div>
-        <Link
-          href="/profile"
-          className="p-2.5 glass-card rounded-xl hover:bg-surface-tertiary transition-colors"
-        >
-          <Settings className="w-5 h-5 text-text-secondary" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDelete}
+            disabled={deleteProject.isPending}
+            title="Delete project"
+            className="p-2.5 glass-card rounded-xl hover:bg-red-500/10 transition-colors disabled:opacity-50"
+          >
+            {deleteProject.isPending ? <Loader2 className="w-5 h-5 text-red-400 animate-spin" /> : <Trash2 className="w-5 h-5 text-red-400" />}
+          </button>
+          <button
+            onClick={openEdit}
+            title="Edit project"
+            className="p-2.5 glass-card rounded-xl hover:bg-surface-tertiary transition-colors"
+          >
+            <Settings className="w-5 h-5 text-text-secondary" />
+          </button>
+        </div>
       </header>
 
       {/* Farming Circle */}

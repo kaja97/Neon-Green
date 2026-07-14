@@ -10,7 +10,7 @@ export default function DiseaseBlock({ projectId }: { projectId: string }) {
     queryKey: ["project_issues", projectId],
     queryFn: async () => {
       const res = await api.get(`/disease/issues/${projectId}`);
-      return res.data;
+      return res.data.data;
     },
     enabled: !!projectId && projectId !== "1" && projectId !== "2",
   });
