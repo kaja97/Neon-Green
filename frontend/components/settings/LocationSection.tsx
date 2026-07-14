@@ -29,7 +29,7 @@ export default function LocationSection() {
     queryKey: ["farmerLocations"],
     queryFn: async () => {
       const res = await api.get("/farmer/locations");
-      return res.data;
+      return res.data.data;
     },
   });
 

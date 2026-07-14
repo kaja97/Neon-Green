@@ -27,7 +27,7 @@ export default function ProfileSection() {
     queryKey: ["farmerProfile"],
     queryFn: async () => {
       const res = await api.get("/farmer/profile");
-      return res.data;
+      return res.data.data;
     },
   });
 

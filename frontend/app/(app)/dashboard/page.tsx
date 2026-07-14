@@ -51,15 +51,62 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            {activeProjects.length > 0 && (
+            <div className="hidden md:flex items-center gap-3">
+              <Link
+                href="/projects"
+                className="flex items-center gap-2 px-4 py-2.5 glass-card-hover text-text-secondary hover:text-white font-semibold text-sm transition-colors"
+              >
+                <FolderOpen className="w-4 h-4" />
+                All Projects
+              </Link>
               <Link
                 href="/projects/new"
-                className="hidden md:flex items-center gap-2 btn-primary px-6 py-3"
+                className="flex items-center gap-2 btn-primary px-6 py-3"
               >
                 <Plus className="w-5 h-5" />
                 New Project
               </Link>
-            )}
+            </div>
+          </div>
+
+          {/* Quick Access */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-slide-up" style={{ animationDelay: "50ms" }}>
+            <Link href="/projects" className="glass-card-hover p-4 group flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 group-hover:scale-110 transition-transform">
+                <FolderOpen className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Projects</p>
+                <p className="text-xs text-text-muted">{(projects?.length || 0)} total</p>
+              </div>
+            </Link>
+            <Link href="/profile" className="glass-card-hover p-4 group flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-blue-500/10 group-hover:scale-110 transition-transform">
+                <User className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Profile</p>
+                <p className="text-xs text-text-muted">Settings</p>
+              </div>
+            </Link>
+            <Link href="/notifications" className="glass-card-hover p-4 group flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 group-hover:scale-110 transition-transform">
+                <Bell className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Alerts</p>
+                <p className="text-xs text-text-muted">Notifications</p>
+              </div>
+            </Link>
+            <Link href="/projects/new" className="glass-card-hover p-4 group flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-violet-500/10 group-hover:scale-110 transition-transform">
+                <Plus className="w-5 h-5 text-violet-400" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">New</p>
+                <p className="text-xs text-text-muted">Start project</p>
+              </div>
+            </Link>
           </div>
 
           {/* Project Display Block */}

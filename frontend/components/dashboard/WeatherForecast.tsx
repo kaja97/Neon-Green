@@ -14,7 +14,7 @@ export default function WeatherForecast({ projectId }: WeatherProps) {
     queryKey: ["weather", projectId],
     queryFn: async () => {
       const res = await api.get(`/weather/${projectId}`);
-      return res.data;
+      return res.data.data;
     },
     enabled: !!projectId,
     retry: 1, // Don't keep retrying if no weather service is configured

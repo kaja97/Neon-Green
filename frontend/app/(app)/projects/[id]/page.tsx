@@ -141,7 +141,7 @@ export default function ProjectDashboard({
           </div>
         </div>
         <Link
-          href={`/projects/${params.id}/edit`}
+          href="/profile"
           className="p-2.5 glass-card rounded-xl hover:bg-surface-tertiary transition-colors"
         >
           <Settings className="w-5 h-5 text-text-secondary" />

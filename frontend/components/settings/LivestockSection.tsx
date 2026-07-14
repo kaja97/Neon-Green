@@ -26,7 +26,7 @@ export default function LivestockSection() {
     queryKey: ["farmerLivestock"],
     queryFn: async () => {
       const res = await api.get("/farmer/livestock");
-      return res.data;
+      return res.data.data;
     },
   });
 

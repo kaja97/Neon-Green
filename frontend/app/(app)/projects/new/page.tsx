@@ -24,19 +24,28 @@ export default function NewProjectWizard() {
   // Queries
   const { data: plants, isLoading: plantsLoading } = useQuery({
     queryKey: ["plants"],
-    queryFn: async () => (await api.get("/plants")).data,
+    queryFn: async () => {
+      const res = await api.get("/plants");
+      return res.data.data;
+    },
     enabled: !!user,
   });
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
-    queryFn: async () => (await api.get("/farmer/profile")).data,
+    queryFn: async () => {
+      const res = await api.get("/farmer/profile");
+      return res.data.data;
+    },
     enabled: !!user,
   });
 
   const { data: locations, isLoading: locationsLoading } = useQuery({
     queryKey: ["locations"],
-    queryFn: async () => (await api.get("/farmer/locations")).data,
+    queryFn: async () => {
+      const res = await api.get("/farmer/locations");
+      return res.data.data;
+    },
     enabled: !!user,
   });
 
@@ -44,10 +53,13 @@ export default function NewProjectWizard() {
   const createProject = useMutation({
     mutationFn: async (data: any) => {
       const res = await api.post("/projects", data);
-      return res.data;
+      return res.data.data;
     },
     onSuccess: (data) => {
       router.push(`/projects/${data.id}`);
+    },
+    onError: () => {
+      // Stay on step 5 to show error state with retry option
     }
   });
 
@@ -59,7 +71,7 @@ export default function NewProjectWizard() {
     createProject.mutate({
       name: `Farm Project - ${new Date().toLocaleDateString()}`,
       plant_id: formData.plant_id,
-      location_id: "00000000-0000-0000-0000-000000000000", // Wait, backend requires valid UUID. Or we need to fetch locations.
+      location_id: formData.location_id,
       area: parseFloat(formData.area_acres),
       area_unit: "acres",
       farming_method: formData.farming_method,
@@ -153,7 +165,7 @@ export default function NewProjectWizard() {
             ) : (
               <div className="text-center py-8">
                 <p className="text-slate-500 mb-4">You haven't added any farm locations yet.</p>
-                <Link href="/settings" className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition-colors">
+                <Link href="/profile" className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition-colors">
                   Add Location in Settings
                 </Link>
               </div>
@@ -227,15 +239,31 @@ export default function NewProjectWizard() {
 
         {step === 5 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-500 text-center py-12">
-            <h2 className="text-2xl font-bold text-slate-900 mb-3">
-              Generating Farm Plan...
-            </h2>
-            <p className="text-slate-500 mb-8 max-w-sm mx-auto">
-              Our AI is analyzing the weather forecast, soil data, and optimal growth stages to create your personalized daily activity plan.
-            </p>
-            <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto" />
-            {createProject.isError && (
-              <p className="text-red-500 mt-4 text-sm font-medium">Failed to create project. Please try again.</p>
+            {createProject.isError ? (
+              <>
+                <h2 className="text-2xl font-bold text-slate-900 mb-3">
+                  Something went wrong
+                </h2>
+                <p className="text-slate-500 mb-8 max-w-sm mx-auto">
+                  Failed to create your farming project. Please check your input and try again.
+                </p>
+                <button
+                  onClick={() => { setStep(4); }}
+                  className="px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all shadow-lg"
+                >
+                  Go Back & Retry
+                </button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-slate-900 mb-3">
+                  Generating Farm Plan...
+                </h2>
+                <p className="text-slate-500 mb-8 max-w-sm mx-auto">
+                  Our AI is analyzing the weather forecast, soil data, and optimal growth stages to create your personalized daily activity plan.
+                </p>
+                <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto" />
+              </>
             )}
           </div>
         )}

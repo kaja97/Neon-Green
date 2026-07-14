@@ -6,38 +6,43 @@ import uuid
 from database import get_db
 from dependencies import get_current_user
 from models.account import Account
+from core.response import success_response, message_response
 from . import schemas, service
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
-@router.get("", response_model=List[schemas.NotificationResponse])
+@router.get("", status_code=200)
 async def get_notifications(
     limit: int = Query(50),
     unread_only: bool = Query(False),
     current_user: Account = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    return await service.get_notifications(db, current_user.id, limit, unread_only)
+    notifications = await service.get_notifications(db, current_user.id, limit, unread_only)
+    return success_response([schemas.NotificationResponse.model_validate(n).model_dump() for n in notifications])
 
-@router.patch("/{notification_id}/read", response_model=schemas.NotificationResponse)
+@router.patch("/{notification_id}/read", status_code=200)
 async def mark_read(
     notification_id: uuid.UUID,
     current_user: Account = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    return await service.mark_read(db, notification_id, current_user.id)
+    notification = await service.mark_read(db, notification_id, current_user.id)
+    return success_response(schemas.NotificationResponse.model_validate(notification).model_dump())
 
-@router.patch("/read-all")
+@router.patch("/read-all", status_code=200)
 async def mark_all_read(
     current_user: Account = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     await service.mark_all_read(db, current_user.id)
-    return {"message": "All notifications marked as read"}
+    return message_response("All notifications marked as read")
 
-@router.get("/count", response_model=schemas.NotificationCount)
+@router.get("/count", status_code=200)
 async def get_count(
     current_user: Account = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    return await service.get_unread_count(db, current_user.id)
+    count = await service.get_unread_count(db, current_user.id)
+    return success_response(schemas.NotificationCount.model_validate(count).model_dump())
+

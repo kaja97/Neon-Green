@@ -28,7 +28,7 @@ export default function LandSection() {
     queryKey: ["farmerLand"],
     queryFn: async () => {
       const res = await api.get("/farmer/land");
-      return res.data;
+      return res.data.data;
     },
   });
 
@@ -36,7 +36,7 @@ export default function LandSection() {
     queryKey: ["farmerLocations"],
     queryFn: async () => {
       const res = await api.get("/farmer/locations");
-      return res.data;
+      return res.data.data;
     },
   });
 

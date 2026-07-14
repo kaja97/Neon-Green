@@ -43,13 +43,8 @@ export default function SettingsPage() {
     router.push("/login");
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
-        <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
-      </div>
-    );
-  }
+  // Push notification loading is no longer blocking page render
+  // The toggle will update asynchronously when ready
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 bg-slate-50 min-h-screen text-slate-900 pb-24">

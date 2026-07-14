@@ -33,7 +33,7 @@ export default function NotificationsPage() {
     queryKey: ["notifications"],
     queryFn: async () => {
       const res = await api.get("/notifications?limit=50");
-      return res.data;
+      return res.data.data;
     }
   });
 
