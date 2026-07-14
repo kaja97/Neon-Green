@@ -176,6 +176,16 @@ async def get_project_detail(
 from .schemas import PlantCreate, PlantUpdate, DiseaseCreate, DiseaseUpdate
 import uuid
 
+@router.get("/plants", status_code=200)
+async def list_all_plants(
+    admin: Account = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all plants for admin master-data management."""
+    plants = await service.list_plants(db)
+    from modules.project.schemas import PlantResponse
+    return success_response([PlantResponse.model_validate(p).model_dump() for p in plants])
+
 @router.post("/plants", status_code=201)
 async def create_plant(
     data: PlantCreate,
@@ -204,6 +214,16 @@ async def delete_plant(
     result = await service.delete_plant(db, plant_id)
     return success_response(result)
 
+@router.get("/diseases", status_code=200)
+async def list_all_diseases(
+    admin: Account = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all diseases for admin master-data management."""
+    diseases = await service.list_diseases(db)
+    from modules.disease.schemas import DiseaseSearchResponse
+    return success_response([DiseaseSearchResponse.model_validate(d).model_dump() for d in diseases])
+
 @router.post("/diseases", status_code=201)
 async def create_disease(
     data: DiseaseCreate,
@@ -211,7 +231,7 @@ async def create_disease(
     db: AsyncSession = Depends(get_db),
 ):
     result = await service.create_disease(db, data)
-    return success_response({"id": str(result.id), "name": result.name})
+    return success_response(result)
 
 @router.put("/diseases/{disease_id}", status_code=200)
 async def update_disease(
@@ -221,7 +241,7 @@ async def update_disease(
     db: AsyncSession = Depends(get_db),
 ):
     result = await service.update_disease(db, disease_id, data)
-    return success_response({"id": str(result.id), "message": "Updated successfully"})
+    return success_response(result)
 
 @router.delete("/diseases/{disease_id}", status_code=200)
 async def delete_disease(
