@@ -283,6 +283,73 @@ export default function ProjectDashboard({
           </Link>
         </div>
       </section>
+
+      {/* Edit Project Modal */}
+      <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Edit Project">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            updateProject.mutate(editForm, { onSuccess: () => setEditOpen(false) });
+          }}
+          className="space-y-4"
+        >
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-300">Project Name</label>
+            <input
+              type="text"
+              required
+              value={editForm.name}
+              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+              className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-300">Area</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                value={editForm.area}
+                onChange={(e) => setEditForm({ ...editForm, area: parseFloat(e.target.value) || 0 })}
+                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-300">Unit</label>
+              <select
+                value={editForm.area_unit}
+                onChange={(e) => setEditForm({ ...editForm, area_unit: e.target.value })}
+                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="acres">Acres</option>
+                <option value="hectares">Hectares</option>
+                <option value="sqm">Sq Meters</option>
+              </select>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-300">Farming Method</label>
+            <select
+              value={editForm.farming_method}
+              onChange={(e) => setEditForm({ ...editForm, farming_method: e.target.value })}
+              className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="organic">Organic</option>
+              <option value="inorganic">Inorganic</option>
+              <option value="integrated">Integrated</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            disabled={updateProject.isPending}
+            className="w-full bg-primary text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+          >
+            {updateProject.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+            Save Changes
+          </button>
+        </form>
+      </Modal>
     </div>
   );
 }
