@@ -2,7 +2,7 @@
 
 import { useProjects } from "@/lib/hooks/useProjects";
 import ProjectCard from "@/components/dashboard/ProjectCard";
-import { Plus, Loader2, Sprout } from "lucide-react";
+import { Plus, Loader2, Sprout, FolderOpen, User, Bell } from "lucide-react";
 import Link from "next/link";
 import ParallaxBackground from "@/components/dashboard/ParallaxBackground";
 import WeatherForecast from "@/components/dashboard/WeatherForecast";

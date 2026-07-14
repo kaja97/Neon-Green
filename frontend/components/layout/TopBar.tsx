@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, User, WifiOff, ShieldAlert, Sprout } from "lucide-react";
+import { Bell, User, WifiOff, ShieldAlert, Sprout, FolderOpen } from "lucide-react";
 import Link from "next/link";
 import { useOffline } from "@/lib/hooks/useOffline";
 import { useQuery } from "@tanstack/react-query";
@@ -48,6 +48,23 @@ export default function TopBar() {
             <span className="text-primary"> AI</span>
           </span>
         </Link>
+
+        {/* Desktop Nav Links */}
+        <nav className="hidden md:flex items-center gap-1">
+          <Link
+            href="/dashboard"
+            className="px-3 py-1.5 text-sm font-semibold text-text-secondary hover:text-white transition-colors rounded-lg hover:bg-surface-tertiary"
+          >
+            Dashboard
+          </Link>
+          <Link
+            href="/projects"
+            className="px-3 py-1.5 text-sm font-semibold text-text-secondary hover:text-white transition-colors rounded-lg hover:bg-surface-tertiary flex items-center gap-1.5"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            Projects
+          </Link>
+        </nav>
 
         <div className="flex items-center gap-3">
           {/* Offline Indicator */}

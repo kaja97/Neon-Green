@@ -68,16 +68,14 @@ export default function ProjectDashboard({
     active_issues,
   } = data;
 
-  const circleStages = farming_circle?.stages?.map((s) => ({
-    name: s.name,
-    status: s.status === "completed" ? "done" as const : s.status === "current" ? "current" as const : "pending" as const,
+  const circleStages = farming_circle?.stages?.map((s: any) => ({
+    name: s.stage?.stage_name || s.name || "Stage",
+    status: s.is_completed ? "done" as const : s.is_current ? "current" as const : "pending" as const,
   })) || [];
 
-  const progress = farming_circle?.progress_pct || 0;
+  const totalDays = farming_circle?.total_days || 90;
   const currentDay = farming_circle?.current_day || 0;
-  const totalDays = project.days_since_planting
-    ? Math.round(project.days_since_planting / (progress / 100 || 1))
-    : 90;
+  const progress = totalDays > 0 ? Math.round((currentDay / totalDays) * 100) : 0;
 
   const serviceBlocks = [
     {

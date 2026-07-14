@@ -1,11 +1,12 @@
 "use client";
 
-import { Home, PlusCircle, Bell, User } from "lucide-react";
+import { Home, FolderOpen, PlusCircle, Bell, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/projects", label: "Projects", icon: FolderOpen },
   { href: "/projects/new", label: "New", icon: PlusCircle },
   { href: "/notifications", label: "Alerts", icon: Bell },
   { href: "/profile", label: "Profile", icon: User },
@@ -19,7 +20,7 @@ export default function BottomNav() {
       {/* Blur backdrop */}
       <div className="absolute inset-0 bg-surface-primary/80 backdrop-blur-xl border-t border-border" />
 
-      <div className="relative grid h-16 w-full grid-cols-4 items-center justify-center max-w-lg mx-auto">
+      <div className="relative grid h-16 w-full grid-cols-5 items-center justify-center max-w-lg mx-auto">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const isActive =
             pathname === href ||
