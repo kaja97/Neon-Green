@@ -301,4 +301,208 @@ disease_solutions = [
     # Soil Rot (d90)
     {"disease_id": "d90", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Soil sulfur application", "dosage": "120kg per acre", "instructions": "Incorporate sulfur into soil to lower pH below 5.2 to suppress bacteria."},
     {"disease_id": "d90", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Moisture maintenance + rotation", "dosage": "N/A", "instructions": "Keep soil moist during early tuber initiation. Rotate with green manure crops."},
+
+    # ── Peanut Solutions (p16) ────────────────
+    # Tikka Leaf Spot (d91)
+    {"disease_id": "d91", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Carbendazim 50% WP", "dosage": "1g per litre", "instructions": "Foliar spray at first symptom. Repeat in 14 days."},
+    {"disease_id": "d91", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Neem Seed Kernel Extract", "dosage": "5% solution", "instructions": "Spray foliar preventively during warm humid weeks."},
+    # Rust (d92)
+    {"disease_id": "d92", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Mancozeb 75% WP", "dosage": "2g per litre", "instructions": "Foliar spray when orange pustules appear on leaves."},
+    {"disease_id": "d92", "farming_method": "organic", "solution_type": "curative", "treatment_name": "Sulphur dusting", "dosage": "10kg per acre", "instructions": "Dust foliage early morning when dew is present."},
+    # Stem Rot (d93)
+    {"disease_id": "d93", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Carbendazim drench", "dosage": "2g per litre", "instructions": "Drench soil around infected stems. Keep fields drained."},
+    {"disease_id": "d93", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma viride in soil", "dosage": "2.5kg per acre", "instructions": "Mix Trichoderma with organic compost and incorporate into soil."},
+    # Collar Rot (d94)
+    {"disease_id": "d94", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Captan seed dressing", "dosage": "3g per kg seed", "instructions": "Dress seeds before sowing to protect emerging hypocotyl."},
+    {"disease_id": "d94", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma seed dressing", "dosage": "10g per kg seed", "instructions": "Dress seeds before sowing. Ensure proper soil moisture."},
+    # Bud Necrosis (d95)
+    {"disease_id": "d95", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Imidacloprid spray", "dosage": "0.3ml per litre", "instructions": "Spray to control thrips vectors. Remove infected bud necrotic plants."},
+    {"disease_id": "d95", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Neem oil + Sticky traps", "dosage": "5ml neem per litre", "instructions": "Spray neem oil to repel thrips. Install blue and yellow sticky traps."},
+
+    # ── Black Gram Solutions (p17) ────────────
+    # Yellow Mosaic (d96)
+    {"disease_id": "d96", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Dimethoate 30 EC", "dosage": "2ml per litre", "instructions": "Spray to control whitefly vector. Rogue out infected plants early."},
+    {"disease_id": "d96", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Neem Oil + Sticky traps", "dosage": "5ml neem per litre", "instructions": "Spray neem oil. Install yellow sticky traps. Uproot infected plants."},
+    # Powdery Mildew (d97)
+    {"disease_id": "d97", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Carbendazim 50% WP", "dosage": "1g per litre", "instructions": "Foliar spray when white powdery patches appear on foliage."},
+    {"disease_id": "d97", "farming_method": "organic", "solution_type": "curative", "treatment_name": "Wettable Sulphur", "dosage": "3g per litre", "instructions": "Spray early morning. Avoid application in hot direct sun."},
+    # Leaf Crinkle (d98)
+    {"disease_id": "d98", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Methyl Demeton", "dosage": "2ml per litre", "instructions": "Foliar spray to control aphid vector. Discard infected seeds."},
+    {"disease_id": "d98", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Neem Seed Kernel Extract", "dosage": "5% solution", "instructions": "Spray to repel aphids. Rogue out crinkled leafy plants."},
+    # Root Rot (d99)
+    {"disease_id": "d99", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Carbendazim drench", "dosage": "2g per litre", "instructions": "Drench soil base. Provide irrigation during dry periods to avoid stress."},
+    {"disease_id": "d99", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma in compost", "dosage": "2kg per acre", "instructions": "Incorporate Trichoderma-enriched compost into beds before planting."},
+    # Anthracnose (d100)
+    {"disease_id": "d100", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Mancozeb 75% WP", "dosage": "2g per litre", "instructions": "Foliar spray during early pod development stage."},
+    {"disease_id": "d100", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Oxychloride", "dosage": "2.5g per litre", "instructions": "Foliar spray at pod initiation. Keep rows ventilated."},
+
+    # ── Soybean Solutions (p18) ───────────────
+    # Soybean Rust (d101)
+    {"disease_id": "d101", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Hexaconazole 5% EC", "dosage": "2ml per litre", "instructions": "Foliar spray immediately at first rust pustule."},
+    {"disease_id": "d101", "farming_method": "organic", "solution_type": "curative", "treatment_name": "Sulphur dusting", "dosage": "10kg per acre", "instructions": "Dust foliage early morning. Select rust-resistant soybean seed."},
+    # Charcoal Rot (d102)
+    {"disease_id": "d102", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Carbendazim drench", "dosage": "2g per litre", "instructions": "Drench soil base. Avoid water stress after flowering phase."},
+    {"disease_id": "d102", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma viride", "dosage": "2.5kg per acre", "instructions": "Apply Trichoderma mixed with compost. Deep plow fields during summer."},
+    # Yellow Mosaic (d103)
+    {"disease_id": "d103", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Imidacloprid spray", "dosage": "0.3ml per litre", "instructions": "Foliar spray to control whitefly vector. Remove yellowed plants."},
+    {"disease_id": "d103", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Neem oil + Rogueing", "dosage": "5ml neem per litre", "instructions": "Foliar spray neem oil to repel whitefly. Destroy virus host weeds."},
+    # Frog Eye Leaf Spot (d104)
+    {"disease_id": "d104", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Mancozeb 75% WP", "dosage": "2g per litre", "instructions": "Foliar spray when frog eye spots appear on leaves."},
+    {"disease_id": "d104", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Hydroxide", "dosage": "2g per litre", "instructions": "Preventive foliar spray. Avoid overhead sprinkler irrigation splashing."},
+    # Pod and Stem Blight (d105)
+    {"disease_id": "d105", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Carbendazim 50% WP", "dosage": "1.5g per litre", "instructions": "Spray at mid-pod filling. Do not delay harvesting."},
+    {"disease_id": "d105", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Pseudomonas seed treatment", "dosage": "10g per kg seed", "instructions": "Dress seeds before sowing. Clean plant debris after harvest."},
+
+    # ── Maize Solutions (p19) ─────────────────
+    # Turcicum Blight (d106)
+    {"disease_id": "d106", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Mancozeb 75% WP", "dosage": "2.5g per litre", "instructions": "Foliar spray when cigar spots appear on leaves."},
+    {"disease_id": "d106", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Pseudomonas fluorescens", "dosage": "10g per litre", "instructions": "Foliar spray at 30 and 45 DAS to suppress fungus."},
+    # Maydis Blight (d107)
+    {"disease_id": "d107", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Zineb 75% WP", "dosage": "2g per litre", "instructions": "Foliar spray at 35 and 50 DAS during wet periods."},
+    {"disease_id": "d107", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Oxychloride", "dosage": "3g per litre", "instructions": "Apply preventive foliar spray. Remove old leaf trash."},
+    # Common Rust (d108)
+    {"disease_id": "d108", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Propiconazole 25% EC", "dosage": "1ml per litre", "instructions": "Foliar spray when rust spots are seen. Avoid excess nitrogen."},
+    {"disease_id": "d108", "farming_method": "organic", "solution_type": "curative", "treatment_name": "Baking soda + Horticultural oil", "dosage": "5g soda per litre", "instructions": "Spray foliar. Prune lower leaves to improve field aeration."},
+    # Charcoal Rot (d109)
+    {"disease_id": "d109", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Carbendazim stem drench", "dosage": "2g per litre", "instructions": "Drench stem bases at silking. Avoid water stress after tasseling."},
+    {"disease_id": "d109", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Soil solarization + Trichoderma", "dosage": "2.5kg Trichoderma per acre", "instructions": "Solarize beds. Apply Trichoderma-enriched compost to soil bed."},
+    # Dwarf Mosaic (d110)
+    {"disease_id": "d110", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Imidacloprid vector spray", "dosage": "0.5ml per litre", "instructions": "Foliar spray to control aphid vector. Rogue out dwarfed maize plants."},
+    {"disease_id": "d110", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Neem oil vector repel", "dosage": "5ml neem per litre", "instructions": "Spray neem oil to repel aphids. Clear grass weeds."},
+
+    # ── Pearl Millet Solutions (p20) ──────────
+    # Downy Mildew (d111)
+    {"disease_id": "d111", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Metalaxyl seed treatment", "dosage": "6g per kg seed", "instructions": "Dress seeds before sowing. Rogue out green ears in field."},
+    {"disease_id": "d111", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Compost Tea seed soak", "dosage": "Undiluted compost tea", "instructions": "Soak seeds for 4 hours. Ensure well-drained soil beds."},
+    # Ergot (d112)
+    {"disease_id": "d112", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Ziram spray", "dosage": "2g per litre", "instructions": "Foliar spray at 50% flowering. Deep plow to bury sclerotia."},
+    {"disease_id": "d112", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Salt water floatation", "dosage": "10% salt solution", "instructions": "Soak seeds in salt water; skim off floating ergot sclerotia before sowing."},
+    # Smut (d113)
+    {"disease_id": "d113", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Carboxin seed dressing", "dosage": "2g per kg seed", "instructions": "Dress seeds. Rogue out smutted earheads in paper bags to avoid spread."},
+    {"disease_id": "d113", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Hot water seed soak", "dosage": "55C water for 10 min", "instructions": "Soak seeds in hot water before drying and sowing. Rotate crops."},
+    # Rust (d114)
+    {"disease_id": "d114", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Wettable Sulphur spray", "dosage": "3g per litre", "instructions": "Foliar spray when rust spots are seen on leaves."},
+    {"disease_id": "d114", "farming_method": "organic", "solution_type": "curative", "treatment_name": "Wood ash + sulphur dust", "dosage": "1:1 ratio powder", "instructions": "Dust foliage early morning when dew is present."},
+    # Blast (d115)
+    {"disease_id": "d115", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Tricyclazole 75% WP", "dosage": "1g per litre", "instructions": "Foliar spray at first blast lesion. Repeat at flowering phase."},
+    {"disease_id": "d115", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Pseudomonas foliar spray", "dosage": "10g per litre", "instructions": "Foliar spray. Avoid excess nitrogen fertilizer application."},
+
+    # ── Sorghum Solutions (p21) ───────────────
+    # Grain Smut (d116)
+    {"disease_id": "d116", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Sulfur seed dressing", "dosage": "3g per kg seed", "instructions": "Mix seeds with sulfur powder before sowing. Collect and burn smutted heads."},
+    {"disease_id": "d116", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Solar seed treatment", "dosage": "Sun solarization", "instructions": "Solarize seeds on concrete under hot noon sun for 4 hours before sowing."},
+    # Anthracnose (d117)
+    {"disease_id": "d117", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Carbendazim 50% WP", "dosage": "1.5g per litre", "instructions": "Foliar spray at jointing stage. Use disease-free seeds."},
+    {"disease_id": "d117", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Hydroxide", "dosage": "2g per litre", "instructions": "Preventive foliar spray before rainy spell. Deep plow sorghum residues."},
+    # Charcoal Rot (d118)
+    {"disease_id": "d118", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Carbendazim drench", "dosage": "2g per litre", "instructions": "Drench stem base. Irrigate crop during grain filling to avoid dry soil."},
+    {"disease_id": "d118", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma in compost", "dosage": "2kg per acre in FYM", "instructions": "Apply bio-fungicide in farmyard manure before sowing sorghum."},
+    # Downy Mildew (d119)
+    {"disease_id": "d119", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Metalaxyl 35% SD", "dosage": "2g per litre", "instructions": "Foliar spray on young seedlings. Maintain field drainage."},
+    {"disease_id": "d119", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Deep summer plowing", "dosage": "N/A", "instructions": "Deep summer plow fields to bury soil-borne spores. Rogue infected leaves."},
+    # Leaf Blight (d120)
+    {"disease_id": "d120", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Mancozeb 75% WP", "dosage": "2.5g per litre", "instructions": "Foliar spray when blight lesions appear. Repeat in 12 days."},
+    {"disease_id": "d120", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Legume Crop Rotation", "dosage": "N/A", "instructions": "Rotate sorghum with non-cereal legumes like green gram to break cycle."},
+
+    # ── Foxtail Millet Solutions (p22) ────────
+    # Blast (d121)
+    {"disease_id": "d121", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Tricyclazole spray", "dosage": "1g per litre", "instructions": "Foliar spray when spindle spots appear on leaves."},
+    {"disease_id": "d121", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Pseudomonas fluorescens", "dosage": "10g per litre", "instructions": "Foliar spray. Avoid high nitrogen fertilizer application."},
+    # Downy Mildew (d122)
+    {"disease_id": "d122", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Metalaxyl seed treatment", "dosage": "4g per kg seed", "instructions": "Dress seeds before sowing. Rogue out leafy ears."},
+    {"disease_id": "d122", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma seed dressing", "dosage": "10g per kg seed", "instructions": "Dress seeds. Burn infected crop debris from fields."},
+    # Smut (d123)
+    {"disease_id": "d123", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Carboxin seed dressing", "dosage": "2g per kg seed", "instructions": "Seed treatment to kill seed-borne smut spores."},
+    {"disease_id": "d123", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Hot water seed treatment", "dosage": "54C water for 10 min", "instructions": "Soak seeds in hot water. Avoid sowing in dry soils."},
+    # Rust (d124)
+    {"disease_id": "d124", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Mancozeb 75% WP", "dosage": "2g per litre", "instructions": "Foliar spray when rust spots are seen on leaves."},
+    {"disease_id": "d124", "farming_method": "organic", "solution_type": "curative", "treatment_name": "Sulphur dusting", "dosage": "8kg per acre", "instructions": "Dust foliage early morning. Maintain wide spacing."},
+    # Seedling Blight (d125)
+    {"disease_id": "d125", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Thiram seed treatment", "dosage": "3g per kg seed", "instructions": "Treat seeds before sowing. Do not waterlog seedbeds."},
+    {"disease_id": "d125", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma harzianum", "dosage": "10g per kg seed", "instructions": "Dress seeds and drench nursery beds with bio-fungicide."},
+
+    # ── Gotukola Solutions (p23) ──────────────
+    # Gotukola Leaf Spot (d126)
+    {"disease_id": "d126", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Mancozeb spray", "dosage": "2g per litre", "instructions": "Foliar spray. Avoid harvesting leaves for 14 days after spray."},
+    {"disease_id": "d126", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Hydroxide foliar", "dosage": "2g per litre", "instructions": "Apply foliar. Avoid overhead sprinkler irrigation during warm afternoons."},
+    # Root Rot (d127)
+    {"disease_id": "d127", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Carbendazim drench", "dosage": "2g per litre", "instructions": "Drench soil around yellowing patches. Avoid overwatering."},
+    {"disease_id": "d127", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma in vermicompost", "dosage": "2kg per acre", "instructions": "Apply Trichoderma-enriched vermicompost to soil beds."},
+    # Gotukola Wilt (d128)
+    {"disease_id": "d128", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Propiconazole drench", "dosage": "1ml per litre", "instructions": "Drench soil base around infected runners area. Practice crop rotation."},
+    {"disease_id": "d128", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Soil liming + Trichoderma", "dosage": "Lime + 2kg Trichoderma/acre", "instructions": "Apply lime to raise soil pH above 7.0. Drench with bio-fungicide."},
+    # Collar Rot (d129)
+    {"disease_id": "d129", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Captan soil drench", "dosage": "2g per litre", "instructions": "Drench soil near runner bases. Clear rotting organic litter."},
+    {"disease_id": "d129", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Pseudomonas drench", "dosage": "10g per litre", "instructions": "Drench base of runners. Solarize soil beds in summer."},
+    # Mosaic Virus (d130)
+    {"disease_id": "d130", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Dimethoate vector control", "dosage": "2ml per litre", "instructions": "Foliar spray to control aphid vector. Rogue out mosaic leaves."},
+    {"disease_id": "d130", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Neem oil repel + Rogueing", "dosage": "5ml neem per litre", "instructions": "Spray neem oil to repel aphids. Discard infected runner offsets."},
+
+    # ── Spinach Solutions (p24) ───────────────
+    # Downy Mildew (d131)
+    {"disease_id": "d131", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Metalaxyl foliar spray", "dosage": "2.5g per litre", "instructions": "Foliar spray when downy spots are seen. Observe 7 days safe harvest period."},
+    {"disease_id": "d131", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Hydroxide spray", "dosage": "2g per litre", "instructions": "Preventive foliar spray. Use drip lines instead of overhead sprinklers."},
+    # White Rust (d132)
+    {"disease_id": "d132", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Mancozeb 75% WP", "dosage": "2g per litre", "instructions": "Foliar spray at first white blister under leaves."},
+    {"disease_id": "d132", "farming_method": "organic", "solution_type": "curative", "treatment_name": "Sulphur powder dusting", "dosage": "10kg per acre", "instructions": "Dust foliage early morning. Maintain wide space between plants."},
+    # Cladosporium (d133)
+    {"disease_id": "d133", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Zineb 75% WP", "dosage": "2g per litre", "instructions": "Foliar spray at early spots. Avoid late evening watering."},
+    {"disease_id": "d133", "farming_method": "organic", "solution_type": "curative", "treatment_name": "Baking Soda + Neem oil", "dosage": "5g soda + 5ml neem/L", "instructions": "Foliar spray weekly. Clear crop residue after harvest."},
+    # Damping Off (d134)
+    {"disease_id": "d134", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Captan seed treatment", "dosage": "3g per kg seed", "instructions": "Dress seeds before sowing. Keep beds moist but not waterlogged."},
+    {"disease_id": "d134", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma harzianum", "dosage": "10g per kg seed", "instructions": "Dress seeds and drench seedling beds. Use sandy organic soils."},
+    # Fusarium Wilt (d135)
+    {"disease_id": "d135", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Carbendazim drench", "dosage": "2g per litre", "instructions": "Drench soil base around wilting spinach rows. Rotate crops."},
+    {"disease_id": "d135", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Soil liming + Trichoderma", "dosage": "Lime + 2kg Trichoderma/acre", "instructions": "Apply lime to keep soil pH neutral. Drench with bio-fungicide."},
+
+    # ── Beetroot Solutions (p25) ──────────────
+    # Cercospora (d136)
+    {"disease_id": "d136", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Mancozeb 75% WP", "dosage": "2.5g per litre", "instructions": "Foliar spray when circular spots appear. Repeat in 14 days."},
+    {"disease_id": "d136", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Oxychloride", "dosage": "3g per litre", "instructions": "Foliar spray preventively during humid weeks. Avoid crop crowding."},
+    # Downy Mildew (d137)
+    {"disease_id": "d137", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Metalaxyl + Mancozeb", "dosage": "2g per litre", "instructions": "Foliar spray at early leaf curl symptoms."},
+    {"disease_id": "d137", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Hydroxide", "dosage": "2g per litre", "instructions": "Apply foliar. Maintain clean weeding and wide crop spacing."},
+    # Scab (d138)
+    {"disease_id": "d138", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Acidifying soil sulfur", "dosage": "80kg per acre", "instructions": "Incorporate sulfur to lower pH below 5.5 to check bacterial scab."},
+    {"disease_id": "d138", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Moisture control + No fresh manure", "dosage": "N/A", "instructions": "Ensure high soil moisture during root bulb swelling. Avoid fresh animal manure."},
+    # Curly Top (d139)
+    {"disease_id": "d139", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Imidacloprid spray", "dosage": "0.5ml per litre", "instructions": "Spray to control leafhopper vector. Destroy curled weeds."},
+    {"disease_id": "d139", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Neem oil repel", "dosage": "5ml neem per litre", "instructions": "Foliar spray to repel leafhoppers. Grow barrier crops."},
+    # Root Rot (d140)
+    {"disease_id": "d140", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Carbendazim drench", "dosage": "2g per litre", "instructions": "Drench crown soil base. Ensure good crop drainage beds."},
+    {"disease_id": "d140", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma enriched compost", "dosage": "2.5kg Trichoderma per acre", "instructions": "Apply bio-fungicide in organic compost to crop beds."},
+
+    # ── Radish Solutions (p26) ────────────────
+    # White Rust (d141)
+    {"disease_id": "d141", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Mancozeb 75% WP", "dosage": "2g per litre", "instructions": "Foliar spray when white pustules appear on leaves."},
+    {"disease_id": "d141", "farming_method": "organic", "solution_type": "curative", "treatment_name": "Sulphur dusting", "dosage": "10kg per acre", "instructions": "Dust foliage early morning when dew is present."},
+    # Alternaria Leaf Spot (d142)
+    {"disease_id": "d142", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Zineb 75% WP", "dosage": "2g per litre", "instructions": "Foliar spray when circular target spots appear on leaves."},
+    {"disease_id": "d142", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Oxychloride", "dosage": "2.5g per litre", "instructions": "Foliar spray at 20 DAS. Maintain wide row spacing."},
+    # Downy Mildew (d143)
+    {"disease_id": "d143", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Metalaxyl 35% SD", "dosage": "2.5g per litre", "instructions": "Foliar spray at early symptoms. Use clean seeds."},
+    {"disease_id": "d143", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Hydroxide", "dosage": "2g per litre", "instructions": "Foliar spray. Prune crowded lower leaves for ventilation."},
+    # Clubroot (d144)
+    {"disease_id": "d144", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Agricultural Lime application", "dosage": "500kg per acre", "instructions": "Apply lime to soil to raise pH above 7.2 to check fungal spore growth."},
+    {"disease_id": "d144", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Soil liming + Crop rotation", "dosage": "Hydrated Lime", "instructions": "Apply lime to raise pH above 7.2. Rotate radish with non-brassicas for 3 years."},
+    # Fusarium Wilt (d145)
+    {"disease_id": "d145", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Carbendazim drench", "dosage": "2g per litre", "instructions": "Drench soil base around wilted radish rows. Avoid waterlogging."},
+    {"disease_id": "d145", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma in compost", "dosage": "2kg per acre in FYM", "instructions": "Apply Trichoderma-enriched manure before sowing radish seeds."},
+
+    # ── Yam Solutions (p27) ───────────────────
+    # Anthracnose (d146)
+    {"disease_id": "d146", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Carbendazim + Mancozeb", "dosage": "2g per litre", "instructions": "Foliar spray when black spots are seen on leaves or vines. Trellis vines early."},
+    {"disease_id": "d146", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Hydroxide foliar", "dosage": "2g per litre", "instructions": "Foliar spray before monsoon. Ensure high trellising to keep leaves dry."},
+    # Mosaic Virus (d147)
+    {"disease_id": "d147", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Dimethoate vector control", "dosage": "2ml per litre", "instructions": "Foliar spray to control aphids. Discard mosaic-infected seed tubers."},
+    {"disease_id": "d147", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Healthy seed tubers + Neem", "dosage": "5ml neem per litre", "instructions": "Select clean tubers for planting. Spray neem oil to repel aphids."},
+    # Dry Rot (d148)
+    {"disease_id": "d148", "farming_method": "conventional", "solution_type": "preventive", "treatment_name": "Fenamiphos seed treatment", "dosage": "2g per litre", "instructions": "Dip seed tubers in nematocide solution before sowing."},
+    {"disease_id": "d148", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Hot water tuber soak + Solarization", "dosage": "50C water for 30 min", "instructions": "Soak seed tubers in hot water. Solarize soil beds before planting."},
+    # Leaf Spot (d149)
+    {"disease_id": "d149", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Mancozeb 75% WP", "dosage": "2g per litre", "instructions": "Foliar spray at early leaf spots. Prune lower shaded leaves."},
+    {"disease_id": "d149", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Copper Oxychloride", "dosage": "3g per litre", "instructions": "Foliar spray at 60 DAT. Keep field weed-free."},
+    # Collar Rot (d150)
+    {"disease_id": "d150", "farming_method": "conventional", "solution_type": "curative", "treatment_name": "Carbendazim vine drench", "dosage": "2g per litre", "instructions": "Drench soil base around infected vine necks. Maintain field drainage."},
+    {"disease_id": "d150", "farming_method": "organic", "solution_type": "preventive", "treatment_name": "Trichoderma in compost", "dosage": "2.5kg per acre", "instructions": "Apply Trichoderma bio-control in organic compost around stem bases."},
 ]

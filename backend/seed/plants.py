@@ -120,5 +120,101 @@ plants = [
         "growth_duration_days": 120,
         "optimal_ph_min": 5.6,
         "optimal_ph_max": 6.6
+    },
+    {
+        "id": "p16",
+        "name": "Peanut",
+        "scientific_name": "Arachis hypogaea",
+        "growth_duration_days": 110,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 6.5
+    },
+    {
+        "id": "p17",
+        "name": "Black Gram",
+        "scientific_name": "Vigna mungo",
+        "growth_duration_days": 80,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 7.0
+    },
+    {
+        "id": "p18",
+        "name": "Soybean",
+        "scientific_name": "Glycine max",
+        "growth_duration_days": 100,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 6.8
+    },
+    {
+        "id": "p19",
+        "name": "Maize",
+        "scientific_name": "Zea mays",
+        "growth_duration_days": 110,
+        "optimal_ph_min": 5.8,
+        "optimal_ph_max": 7.0
+    },
+    {
+        "id": "p20",
+        "name": "Pearl Millet",
+        "scientific_name": "Pennisetum glaucum",
+        "growth_duration_days": 90,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 7.5
+    },
+    {
+        "id": "p21",
+        "name": "Sorghum",
+        "scientific_name": "Sorghum bicolor",
+        "growth_duration_days": 110,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 7.5
+    },
+    {
+        "id": "p22",
+        "name": "Foxtail Millet",
+        "scientific_name": "Setaria italica",
+        "growth_duration_days": 90,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 7.0
+    },
+    {
+        "id": "p23",
+        "name": "Gotukola",
+        "scientific_name": "Centella asiatica",
+        "growth_duration_days": 90,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 7.5
+    },
+    {
+        "id": "p24",
+        "name": "Spinach",
+        "scientific_name": "Spinacia oleracea",
+        "growth_duration_days": 50,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 7.0
+    },
+    {
+        "id": "p25",
+        "name": "Beetroot",
+        "scientific_name": "Beta vulgaris",
+        "growth_duration_days": 75,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 7.0
+    },
+    {
+        "id": "p26",
+        "name": "Radish",
+        "scientific_name": "Raphanus sativus",
+        "growth_duration_days": 45,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 7.0
+    },
+    {
+        "id": "p27",
+        "name": "Yam",
+        "scientific_name": "Dioscorea alata",
+        "growth_duration_days": 240,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 6.5
     }
 ]

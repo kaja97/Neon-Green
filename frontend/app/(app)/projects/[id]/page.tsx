@@ -10,6 +10,8 @@ import SoilBlock from "@/components/blocks/SoilBlock";
 import DiseaseBlock from "@/components/blocks/DiseaseBlock";
 import AlertBanner from "@/components/blocks/AlertBanner";
 import QuickAskBlock from "@/components/blocks/QuickAskBlock";
+import WeatherCardBlock from "@/components/blocks/WeatherCardBlock";
+import FertilizerLogBlock from "@/components/blocks/FertilizerLogBlock";
 import Modal from "@/components/ui/Modal";
 import { formatCurrency } from "@/lib/utils/formatters";
 import {
@@ -246,6 +248,12 @@ export default function ProjectDashboard({
           projectId={params.id}
           activities={todays_activities}
         />
+      </section>
+
+      {/* Weather + Fertilizer Log */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slide-up" style={{ animationDelay: "225ms" }}>
+        <WeatherCardBlock projectId={params.id} />
+        <FertilizerLogBlock projectId={params.id} />
       </section>
 
       {/* AI Summary Card */}

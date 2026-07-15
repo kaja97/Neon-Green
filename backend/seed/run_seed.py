@@ -47,6 +47,18 @@ YIELD_DATA = {
     "p13": 1000,   # Cowpea
     "p14": 5000,   # Bitter Gourd
     "p15": 8000,   # Sweet Potato
+    "p16": 1200,   # Peanut
+    "p17": 800,    # Black Gram
+    "p18": 1000,   # Soybean
+    "p19": 3000,   # Maize
+    "p20": 1000,   # Pearl Millet
+    "p21": 1200,   # Sorghum
+    "p22": 900,    # Foxtail Millet
+    "p23": 2500,   # Gotukola
+    "p24": 3000,   # Spinach
+    "p25": 6000,   # Beetroot
+    "p26": 5000,   # Radish
+    "p27": 9000,   # Yam
 }
 
 async def seed_data():

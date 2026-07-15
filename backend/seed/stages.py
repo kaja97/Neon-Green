@@ -120,4 +120,100 @@ stages = [
     {"id": "s88", "plant_id": "p15", "stage_name": "Tuber Development", "stage_order": 4, "start_day": 51, "end_day": 80},
     {"id": "s89", "plant_id": "p15", "stage_name": "Tuber Bulking", "stage_order": 5, "start_day": 81, "end_day": 110},
     {"id": "s90", "plant_id": "p15", "stage_name": "Harvesting", "stage_order": 6, "start_day": 111, "end_day": 120},
+
+    # Peanut (p16)
+    {"id": "s91", "plant_id": "p16", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 7},
+    {"id": "s92", "plant_id": "p16", "stage_name": "Seedling/Establishment", "stage_order": 2, "start_day": 8, "end_day": 25},
+    {"id": "s93", "plant_id": "p16", "stage_name": "Vegetative/Flowering", "stage_order": 3, "start_day": 26, "end_day": 45},
+    {"id": "s94", "plant_id": "p16", "stage_name": "Pegging Phase", "stage_order": 4, "start_day": 46, "end_day": 70},
+    {"id": "s95", "plant_id": "p16", "stage_name": "Pod Development", "stage_order": 5, "start_day": 71, "end_day": 95},
+    {"id": "s96", "plant_id": "p16", "stage_name": "Harvesting", "stage_order": 6, "start_day": 96, "end_day": 110},
+
+    # Black Gram (p17)
+    {"id": "s97", "plant_id": "p17", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 5},
+    {"id": "s98", "plant_id": "p17", "stage_name": "Seedling/Establishment", "stage_order": 2, "start_day": 6, "end_day": 15},
+    {"id": "s99", "plant_id": "p17", "stage_name": "Vegetative Growth", "stage_order": 3, "start_day": 16, "end_day": 35},
+    {"id": "s100", "plant_id": "p17", "stage_name": "Flowering Stage", "stage_order": 4, "start_day": 36, "end_day": 50},
+    {"id": "s101", "plant_id": "p17", "stage_name": "Pod Development", "stage_order": 5, "start_day": 51, "end_day": 70},
+    {"id": "s102", "plant_id": "p17", "stage_name": "Harvesting", "stage_order": 6, "start_day": 71, "end_day": 80},
+
+    # Soybean (p18)
+    {"id": "s103", "plant_id": "p18", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 7},
+    {"id": "s104", "plant_id": "p18", "stage_name": "Seedling/Establishment", "stage_order": 2, "start_day": 8, "end_day": 20},
+    {"id": "s105", "plant_id": "p18", "stage_name": "Vegetative Growth", "stage_order": 3, "start_day": 21, "end_day": 45},
+    {"id": "s106", "plant_id": "p18", "stage_name": "Flowering Stage", "stage_order": 4, "start_day": 46, "end_day": 65},
+    {"id": "s107", "plant_id": "p18", "stage_name": "Pod Filling", "stage_order": 5, "start_day": 66, "end_day": 85},
+    {"id": "s108", "plant_id": "p18", "stage_name": "Harvesting", "stage_order": 6, "start_day": 86, "end_day": 100},
+
+    # Maize (p19)
+    {"id": "s109", "plant_id": "p19", "stage_name": "Germination/Emergence", "stage_order": 1, "start_day": 0, "end_day": 10},
+    {"id": "s110", "plant_id": "p19", "stage_name": "Early Vegetative", "stage_order": 2, "start_day": 11, "end_day": 35},
+    {"id": "s111", "plant_id": "p19", "stage_name": "Tasseling", "stage_order": 3, "start_day": 36, "end_day": 55},
+    {"id": "s112", "plant_id": "p19", "stage_name": "Silking Stage", "stage_order": 4, "start_day": 56, "end_day": 75},
+    {"id": "s113", "plant_id": "p19", "stage_name": "Milk/Dough Phase", "stage_order": 5, "start_day": 76, "end_day": 95},
+    {"id": "s114", "plant_id": "p19", "stage_name": "Harvesting", "stage_order": 6, "start_day": 96, "end_day": 110},
+
+    # Pearl Millet (p20)
+    {"id": "s115", "plant_id": "p20", "stage_name": "Seedling Phase", "stage_order": 1, "start_day": 0, "end_day": 12},
+    {"id": "s116", "plant_id": "p20", "stage_name": "Active Tillering", "stage_order": 2, "start_day": 13, "end_day": 30},
+    {"id": "s117", "plant_id": "p20", "stage_name": "Stem Elongation", "stage_order": 3, "start_day": 31, "end_day": 48},
+    {"id": "s118", "plant_id": "p20", "stage_name": "Heading/Flowering", "stage_order": 4, "start_day": 49, "end_day": 65},
+    {"id": "s119", "plant_id": "p20", "stage_name": "Grain Development", "stage_order": 5, "start_day": 66, "end_day": 80},
+    {"id": "s120", "plant_id": "p20", "stage_name": "Harvesting", "stage_order": 6, "start_day": 81, "end_day": 90},
+
+    # Sorghum (p21)
+    {"id": "s121", "plant_id": "p21", "stage_name": "Seedling/Establishment", "stage_order": 1, "start_day": 0, "end_day": 15},
+    {"id": "s122", "plant_id": "p21", "stage_name": "Vegetative/Tillering", "stage_order": 2, "start_day": 16, "end_day": 40},
+    {"id": "s123", "plant_id": "p21", "stage_name": "Booting Phase", "stage_order": 3, "start_day": 41, "end_day": 60},
+    {"id": "s124", "plant_id": "p21", "stage_name": "Flowering Stage", "stage_order": 4, "start_day": 61, "end_day": 75},
+    {"id": "s125", "plant_id": "p21", "stage_name": "Grain Bulking", "stage_order": 5, "start_day": 76, "end_day": 95},
+    {"id": "s126", "plant_id": "p21", "stage_name": "Harvesting", "stage_order": 6, "start_day": 96, "end_day": 110},
+
+    # Foxtail Millet (p22)
+    {"id": "s127", "plant_id": "p22", "stage_name": "Seedling Phase", "stage_order": 1, "start_day": 0, "end_day": 10},
+    {"id": "s128", "plant_id": "p22", "stage_name": "Active Tillering", "stage_order": 2, "start_day": 11, "end_day": 28},
+    {"id": "s129", "plant_id": "p22", "stage_name": "Stem Elongation", "stage_order": 3, "start_day": 29, "end_day": 45},
+    {"id": "s130", "plant_id": "p22", "stage_name": "Flowering/Panicle", "stage_order": 4, "start_day": 46, "end_day": 62},
+    {"id": "s131", "plant_id": "p22", "stage_name": "Grain Filling", "stage_order": 5, "start_day": 63, "end_day": 80},
+    {"id": "s132", "plant_id": "p22", "stage_name": "Harvesting", "stage_order": 6, "start_day": 81, "end_day": 90},
+
+    # Gotukola (p23)
+    {"id": "s133", "plant_id": "p23", "stage_name": "Planting & Rooting", "stage_order": 1, "start_day": 0, "end_day": 10},
+    {"id": "s134", "plant_id": "p23", "stage_name": "Runner Development", "stage_order": 2, "start_day": 11, "end_day": 30},
+    {"id": "s135", "plant_id": "p23", "stage_name": "Foliar Expansion", "stage_order": 3, "start_day": 31, "end_day": 50},
+    {"id": "s136", "plant_id": "p23", "stage_name": "Mature Growth", "stage_order": 4, "start_day": 51, "end_day": 70},
+    {"id": "s137", "plant_id": "p23", "stage_name": "Primary Harvest", "stage_order": 5, "start_day": 71, "end_day": 80},
+    {"id": "s138", "plant_id": "p23", "stage_name": "Secondary Harvest", "stage_order": 6, "start_day": 81, "end_day": 90},
+
+    # Spinach (p24)
+    {"id": "s139", "plant_id": "p24", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 6},
+    {"id": "s140", "plant_id": "p24", "stage_name": "Seedling/Establishment", "stage_order": 2, "start_day": 7, "end_day": 15},
+    {"id": "s141", "plant_id": "p24", "stage_name": "Early Leafy Stage", "stage_order": 3, "start_day": 16, "end_day": 25},
+    {"id": "s142", "plant_id": "p24", "stage_name": "Active Leafy growth", "stage_order": 4, "start_day": 26, "end_day": 35},
+    {"id": "s143", "plant_id": "p24", "stage_name": "Mature Leafy phase", "stage_order": 5, "start_day": 36, "end_day": 45},
+    {"id": "s144", "plant_id": "p24", "stage_name": "Harvesting", "stage_order": 6, "start_day": 46, "end_day": 50},
+
+    # Beetroot (p25)
+    {"id": "s145", "plant_id": "p25", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 8},
+    {"id": "s146", "plant_id": "p25", "stage_name": "Seedling/Establishment", "stage_order": 2, "start_day": 9, "end_day": 20},
+    {"id": "s147", "plant_id": "p25", "stage_name": "Vegetative Leafy growth", "stage_order": 3, "start_day": 21, "end_day": 38},
+    {"id": "s148", "plant_id": "p25", "stage_name": "Root Initiation", "stage_order": 4, "start_day": 39, "end_day": 52},
+    {"id": "s149", "plant_id": "p25", "stage_name": "Root Bulking", "stage_order": 5, "start_day": 53, "end_day": 68},
+    {"id": "s150", "plant_id": "p25", "stage_name": "Harvesting", "stage_order": 6, "start_day": 69, "end_day": 75},
+
+    # Radish (p26)
+    {"id": "s151", "plant_id": "p26", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 5},
+    {"id": "s152", "plant_id": "p26", "stage_name": "Seedling/Establishment", "stage_order": 2, "start_day": 6, "end_day": 12},
+    {"id": "s153", "plant_id": "p26", "stage_name": "Active Vegetative", "stage_order": 3, "start_day": 13, "end_day": 22},
+    {"id": "s154", "plant_id": "p26", "stage_name": "Root Swelling", "stage_order": 4, "start_day": 23, "end_day": 32},
+    {"id": "s155", "plant_id": "p26", "stage_name": "Root Maturation", "stage_order": 5, "start_day": 33, "end_day": 40},
+    {"id": "s156", "plant_id": "p26", "stage_name": "Harvesting", "stage_order": 6, "start_day": 41, "end_day": 45},
+
+    # Yam (p27)
+    {"id": "s157", "plant_id": "p27", "stage_name": "Sprouting & Rooting", "stage_order": 1, "start_day": 0, "end_day": 30},
+    {"id": "s158", "plant_id": "p27", "stage_name": "Vine Growth", "stage_order": 2, "start_day": 31, "end_day": 80},
+    {"id": "s159", "plant_id": "p27", "stage_name": "Canopy Development", "stage_order": 3, "start_day": 81, "end_day": 130},
+    {"id": "s160", "plant_id": "p27", "stage_name": "Tuber Initiation", "stage_order": 4, "start_day": 131, "end_day": 170},
+    {"id": "s161", "plant_id": "p27", "stage_name": "Tuber Bulking", "stage_order": 5, "start_day": 171, "end_day": 220},
+    {"id": "s162", "plant_id": "p27", "stage_name": "Harvesting", "stage_order": 6, "start_day": 221, "end_day": 240},
 ]

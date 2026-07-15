@@ -120,4 +120,100 @@ water_requirements = [
     {"plant_id": "p15", "stage_id": "s88", "water_mm_per_day": 5.5, "irrigation_frequency_days": 3},
     {"plant_id": "p15", "stage_id": "s89", "water_mm_per_day": 4.5, "irrigation_frequency_days": 4},
     {"plant_id": "p15", "stage_id": "s90", "water_mm_per_day": 1.0, "irrigation_frequency_days": 7},
+
+    # Peanut Water Requirements
+    {"plant_id": "p16", "stage_id": "s91", "water_mm_per_day": 2.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p16", "stage_id": "s92", "water_mm_per_day": 3.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p16", "stage_id": "s93", "water_mm_per_day": 5.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p16", "stage_id": "s94", "water_mm_per_day": 6.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p16", "stage_id": "s95", "water_mm_per_day": 5.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p16", "stage_id": "s96", "water_mm_per_day": 1.0, "irrigation_frequency_days": 8},
+
+    # Black Gram Water Requirements
+    {"plant_id": "p17", "stage_id": "s97", "water_mm_per_day": 2.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p17", "stage_id": "s98", "water_mm_per_day": 3.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p17", "stage_id": "s99", "water_mm_per_day": 4.5, "irrigation_frequency_days": 4},
+    {"plant_id": "p17", "stage_id": "s100", "water_mm_per_day": 5.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p17", "stage_id": "s101", "water_mm_per_day": 4.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p17", "stage_id": "s102", "water_mm_per_day": 1.0, "irrigation_frequency_days": 7},
+
+    # Soybean Water Requirements
+    {"plant_id": "p18", "stage_id": "s103", "water_mm_per_day": 2.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p18", "stage_id": "s104", "water_mm_per_day": 3.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p18", "stage_id": "s105", "water_mm_per_day": 5.0, "irrigation_frequency_days": 4},
+    {"plant_id": "p18", "stage_id": "s106", "water_mm_per_day": 6.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p18", "stage_id": "s107", "water_mm_per_day": 6.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p18", "stage_id": "s108", "water_mm_per_day": 1.5, "irrigation_frequency_days": 7},
+
+    # Maize Water Requirements
+    {"plant_id": "p19", "stage_id": "s109", "water_mm_per_day": 3.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p19", "stage_id": "s110", "water_mm_per_day": 5.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p19", "stage_id": "s111", "water_mm_per_day": 7.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p19", "stage_id": "s112", "water_mm_per_day": 7.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p19", "stage_id": "s113", "water_mm_per_day": 6.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p19", "stage_id": "s114", "water_mm_per_day": 2.0, "irrigation_frequency_days": 6},
+
+    # Pearl Millet Water Requirements
+    {"plant_id": "p20", "stage_id": "s115", "water_mm_per_day": 2.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p20", "stage_id": "s116", "water_mm_per_day": 3.0, "irrigation_frequency_days": 4},
+    {"plant_id": "p20", "stage_id": "s117", "water_mm_per_day": 4.0, "irrigation_frequency_days": 4},
+    {"plant_id": "p20", "stage_id": "s118", "water_mm_per_day": 4.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p20", "stage_id": "s119", "water_mm_per_day": 3.5, "irrigation_frequency_days": 4},
+    {"plant_id": "p20", "stage_id": "s120", "water_mm_per_day": 1.0, "irrigation_frequency_days": 8},
+
+    # Sorghum Water Requirements
+    {"plant_id": "p21", "stage_id": "s121", "water_mm_per_day": 2.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p21", "stage_id": "s122", "water_mm_per_day": 4.0, "irrigation_frequency_days": 4},
+    {"plant_id": "p21", "stage_id": "s123", "water_mm_per_day": 5.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p21", "stage_id": "s124", "water_mm_per_day": 6.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p21", "stage_id": "s125", "water_mm_per_day": 4.5, "irrigation_frequency_days": 4},
+    {"plant_id": "p21", "stage_id": "s126", "water_mm_per_day": 1.5, "irrigation_frequency_days": 7},
+
+    # Foxtail Millet Water Requirements
+    {"plant_id": "p22", "stage_id": "s127", "water_mm_per_day": 1.8, "irrigation_frequency_days": 3},
+    {"plant_id": "p22", "stage_id": "s128", "water_mm_per_day": 2.8, "irrigation_frequency_days": 4},
+    {"plant_id": "p22", "stage_id": "s129", "water_mm_per_day": 3.8, "irrigation_frequency_days": 4},
+    {"plant_id": "p22", "stage_id": "s130", "water_mm_per_day": 4.2, "irrigation_frequency_days": 3},
+    {"plant_id": "p22", "stage_id": "s131", "water_mm_per_day": 3.2, "irrigation_frequency_days": 4},
+    {"plant_id": "p22", "stage_id": "s132", "water_mm_per_day": 1.0, "irrigation_frequency_days": 8},
+
+    # Gotukola Water Requirements
+    {"plant_id": "p23", "stage_id": "s133", "water_mm_per_day": 3.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p23", "stage_id": "s134", "water_mm_per_day": 4.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p23", "stage_id": "s135", "water_mm_per_day": 5.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p23", "stage_id": "s136", "water_mm_per_day": 5.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p23", "stage_id": "s137", "water_mm_per_day": 4.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p23", "stage_id": "s138", "water_mm_per_day": 4.0, "irrigation_frequency_days": 3},
+
+    # Spinach Water Requirements
+    {"plant_id": "p24", "stage_id": "s139", "water_mm_per_day": 2.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p24", "stage_id": "s140", "water_mm_per_day": 3.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p24", "stage_id": "s141", "water_mm_per_day": 4.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p24", "stage_id": "s142", "water_mm_per_day": 5.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p24", "stage_id": "s143", "water_mm_per_day": 4.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p24", "stage_id": "s144", "water_mm_per_day": 2.0, "irrigation_frequency_days": 4},
+
+    # Beetroot Water Requirements
+    {"plant_id": "p25", "stage_id": "s145", "water_mm_per_day": 2.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p25", "stage_id": "s146", "water_mm_per_day": 3.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p25", "stage_id": "s147", "water_mm_per_day": 4.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p25", "stage_id": "s148", "water_mm_per_day": 5.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p25", "stage_id": "s149", "water_mm_per_day": 5.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p25", "stage_id": "s150", "water_mm_per_day": 2.0, "irrigation_frequency_days": 5},
+
+    # Radish Water Requirements
+    {"plant_id": "p26", "stage_id": "s151", "water_mm_per_day": 2.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p26", "stage_id": "s152", "water_mm_per_day": 3.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p26", "stage_id": "s153", "water_mm_per_day": 4.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p26", "stage_id": "s154", "water_mm_per_day": 4.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p26", "stage_id": "s155", "water_mm_per_day": 3.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p26", "stage_id": "s156", "water_mm_per_day": 1.5, "irrigation_frequency_days": 5},
+
+    # Yam Water Requirements
+    {"plant_id": "p27", "stage_id": "s157", "water_mm_per_day": 3.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p27", "stage_id": "s158", "water_mm_per_day": 4.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p27", "stage_id": "s159", "water_mm_per_day": 5.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p27", "stage_id": "s160", "water_mm_per_day": 5.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p27", "stage_id": "s161", "water_mm_per_day": 4.5, "irrigation_frequency_days": 4},
+    {"plant_id": "p27", "stage_id": "s162", "water_mm_per_day": 1.0, "irrigation_frequency_days": 8},
 ]
