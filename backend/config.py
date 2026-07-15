@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_EXPIRE_MINUTES: int = 15
     JWT_REFRESH_EXPIRE_DAYS: int = 30
+
+    # Comma-separated origins that are allowed to send credentialed browser
+    # requests to the API. Set this in production to the deployed frontend URL.
+    CORS_ORIGINS: str = "http://localhost:3000"
     
     # APIs
     GOOGLE_AI_STUDIO_API_KEY: Optional[str] = None

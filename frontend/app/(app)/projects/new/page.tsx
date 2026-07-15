@@ -9,6 +9,30 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 
+type FarmingMethod = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+const FALLBACK_FARMING_METHODS: FarmingMethod[] = [
+  {
+    id: "organic",
+    name: "Organic Farming",
+    description: "Uses natural inputs and organic practices.",
+  },
+  {
+    id: "inorganic",
+    name: "Inorganic Farming",
+    description: "Uses synthetic fertilizers and crop-protection products.",
+  },
+  {
+    id: "integrated",
+    name: "Integrated Farming",
+    description: "Combines organic and inorganic farming practices.",
+  },
+];
+
 export default function NewProjectWizard() {
   const router = useRouter();
   const { user } = useAuthStore();
@@ -44,6 +68,15 @@ export default function NewProjectWizard() {
     queryKey: ["locations"],
     queryFn: async () => {
       const res = await api.get("/farmer/locations");
+      return res.data.data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: farmingMethods = FALLBACK_FARMING_METHODS, isLoading: farmingMethodsLoading } = useQuery<FarmingMethod[]>({
+    queryKey: ["farming-methods"],
+    queryFn: async () => {
+      const res = await api.get("/farming-methods");
       return res.data.data;
     },
     enabled: !!user,
@@ -192,26 +225,28 @@ export default function NewProjectWizard() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Farming Method</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    onClick={() => setFormData({...formData, farming_method: "organic"})} 
-                    className={clsx(
-                      "py-3 px-4 rounded-xl border-2 font-semibold text-sm transition-colors",
-                      formData.farming_method === "organic" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-600"
-                    )}
-                  >
-                    Organic
-                  </button>
-                  <button 
-                    onClick={() => setFormData({...formData, farming_method: "conventional"})} 
-                    className={clsx(
-                      "py-3 px-4 rounded-xl border-2 font-semibold text-sm transition-colors",
-                      formData.farming_method === "conventional" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-600"
-                    )}
-                  >
-                    Conventional
-                  </button>
-                </div>
+                {farmingMethodsLoading ? (
+                  <div className="flex justify-center py-4"><Loader2 className="animate-spin text-amber-500" /></div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {farmingMethods.map((method) => (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, farming_method: method.id })}
+                        className={clsx(
+                          "py-3 px-4 rounded-xl border-2 text-left transition-colors",
+                          formData.farming_method === method.id
+                            ? "border-amber-500 bg-amber-50 text-amber-700"
+                            : "border-slate-200 text-slate-600 hover:border-amber-300"
+                        )}
+                      >
+                        <span className="block font-semibold text-sm">{method.name}</span>
+                        <span className="block mt-1 text-xs opacity-80">{method.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

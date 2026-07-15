@@ -64,9 +64,14 @@ export default function RegisterPage() {
       api
         .get("/farming-methods")
         .then((res) => {
-          setFarmingMethods(res.data.data || []);
+          setFarmingMethods(
+            (res.data.data || []).map((method: { id: string; name: string }) => ({
+              ...method,
+              code: method.id,
+            }))
+          );
           if (res.data.data?.length > 0) {
-            setFarmingMethod(res.data.data[0].code);
+            setFarmingMethod(res.data.data[0].id);
           }
         })
         .catch(() => {

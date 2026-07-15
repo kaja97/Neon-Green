@@ -42,6 +42,9 @@ class LoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    # This token is sent only in an httpOnly cookie by the router. Keeping it
+    # excluded prevents it from ever being included in the JSON response.
+    refresh_token: str = Field(exclude=True, repr=False)
     token_type: str = "bearer"
     expires_in: int = 900  # 15 minutes in seconds
     role: Optional[str] = None
@@ -118,6 +121,8 @@ class RegisterResponse(BaseModel):
     account_id: uuid.UUID
     farmer_profile_id: uuid.UUID
     access_token: str
+    # The refresh token is intentionally cookie-only; see TokenResponse above.
+    refresh_token: str = Field(exclude=True, repr=False)
     token_type: str = "bearer"
     expires_in: int = 900
 

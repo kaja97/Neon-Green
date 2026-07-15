@@ -51,6 +51,9 @@ async def test_login_with_email(client: AsyncClient):
     assert data["success"] is True
     assert "access_token" in data["data"]
     assert data["data"]["role"] == "farmer"
+    assert "refresh_token=" in resp.headers["set-cookie"]
+    assert "HttpOnly" in resp.headers["set-cookie"]
+    assert "refresh_token" not in data["data"]
 
 
 @pytest.mark.asyncio
