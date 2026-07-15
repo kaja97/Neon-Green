@@ -38,9 +38,14 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 p-4 md:p-0"
+            className="fixed inset-0 z-50 overflow-y-auto flex items-start md:items-center justify-center p-4"
+            onClick={onClose}
           >
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+            {/* Stop click-through so only the backdrop closes the modal */}
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh] w-full max-w-lg"
+            >
               <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
                 <h2 className="text-xl font-bold text-slate-800">{title}</h2>
                 <button

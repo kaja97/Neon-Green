@@ -41,4 +41,84 @@ nutrient_requirements = [
     {"stage_id": "s28", "nitrogen_kg": 5, "phosphorus_kg": 12, "potassium_kg": 15},
     {"stage_id": "s29", "nitrogen_kg": 3, "phosphorus_kg": 8, "potassium_kg": 10},
     {"stage_id": "s30", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 5},
+
+    # Onion (p6)
+    {"stage_id": "s31", "nitrogen_kg": 5, "phosphorus_kg": 5, "potassium_kg": 5},
+    {"stage_id": "s32", "nitrogen_kg": 15, "phosphorus_kg": 10, "potassium_kg": 10},
+    {"stage_id": "s33", "nitrogen_kg": 30, "phosphorus_kg": 15, "potassium_kg": 20},
+    {"stage_id": "s34", "nitrogen_kg": 20, "phosphorus_kg": 15, "potassium_kg": 25},
+    {"stage_id": "s35", "nitrogen_kg": 10, "phosphorus_kg": 10, "potassium_kg": 30},
+    {"stage_id": "s36", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 5},
+
+    # Potato (p7)
+    {"stage_id": "s37", "nitrogen_kg": 5, "phosphorus_kg": 5, "potassium_kg": 5},
+    {"stage_id": "s38", "nitrogen_kg": 25, "phosphorus_kg": 15, "potassium_kg": 15},
+    {"stage_id": "s39", "nitrogen_kg": 30, "phosphorus_kg": 20, "potassium_kg": 25},
+    {"stage_id": "s40", "nitrogen_kg": 20, "phosphorus_kg": 25, "potassium_kg": 30},
+    {"stage_id": "s41", "nitrogen_kg": 15, "phosphorus_kg": 15, "potassium_kg": 40},
+    {"stage_id": "s42", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 10},
+
+    # Cassava (p8)
+    {"stage_id": "s43", "nitrogen_kg": 5, "phosphorus_kg": 5, "potassium_kg": 5},
+    {"stage_id": "s44", "nitrogen_kg": 25, "phosphorus_kg": 15, "potassium_kg": 20},
+    {"stage_id": "s45", "nitrogen_kg": 30, "phosphorus_kg": 10, "potassium_kg": 35},
+    {"stage_id": "s46", "nitrogen_kg": 20, "phosphorus_kg": 10, "potassium_kg": 45},
+    {"stage_id": "s47", "nitrogen_kg": 10, "phosphorus_kg": 5, "potassium_kg": 50},
+    {"stage_id": "s48", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 10},
+
+    # Finger Millet (p9)
+    {"stage_id": "s49", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 0},
+    {"stage_id": "s50", "nitrogen_kg": 5, "phosphorus_kg": 5, "potassium_kg": 5},
+    {"stage_id": "s51", "nitrogen_kg": 20, "phosphorus_kg": 10, "potassium_kg": 10},
+    {"stage_id": "s52", "nitrogen_kg": 15, "phosphorus_kg": 15, "potassium_kg": 15},
+    {"stage_id": "s53", "nitrogen_kg": 10, "phosphorus_kg": 5, "potassium_kg": 20},
+    {"stage_id": "s54", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 5},
+
+    # Coconut (p10)
+    {"stage_id": "s55", "nitrogen_kg": 10, "phosphorus_kg": 10, "potassium_kg": 15},
+    {"stage_id": "s56", "nitrogen_kg": 15, "phosphorus_kg": 15, "potassium_kg": 25},
+    {"stage_id": "s57", "nitrogen_kg": 20, "phosphorus_kg": 20, "potassium_kg": 35},
+    {"stage_id": "s58", "nitrogen_kg": 25, "phosphorus_kg": 20, "potassium_kg": 45},
+    {"stage_id": "s59", "nitrogen_kg": 30, "phosphorus_kg": 25, "potassium_kg": 55},
+    {"stage_id": "s60", "nitrogen_kg": 35, "phosphorus_kg": 30, "potassium_kg": 70},
+
+    # Green Gram (p11)
+    {"stage_id": "s61", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 0},
+    {"stage_id": "s62", "nitrogen_kg": 5, "phosphorus_kg": 5, "potassium_kg": 3},
+    {"stage_id": "s63", "nitrogen_kg": 10, "phosphorus_kg": 15, "potassium_kg": 10},
+    {"stage_id": "s64", "nitrogen_kg": 8, "phosphorus_kg": 12, "potassium_kg": 12},
+    {"stage_id": "s65", "nitrogen_kg": 5, "phosphorus_kg": 10, "potassium_kg": 15},
+    {"stage_id": "s66", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 5},
+
+    # Okra (p12)
+    {"stage_id": "s67", "nitrogen_kg": 2, "phosphorus_kg": 2, "potassium_kg": 2},
+    {"stage_id": "s68", "nitrogen_kg": 8, "phosphorus_kg": 6, "potassium_kg": 5},
+    {"stage_id": "s69", "nitrogen_kg": 25, "phosphorus_kg": 15, "potassium_kg": 15},
+    {"stage_id": "s70", "nitrogen_kg": 15, "phosphorus_kg": 20, "potassium_kg": 20},
+    {"stage_id": "s71", "nitrogen_kg": 10, "phosphorus_kg": 15, "potassium_kg": 25},
+    {"stage_id": "s72", "nitrogen_kg": 2, "phosphorus_kg": 2, "potassium_kg": 5},
+
+    # Cowpea (p13)
+    {"stage_id": "s73", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 0},
+    {"stage_id": "s74", "nitrogen_kg": 4, "phosphorus_kg": 5, "potassium_kg": 3},
+    {"stage_id": "s75", "nitrogen_kg": 8, "phosphorus_kg": 15, "potassium_kg": 10},
+    {"stage_id": "s76", "nitrogen_kg": 6, "phosphorus_kg": 12, "potassium_kg": 12},
+    {"stage_id": "s77", "nitrogen_kg": 4, "phosphorus_kg": 10, "potassium_kg": 15},
+    {"stage_id": "s78", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 5},
+
+    # Bitter Gourd (p14)
+    {"stage_id": "s79", "nitrogen_kg": 3, "phosphorus_kg": 3, "potassium_kg": 3},
+    {"stage_id": "s80", "nitrogen_kg": 20, "phosphorus_kg": 12, "potassium_kg": 15},
+    {"stage_id": "s81", "nitrogen_kg": 15, "phosphorus_kg": 18, "potassium_kg": 20},
+    {"stage_id": "s82", "nitrogen_kg": 10, "phosphorus_kg": 15, "potassium_kg": 25},
+    {"stage_id": "s83", "nitrogen_kg": 8, "phosphorus_kg": 12, "potassium_kg": 30},
+    {"stage_id": "s84", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 10},
+
+    # Sweet Potato (p15)
+    {"stage_id": "s85", "nitrogen_kg": 5, "phosphorus_kg": 5, "potassium_kg": 5},
+    {"stage_id": "s86", "nitrogen_kg": 15, "phosphorus_kg": 10, "potassium_kg": 10},
+    {"stage_id": "s87", "nitrogen_kg": 20, "phosphorus_kg": 20, "potassium_kg": 25},
+    {"stage_id": "s88", "nitrogen_kg": 15, "phosphorus_kg": 15, "potassium_kg": 35},
+    {"stage_id": "s89", "nitrogen_kg": 8, "phosphorus_kg": 8, "potassium_kg": 45},
+    {"stage_id": "s90", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 10},
 ]

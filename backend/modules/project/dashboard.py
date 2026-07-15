@@ -1,5 +1,6 @@
 import uuid
 import json
+import logging
 from datetime import date, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -8,9 +9,12 @@ from models.plant import PlantStage
 from models.activity import FarmingActivity, ActivityPlan
 from models.weather import WeatherAlert
 from models.issue import ProjectIssue
+from models.ai import AIProjectSummary
 from .schemas import DashboardResponse, FarmingCircleResponse, StageProgress
 from .service import get_project, get_plant_stages
 from core.cache import get_dashboard_cache_key, get_redis_client
+
+logger = logging.getLogger(__name__)
 
 async def _get_farming_circle_and_stage(db: AsyncSession, project: Project):
     stages = await get_plant_stages(db, project.plant_id)
@@ -111,6 +115,96 @@ async def _get_alerts_and_issues(db: AsyncSession, project_id: uuid.UUID):
         
     return weather_alerts, active_issues
 
+
+async def _get_soil_status(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
+    """Fetch the latest soil test and map to the dashboard tile shape.
+
+    Wrapped in try/except so a missing test or DB error does not blank the
+    whole dashboard.
+    """
+    try:
+        from modules.soil.service import get_soil_tests
+        tests = await get_soil_tests(db, project_id, account_id)
+        if not tests:
+            return None
+        latest = tests[0]
+        if not latest.results:
+            return None
+        return {
+            "ph": latest.results.ph_level,
+            "nitrogen_status": latest.results.nitrogen_level,
+            "last_test": latest.test_date.isoformat(),
+        }
+    except Exception:
+        logger.warning("Failed to load soil_status for project %s", project_id, exc_info=True)
+        return None
+
+
+async def _get_market_price(db: AsyncSession, plant_id: uuid.UUID):
+    """Fetch current market trend for the project's plant."""
+    try:
+        from modules.market.service import get_trend
+        trend = await get_trend(db, plant_id)
+        return {
+            "price_per_kg": trend["current_price"],
+            "trend": trend["direction"],
+            "change_pct": trend["change_percentage"],
+        }
+    except Exception:
+        logger.warning("Failed to load market_price for plant %s", plant_id, exc_info=True)
+        return None
+
+
+async def _get_weather(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
+    """Fetch current weather for the project's location."""
+    try:
+        from modules.weather.service import get_weather_for_project
+        weather = await get_weather_for_project(db, project_id, account_id)
+        return weather.model_dump(mode="json")
+    except Exception:
+        logger.warning("Failed to load weather for project %s", project_id, exc_info=True)
+        return None
+
+
+async def _get_ai_summary(db: AsyncSession, project_id: uuid.UUID):
+    """Read the stored AI summary row directly (no regeneration / rate-limit).
+
+    The AIProjectSummary.summary_json is a flat dict of project state built by
+    build_project_context.  We surface a condensed text representation for the
+    dashboard card.
+    """
+    try:
+        result = await db.execute(
+            select(AIProjectSummary).where(AIProjectSummary.project_id == project_id)
+        )
+        summary = result.scalars().first()
+        if not summary:
+            return None
+
+        # Build a readable text blob from the stored JSON
+        sj = summary.summary_json or {}
+        lines = []
+        if sj.get("crop"):
+            lines.append(f"Crop: {sj['crop']}")
+        if sj.get("days_since_planting") is not None:
+            lines.append(f"Day {sj['days_since_planting']}")
+        if sj.get("current_stage"):
+            lines.append(f"Stage: {sj['current_stage']}")
+        if sj.get("weather"):
+            lines.append(f"Weather: {sj['weather']}")
+        if sj.get("active_issues"):
+            lines.append(f"Issues: {sj['active_issues']}")
+
+        return {
+            "text": " | ".join(lines) if lines else "AI analysis available.",
+            "generated_at": summary.last_updated_at.isoformat() if summary.last_updated_at else None,
+            "source": "auto",
+        }
+    except Exception:
+        logger.warning("Failed to load ai_summary for project %s", project_id, exc_info=True)
+        return None
+
+
 async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID) -> DashboardResponse:
     # 1. Check Redis Cache
     redis = await get_redis_client()
@@ -126,18 +220,26 @@ async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uui
                 
     # 2. Gather data sequentially for Project, then parallel for the rest
     project = await get_project(db, project_id, account_id)
-    
+
     import asyncio
     (
         (current_stage, farming_circle),
         (todays_activities, upcoming_activities),
-        (weather_alerts, active_issues)
+        (weather_alerts, active_issues),
+        soil_status,
+        market_price,
+        weather,
+        ai_summary,
     ) = await asyncio.gather(
         _get_farming_circle_and_stage(db, project),
         _get_activities(db, project_id),
-        _get_alerts_and_issues(db, project_id)
+        _get_alerts_and_issues(db, project_id),
+        _get_soil_status(db, project_id, account_id),
+        _get_market_price(db, project.plant_id),
+        _get_weather(db, project_id, account_id),
+        _get_ai_summary(db, project_id),
     )
-    
+
     response = DashboardResponse(
         project=project,
         current_stage=current_stage,
@@ -145,7 +247,11 @@ async def get_dashboard(db: AsyncSession, project_id: uuid.UUID, account_id: uui
         todays_activities=todays_activities,
         upcoming_activities=upcoming_activities,
         weather_alerts=weather_alerts,
-        active_issues=active_issues
+        active_issues=active_issues,
+        soil_status=soil_status,
+        market_price=market_price,
+        weather=weather,
+        ai_summary=ai_summary,
     )
     
     # 3. Store in cache

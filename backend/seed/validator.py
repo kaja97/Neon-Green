@@ -3,7 +3,7 @@ import sys
 import logging
 from sqlalchemy.future import select
 from database import engine, async_session
-from models.plant import Plant, PlantStage, FertilizerRecommendation
+from models import Plant, PlantStage, PlantFertilizerRecommendation
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,14 +39,14 @@ async def validate_seed_data():
                 logger.warning(f"Plant {plant.common_name} final stage ends at {stages[-1].end_day}, but total duration is {plant.growth_duration_days}")
                 
         # 2. Verify organic fertilizers don't recommend synthetic products
-        fertilizers = (await db.execute(select(FertilizerRecommendation))).scalars().all()
+        fertilizers = (await db.execute(select(PlantFertilizerRecommendation))).scalars().all()
         synthetic_terms = ["urea", "tsp", "mop", "npk", "synthetic"]
         
         for fert in fertilizers:
             if fert.farming_method == "organic":
                 for term in synthetic_terms:
-                    if term in fert.product_name.lower():
-                        logger.error(f"Organic fertilizer recommendation contains synthetic product: {fert.product_name}")
+                    if term in fert.fertilizer_name.lower():
+                        logger.error(f"Organic fertilizer recommendation contains synthetic product: {fert.fertilizer_name}")
                         has_errors = True
                         
     if has_errors:

@@ -116,14 +116,13 @@ async def generate_season_plan(project_id: str | uuid.UUID, db: AsyncSession):
                 water_liters = float(water_req.water_mm_per_day) * float(project.area) * 4046.86  # approx liters/acre
                 act = FarmingActivity(
                     plan_id=new_plan.id,
-                    project_id=project.id,
-                    stage_id=stage.id,
-                    activity_type="watering",
+                    activity_type="irrigation",
                     title=f"Watering ({stage.stage_name})",
                     description=f"Requires ~{water_req.water_mm_per_day}mm (approx {water_liters:.1f} liters).",
                     planned_date=current_date,
                     due_date=current_date,
-                    status="pending"
+                    status="pending",
+                    is_ai_recommended=True,
                 )
                 activities.append(act)
 
@@ -135,19 +134,18 @@ async def generate_season_plan(project_id: str | uuid.UUID, db: AsyncSession):
                         continue
                     if project.farming_method == "inorganic" and fert.farming_method == "organic":
                         continue
-                        
+
                     qty = float(fert.application_rate_per_acre_kg) * float(project.area)
                     is_organic = fert.farming_method == "organic"
                     act = FarmingActivity(
                         plan_id=new_plan.id,
-                        project_id=project.id,
-                        stage_id=stage.id,
-                        activity_type="fertilizing",
+                        activity_type="fertilizer",
                         title=f"Apply {fert.fertilizer_name} ({stage.stage_name})",
                         description=f"Apply {qty:.2f} kg of {fert.fertilizer_name}. ({'Organic' if is_organic else 'Conventional'})",
                         planned_date=current_date,
                         due_date=current_date + timedelta(days=3),
-                        status="pending"
+                        status="pending",
+                        is_ai_recommended=True,
                     )
                     activities.append(act)
 
@@ -156,14 +154,13 @@ async def generate_season_plan(project_id: str | uuid.UUID, db: AsyncSession):
                 watch_desc = f"Watch for: {stage.watch_for}" if stage.watch_for else "General health check."
                 act = FarmingActivity(
                     plan_id=new_plan.id,
-                    project_id=project.id,
-                    stage_id=stage.id,
                     activity_type="monitoring",
                     title=f"Scouting & Monitoring ({stage.stage_name})",
                     description=watch_desc,
                     planned_date=current_date,
                     due_date=current_date,
-                    status="pending"
+                    status="pending",
+                    is_ai_recommended=True,
                 )
                 activities.append(act)
 

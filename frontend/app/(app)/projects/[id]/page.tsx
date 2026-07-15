@@ -9,6 +9,7 @@ import WeatherBlock from "@/components/blocks/WeatherBlock";
 import SoilBlock from "@/components/blocks/SoilBlock";
 import DiseaseBlock from "@/components/blocks/DiseaseBlock";
 import AlertBanner from "@/components/blocks/AlertBanner";
+import QuickAskBlock from "@/components/blocks/QuickAskBlock";
 import Modal from "@/components/ui/Modal";
 import { formatCurrency } from "@/lib/utils/formatters";
 import {
@@ -282,6 +283,11 @@ export default function ProjectDashboard({
             Chat with Assistant
           </Link>
         </div>
+      </section>
+
+      {/* Quick Ask */}
+      <section className="animate-slide-up" style={{ animationDelay: "300ms" }}>
+        <QuickAskBlock projectId={params.id} />
       </section>
 
       {/* Edit Project Modal */}

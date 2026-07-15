@@ -167,7 +167,12 @@ async def _ensure_active_plan(db: AsyncSession, project_id: uuid.UUID) -> Activi
 
 
 async def create_activity(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID, data: ActivityCreate):
-    """Allow a farmer to manually add a task to their project's activity plan."""
+    """Allow a farmer to manually add a task to their project's activity plan.
+
+    When `activity_type == 'other'`, the optional `name` (custom label) is
+    used as the activity title if provided; otherwise `title` is used as-is.
+    `activity_type` is already normalized to the canonical enum by the schema.
+    """
     farmer_id = await _get_farmer_id(db, account_id)
     # Verify project ownership
     project = await db.get(Project, project_id)
@@ -176,10 +181,13 @@ async def create_activity(db: AsyncSession, project_id: uuid.UUID, account_id: u
 
     plan = await _ensure_active_plan(db, project_id)
 
+    # 'other' tasks carry a free-text name; prefer it over a generic title.
+    title = data.name if data.activity_type == "other" and data.name else data.title
+
     activity = FarmingActivity(
         plan_id=plan.id,
         activity_type=data.activity_type,
-        title=data.title,
+        title=title,
         description=data.description,
         planned_date=date.today(),
         due_date=data.due_date,

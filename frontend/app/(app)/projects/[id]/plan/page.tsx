@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CheckCircle2, SkipForward, Clock, Loader2, Plus, Pencil, Trash2, Sparkles } from "lucide-react";
+import { ArrowLeft, CheckCircle2, SkipForward, Clock, Loader2, Plus, Pencil, Trash2, Sparkles, Sprout, AlertTriangle, Sun } from "lucide-react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { useQuery } from "@tanstack/react-query";
@@ -12,14 +12,24 @@ import {
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 
+// Canonical activity-type enum — kept in sync with backend
+// backend/modules/planner/schemas.py::ACTIVITY_TYPES
 const ACTIVITY_TYPES = [
   { value: "irrigation", label: "💧 Irrigation" },
   { value: "fertilizer", label: "🧪 Fertilizer" },
   { value: "pest_control", label: "🐛 Pest Control" },
   { value: "disease_check", label: "🔍 Disease Check" },
   { value: "harvesting", label: "🌾 Harvesting" },
+  { value: "weeding", label: "🌿 Weeding" },
+  { value: "soil_preparation", label: "🪏 Soil Preparation" },
+  { value: "monitoring", label: "🔎 Monitoring" },
   { value: "other", label: "📅 Other" },
 ];
+
+const ACTIVITY_EMOJI: Record<string, string> = ACTIVITY_TYPES.reduce((acc, t) => {
+  acc[t.value] = t.label.split(" ")[0];
+  return acc;
+}, {} as Record<string, string>);
 
 export default function PlanPage({ params }: { params: { id: string } }) {
   const completeMutation = useCompleteActivity(params.id);
@@ -41,6 +51,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
   const [taskForm, setTaskForm] = useState({
     title: "",
     activity_type: "irrigation",
+    name: "",
     description: "",
     due_date: new Date().toISOString().split("T")[0],
   });
@@ -99,7 +110,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
 
   const openAddModal = () => {
     setEditingTask(null);
-    setTaskForm({ title: "", activity_type: "irrigation", description: "", due_date: new Date().toISOString().split("T")[0] });
+    setTaskForm({ title: "", activity_type: "irrigation", name: "", description: "", due_date: new Date().toISOString().split("T")[0] });
     setTaskModalOpen(true);
   };
 
@@ -109,6 +120,8 @@ export default function PlanPage({ params }: { params: { id: string } }) {
     setTaskForm({
       title: task.title || "",
       activity_type: task.activity_type || "other",
+      // For 'other' tasks the title IS the custom name; prefill it.
+      name: task.activity_type === "other" ? (task.name || task.title || "") : "",
       description: task.description || "",
       due_date: task.due_date ? new Date(task.due_date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
     });
@@ -189,6 +202,42 @@ export default function PlanPage({ params }: { params: { id: string } }) {
         </button>
       </header>
 
+      {/* Today's Crop Status Card */}
+      {dashboard && (
+        <section className="bg-gradient-to-br from-green-50 to-white border border-green-200 rounded-2xl p-5 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-green-100 rounded-xl">
+                <Sprout className="w-6 h-6 text-green-700" />
+              </div>
+              <div>
+                <h2 className="font-bold text-slate-800 text-base">
+                  {dashboard.current_stage?.stage_name || "Active Stage"}
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Day {dashboard.farming_circle?.current_day || 0} of {dashboard.farming_circle?.total_days || "?"}
+                  {dashboard.project?.plant?.common_name ? ` · ${dashboard.project.plant.common_name}` : ""}
+                </p>
+              </div>
+            </div>
+            {dashboard.weather?.current && (
+              <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                <Sun className="w-4 h-4 text-amber-500" />
+                <span>{Math.round(dashboard.weather.current.temp_celsius)}°C</span>
+              </div>
+            )}
+          </div>
+          {dashboard.current_stage?.watch_for && (
+            <div className="mt-3 flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+              <span className="text-amber-800">
+                <span className="font-semibold">Watch for:</span> {dashboard.current_stage.watch_for}
+              </span>
+            </div>
+          )}
+        </section>
+      )}
+
       {error ? (
         <div className="p-8 text-center text-red-500">Failed to load timeline.</div>
       ) : Object.keys(groupedActivities).length === 0 ? (
@@ -214,7 +263,6 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                   const isDone = status === "completed";
                   const isSkipped = status === "skipped";
                   const isManual = task.is_ai_recommended === false;
-                  const typeOpt = ACTIVITY_TYPES.find((t) => t.value === task.activity_type);
 
                   return (
                     <div
@@ -228,7 +276,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                         "cursor-pointer"
                       )}
                     >
-                      <span className="text-xl w-8 text-center">{typeOpt?.label.split(" ")[0] || "📅"}</span>
+                      <span className="text-xl w-8 text-center">{ACTIVITY_EMOJI[task.activity_type] || "📅"}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <h3 className={clsx("font-medium truncate", (isDone || isSkipped) ? "text-slate-500 line-through" : "text-slate-800")}>
@@ -300,17 +348,32 @@ export default function PlanPage({ params }: { params: { id: string } }) {
       {/* Add/Edit Task Modal */}
       <Modal isOpen={taskModalOpen} onClose={() => setTaskModalOpen(false)} title={editingTask ? "Edit Task" : "Add New Task"}>
         <form onSubmit={submitTask} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Task Title</label>
-            <input
-              type="text"
-              required
-              value={taskForm.title}
-              onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
-              placeholder="e.g. Apply compost to row 3"
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-          </div>
+          {/* For 'other' we ask for a custom Name instead of a generic Title */}
+          {taskForm.activity_type === "other" ? (
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-700">Activity Name</label>
+              <input
+                type="text"
+                required
+                value={taskForm.name}
+                onChange={(e) => setTaskForm({ ...taskForm, name: e.target.value, title: e.target.value })}
+                placeholder="e.g. Mulch the beds"
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-700">Task Title</label>
+              <input
+                type="text"
+                required
+                value={taskForm.title}
+                onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+                placeholder="e.g. Apply compost to row 3"
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-sm font-medium text-slate-700">Type</label>
