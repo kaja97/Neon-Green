@@ -5,13 +5,10 @@ import Link from "next/link";
 import { clsx } from "clsx";
 
 interface Alert {
-  id: string;
-  project_id: string;
-  alert_type: string;
+  type: string;
   severity: string;
   message: string;
-  target_date: string;
-  is_resolved: boolean;
+  target_date?: string;
 }
 
 export default function AlertBanner({ projectId, alerts }: { projectId: string, alerts: Alert[] }) {
@@ -27,28 +24,28 @@ export default function AlertBanner({ projectId, alerts }: { projectId: string, 
         className={clsx(
           "flex items-start gap-3 p-4 rounded-2xl transition-colors border shadow-sm",
           isHigh
-            ? "bg-red-50 border-red-200 hover:bg-red-100"
-            : "bg-amber-50 border-amber-200 hover:bg-amber-100"
+            ? "bg-red-50/10 border-red-500/20 hover:bg-red-50/15 text-red-200"
+            : "bg-amber-50/10 border-amber-500/20 hover:bg-amber-50/15 text-amber-200"
         )}
       >
         {isHigh ? (
-          <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <ShieldAlert className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
         ) : (
-          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
         )}
         <div>
           <h4
             className={clsx(
               "font-semibold text-sm capitalize",
-              isHigh ? "text-red-800" : "text-amber-800"
+              isHigh ? "text-red-400" : "text-amber-400"
             )}
           >
-            {alert.alert_type.replace(/_/g, " ")} Risk Detected
+            {alert.type.replace(/_/g, " ")} Risk Detected
           </h4>
           <p
             className={clsx(
               "text-sm mt-1 leading-snug",
-              isHigh ? "text-red-700" : "text-amber-700"
+              isHigh ? "text-red-300" : "text-amber-300"
             )}
           >
             {alert.message}
