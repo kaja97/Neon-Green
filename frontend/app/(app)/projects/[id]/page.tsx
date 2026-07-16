@@ -13,7 +13,7 @@ import QuickAskBlock from "@/components/blocks/QuickAskBlock";
 import WeatherCardBlock from "@/components/blocks/WeatherCardBlock";
 import FertilizerLogBlock from "@/components/blocks/FertilizerLogBlock";
 import Modal from "@/components/ui/Modal";
-import { formatCurrency } from "@/lib/utils/formatters";
+import { formatCurrency, formatFarmingMethod } from "@/lib/utils/formatters";
 import {
   ArrowLeft,
   Settings,
@@ -174,7 +174,7 @@ export default function ProjectDashboard({
               {project.plant?.common_name || "Farm Project"}
             </h1>
             <p className="text-text-muted text-sm">
-              {project.area} · {project.farming_method || "Farming"}
+              {project.area} · {formatFarmingMethod(project.farming_method)}
             </p>
           </div>
         </div>
@@ -354,7 +354,7 @@ export default function ProjectDashboard({
               className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="organic">Organic</option>
-              <option value="inorganic">Inorganic</option>
+              <option value="inorganic">Conventional</option>
               <option value="integrated">Integrated</option>
             </select>
           </div>

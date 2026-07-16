@@ -49,10 +49,13 @@ async def get_plant_stages(db: AsyncSession, plant_id: uuid.UUID):
 
 
 async def get_farming_methods():
+    # Display names are human-readable; the `id` is the enum value stored on the
+    # project. "Conventional" is the user-facing label for the `inorganic` value
+    # (kept consistent with the New Project wizard and Edit modal).
     return [
-        {"id": "organic", "name": "Organic Farming", "description": "Farming system that relies on fertilizers of organic origin."},
-        {"id": "inorganic", "name": "Inorganic Farming", "description": "Farming system that uses synthetic chemicals and fertilizers."},
-        {"id": "integrated", "name": "Integrated Farming", "description": "Combines organic and inorganic methods."}
+        {"id": "organic", "name": "Organic", "description": "Farming system that relies on fertilizers of organic origin."},
+        {"id": "inorganic", "name": "Conventional", "description": "Farming system that uses synthetic chemicals and fertilizers."},
+        {"id": "integrated", "name": "Integrated", "description": "Combines organic and conventional methods."}
     ]
 
 

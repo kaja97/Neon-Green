@@ -3,7 +3,7 @@ from datetime import date
 import uuid
 from models.project import Project
 from models.plant import Plant
-from modules.planner.engine import generate_daily_plan
+from modules.planner.engine import generate_season_plan
 
 @pytest.mark.asyncio
 async def test_planner_organic_filtering():

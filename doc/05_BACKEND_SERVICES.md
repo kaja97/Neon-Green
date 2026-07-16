@@ -288,37 +288,32 @@ async def invalidate_dashboard_cache(project_id: str):
 
 ### Weather → Activity Adjustment Logic (Deterministic)
 ```python
-def adjust_activities_for_weather(project_id: str):
-    """
-    Called by Celery at 5:00 AM daily.
-    Adjusts today's activities based on weather forecast.
-    """
-    forecast = get_todays_weather(project_id)
-    activities = get_todays_pending_activities(project_id)
+# modules/weather/rules.py
 
-    for activity in activities:
-        # Rule 1: Skip watering if rain > 5mm expected
-        if activity.activity_type == "watering" and forecast.rain_mm > 5:
-            activity.status = "skipped"
-            activity.skipped_reason = f"Rain expected: {forecast.rain_mm}mm"
+def should_skip_watering(rain_mm_today: float) -> tuple[bool, str]:
+    if rain_mm_today > 5.0:
+        return True, f"Skipped due to sufficient rain forecast ({round(rain_mm_today, 1)}mm)"
+    return False, ""
 
-        # Rule 2: Postpone spraying if wind > 20km/h
-        if activity.activity_type == "spraying" and forecast.wind_speed > 20:
-            activity.status = "rescheduled"
-            activity.scheduled_date += timedelta(days=1)
+def should_postpone_fertilizing(rain_mm_today: float) -> tuple[bool, str]:
+    if rain_mm_today > 25.0:
+        return True, f"Postponed 1 day due to heavy rain risk ({round(rain_mm_today, 1)}mm)"
+    return False, ""
 
-        # Rule 3: Skip fertilizer if heavy rain > 25mm (nutrient washout)
-        if activity.activity_type == "fertilizing" and forecast.rain_mm > 25:
-            activity.status = "rescheduled"
-            activity.skipped_reason = "Heavy rain expected - fertilizer would wash away"
+def should_postpone_spraying(wind_kph_today: float) -> tuple[bool, str]:
+    if wind_kph_today > 20.0:
+        return True, f"Postponed 1 day due to high winds ({round(wind_kph_today, 1)} km/h)"
+    return False, ""
 
-    # Create weather alerts for dangerous conditions
-    if forecast.rain_mm > 50:
-        create_weather_alert(project_id, "flood_risk", "critical")
-    if forecast.temp_min < 10:
-        create_weather_alert(project_id, "frost_risk", "warning")
-    if forecast.humidity > 90 and forecast.temp_max > 25:
-        create_weather_alert(project_id, "disease_risk_high_humidity", "warning")
+def evaluate_weather_alerts(rain_tomorrow: float, min_temp_tomorrow: float, avg_humidity_tomorrow: float) -> list[tuple[str, str, str]]:
+    alerts = []
+    if rain_tomorrow > 50.0:
+        alerts.append(("heavy_rain", "high", f"Heavy rain expected tomorrow ({round(rain_tomorrow,1)}mm)."))
+    if min_temp_tomorrow < 10.0:
+        alerts.append(("frost", "high", f"Frost warning tomorrow."))
+    if avg_humidity_tomorrow > 85.0:
+        alerts.append(("disease_risk", "medium", f"High humidity tomorrow."))
+    return alerts
 ```
 
 ---
@@ -330,57 +325,33 @@ def adjust_activities_for_weather(project_id: str):
 ### Endpoints
 | Method | Endpoint | Purpose | Auth |
 |--------|----------|---------|------|
-| POST | `/soil/tests` | Submit a soil test result | Bearer |
+| POST | `/soil/tests/{project_id}` | Submit a soil test result | Bearer |
 | GET | `/soil/tests/{project_id}` | Get all soil tests for project | Bearer |
 | GET | `/soil/recommendations/{project_id}` | Get computed recommendations | Bearer |
 
 ### Soil Recommendation Engine (100% Deterministic)
 ```python
-def compute_soil_recommendations(soil_test_id: str, project_id: str):
+def calculate_nutrient_gaps(test: SoilTest, result: SoilNutrientResult, farming_method: str) -> list[SoilRecommendation]:
     """
-    Compare actual soil values against crop-specific optimal ranges.
-    Generate specific fertilizer recommendations.
+    Compare actual soil values against simplified ranges and return recommendations list.
     """
-    soil = get_soil_results(soil_test_id)
-    project = get_project(project_id)
-    plant = project.plant
-    stage = get_current_stage(project)
-    crop_needs = get_nutrient_requirements(plant.id, stage.id)
-    is_organic = project.farming_method.code == "organic"
-
-    recommendations = []
-
-    # pH correction
-    if soil.ph < plant.optimal_ph_min:
-        recommendations.append({
-            "type": "pH_correction",
-            "nutrient": "pH",
-            "current": soil.ph,
-            "optimal": plant.optimal_ph_min,
-            "severity": "severe" if (plant.optimal_ph_min - soil.ph) > 1.0 else "mild",
-            "action": "Apply agricultural lime" if not is_organic else "Apply wood ash or dolomite",
-            "quantity_per_acre": round((plant.optimal_ph_min - soil.ph) * 500, 1),  # kg
-            "unit": "kg"
-        })
+    recs = []
+    
+    # pH logic
+    if result.ph_level < 6.0:
+        desc = "Apply agricultural lime (100kg/acre) to raise pH." if farming_method != "organic" else "Apply Slaked lime or wood ash to raise pH."
+        recs.append(SoilRecommendation(soil_test_id=test.id, recommendation_type="amendment", description=desc))
+    elif result.ph_level > 7.5:
+        desc = "Apply elemental sulfur to lower pH." if farming_method != "organic" else "Add peat moss to lower pH."
+        recs.append(SoilRecommendation(soil_test_id=test.id, recommendation_type="amendment", description=desc))
 
     # Nitrogen check
-    if soil.nitrogen_ppm < crop_needs.nitrogen_kg_per_acre * 2.24:  # Convert
-        product = "Compost or blood meal" if is_organic else "Urea (46-0-0)"
-        recommendations.append({
-            "type": "fertilizer",
-            "nutrient": "Nitrogen",
-            "current": soil.nitrogen_ppm,
-            "optimal": crop_needs.nitrogen_kg_per_acre * 2.24,
-            "severity": calculate_severity(soil.nitrogen_ppm, crop_needs.nitrogen_kg_per_acre * 2.24),
-            "action": f"Apply {product}",
-            "quantity_per_acre": round(crop_needs.nitrogen_kg_per_acre - (soil.nitrogen_ppm / 2.24), 1),
-            "unit": "kg"
-        })
+    if result.nitrogen_level.lower() == "low":
+        desc = "Apply Urea (50kg/acre) as basal dressing." if farming_method != "organic" else "Apply compost or blood meal."
+        recs.append(SoilRecommendation(soil_test_id=test.id, recommendation_type="fertilizer", description=desc))
 
-    # Repeat for Phosphorus, Potassium, etc.
-    # ...
-
-    return recommendations
+    # Repeat for Phosphorus, Potassium...
+    return recs
 ```
 
 ### Revenue Calculator Service (Master Plan Alignment)
@@ -589,9 +560,9 @@ def match_disease(plant_id: str, symptoms_text: str, affected_parts: list):
 ### Endpoints
 | Method | Endpoint | Purpose | Auth |
 |--------|----------|---------|------|
-| GET | `/ai/summary/{project_id}` | Get latest cached AI summary | Bearer |
-| POST | `/ai/summary/{project_id}` | Generate new AI summary | Bearer |
-| POST | `/ai/chat` | Ask a question (with project context) | Bearer |
+| GET | `/ai/{project_id}/summary` | Get latest cached AI summary | Bearer |
+| POST | `/ai/{project_id}/summary [NOT IMPLEMENTED]` | Generate new AI summary | Bearer |
+| POST | `/ai/{project_id}/chat` | Ask a question (with project context) | Bearer |
 
 ### Logic
 See [07_AI_RAG_MCP.md](07_AI_RAG_MCP.md) for complete implementation.

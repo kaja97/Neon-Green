@@ -453,7 +453,7 @@ Response 200: {
 
 ### Submit Soil Test
 ```
-POST /soil/tests
+POST /soil/tests/{project_id}
 Body: {
   "project_id": "uuid",
   "test_date": "2025-03-20",
@@ -490,7 +490,7 @@ Response 201: {
 
 ### Report Issue
 ```
-POST /issues
+POST /disease/issues/{project_id}
 Body: {
   "project_id": "uuid",
   "issue_type": "disease",
@@ -577,9 +577,48 @@ Response 200: {
 
 ## AI ENDPOINTS ⭐ (Free Google AI Studio)
 
+### List Conversations
+```
+GET /ai/{project_id}/conversations
+Response 200: {
+  "data": [
+    {
+      "id": "uuid",
+      "project_id": "uuid",
+      "session_title": "Why are leaves yellow?",
+      "is_active": true,
+      "created_at": "2025-04-15T05:00:00Z"
+    }
+  ]
+}
+```
+
+### Get Conversation Messages
+```
+GET /ai/conversations/{conversation_id}/messages
+Response 200: {
+  "data": [
+    {
+      "id": "uuid",
+      "role": "user",
+      "content": "Why are my tomato leaves turning yellow?",
+      "tokens_used": 0,
+      "created_at": "2025-04-15T05:01:00Z"
+    },
+    {
+      "id": "uuid",
+      "role": "model",
+      "content": "Yellow leaves can be caused by nitrogen deficiency...",
+      "tokens_used": 120,
+      "created_at": "2025-04-15T05:01:05Z"
+    }
+  ]
+}
+```
+
 ### Get AI Summary (Cached)
 ```
-GET /ai/summary/{project_id}
+GET /ai/{project_id}/summary
 Response 200: {
   "data": {
     "summary": "📊 Your tomato crop is in Flowering stage (Day 45/90).\n\n🌤️ Weather looks good for the next 3 days...",
@@ -593,7 +632,7 @@ Response 200: {
 
 ### Generate Fresh AI Summary
 ```
-POST /ai/summary/{project_id}
+POST /ai/summary/{project_id} [NOT IMPLEMENTED YET]
 Response 200: {
   "data": {
     "summary": "📊 GROWTH STATUS: Your tomatoes are in Flowering stage...",
@@ -611,7 +650,7 @@ Response 200: {
 
 ### AI Chat (Ask a Question)
 ```
-POST /ai/chat
+POST /ai/{project_id}/chat
 Body: {
   "project_id": "uuid",
   "message": "Why are my tomato leaves turning yellow?"

@@ -60,6 +60,15 @@ async def submit_soil_test(db: AsyncSession, project_id: uuid.UUID, account_id: 
     
     await db.commit()
     await db.refresh(soil_test)
+
+    # Attach result and recommendations so SoilTestDetailResponse can serialize them.
+    # (db.refresh only loads mapped columns, not dynamic relationships.)
+    soil_test.results = soil_res
+    rec_query = await db.execute(
+        select(SoilRecommendation).where(SoilRecommendation.soil_test_id == soil_test.id)
+    )
+    soil_test.recommendations = rec_query.scalars().all()
+
     return soil_test
 
 async def get_soil_tests(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):

@@ -5,7 +5,7 @@ This document details two critical user experience systems:
 1. **Smart Notification Routing** — notifications that deep-link to the exact UI block and trigger highlight animations
 2. **Offline-First Architecture** — how the PWA and future Flutter apps work without internet
 
-Both features are essential for farmers in rural Sri Lanka where internet connectivity is spotty.
+Both features are essential for farmers in rural Sri Lanka where internet connectivity is spotty. Note: The Offline Mutation Queue is not implemented in v1.0. A simplified offline caching store (`agrifarm-offline-cache`) is currently in place for read operations of today's activities and dashboard data.
 
 ---
 
@@ -270,7 +270,7 @@ const withPWA = require('next-pwa')({
 });
 ```
 
-### Offline Mutation Queue (Zustand)
+### Offline Mutation Queue (Zustand) [NOT IMPLEMENTED YET]
 
 ```typescript
 // lib/stores/offlineStore.ts
@@ -349,7 +349,7 @@ if (typeof window !== 'undefined') {
 }
 ```
 
-### Offline Activity Completion
+### Offline Activity Completion [NOT IMPLEMENTED YET]
 
 ```typescript
 // When farmer marks a task "Done" offline:

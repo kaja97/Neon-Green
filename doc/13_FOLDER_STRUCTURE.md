@@ -12,7 +12,7 @@ agrifarm-ai/
 ├── backend/                          ← FastAPI Python backend
 ├── frontend/                         ← Next.js 14 web app
 ├── docker/                           ← Docker configs
-├── docs/                             ← This documentation (copy of /doc)
+├── doc/                              ← Documentation files
 ├── scripts/                          ← Dev utility scripts
 ├── .github/                          ← CI/CD workflows
 ├── docker-compose.yml                ← Local dev: PostgreSQL + Redis + Backend + Frontend
@@ -33,8 +33,8 @@ backend/
 ├── config.py                         ← Pydantic BaseSettings (env vars)
 ├── database.py                       ← SQLAlchemy async engine + session factory
 ├── dependencies.py                   ← Shared deps: get_db, get_current_user, get_ai_service
-├── exceptions.py                     ← Custom HTTP exceptions with error codes
-├── middleware.py                      ← CORS, rate limiting, request logging
+├── exceptions.py                     ← [NOT IMPLEMENTED / REPLACED] (errors are in core/errors)
+├── middleware.py                      ← [NOT IMPLEMENTED / REPLACED] (CORS middleware is in main.py)
 │
 ├── core/                             ← Shared infrastructure helpers
 │   ├── __init__.py
