@@ -47,3 +47,8 @@ async def mark_activity_complete(activity_id: uuid.UUID, data: schemas.CompleteR
 async def mark_activity_skip(activity_id: uuid.UUID, data: schemas.SkipRequest, current_user: Account = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     activity = await service.mark_skip(db, activity_id, current_user.id, data)
     return success_response(schemas.ActivityResponse.model_validate(activity).model_dump())
+
+@router.post("/activities/{activity_id}/reset", status_code=200)
+async def reset_activity(activity_id: uuid.UUID, current_user: Account = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    activity = await service.reset_activity(db, activity_id, current_user.id)
+    return success_response(schemas.ActivityResponse.model_validate(activity).model_dump())

@@ -42,8 +42,8 @@ export default function FertilizerLogBlock({ projectId }: { projectId: string })
           <h3 className="font-bold text-base text-white">Fertilizer Log</h3>
         </div>
         <Link
-          href={`/projects/${projectId}/plan`}
-          className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary text-xs font-semibold rounded-lg hover:bg-primary/20 transition-colors"
+          href={`/projects/${projectId}/fertilizer`}
+          className="flex items-center gap-1 px-3 py-1.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-semibold rounded-lg hover:bg-green-500/20 transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           Log

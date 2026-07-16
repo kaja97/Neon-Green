@@ -8,6 +8,7 @@ import api from "@/lib/api";
 import {
   useCompleteActivity, useSkipActivity,
   useCreateActivity, useUpdateActivity, useDeleteActivity,
+  useResetActivity,
 } from "@/lib/hooks/useActivities";
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
@@ -37,7 +38,11 @@ export default function PlanPage({ params }: { params: { id: string } }) {
   const createMutation = useCreateActivity(params.id);
   const updateMutation = useUpdateActivity(params.id);
   const deleteMutation = useDeleteActivity(params.id);
+  const resetMutation = useResetActivity(params.id);
   const [optimisticStatus, setOptimisticStatus] = useState<Record<string, string>>({});
+
+  // Detail Modal
+  const [detailTask, setDetailTask] = useState<any | null>(null);
 
   // Complete modal
   const [completingTask, setCompletingTask] = useState<any>(null);
@@ -72,13 +77,31 @@ export default function PlanPage({ params }: { params: { id: string } }) {
     },
   });
 
+  const handleRowClick = (task: any, status: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const taskDate = new Date(task.due_date);
+    const isFuture = taskDate > today;
+
+    if (isFuture) {
+      setDetailTask(task);
+    } else if (status === "pending") {
+      setCompletingTask(task);
+      setActualWater("");
+      setActualFertilizer(task.required_fertilizer_kg?.toString() || "");
+      setNotes(task.notes || "");
+    } else {
+      setDetailTask(task);
+    }
+  };
+
   const handleCompleteClick = (task: any, status: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (status !== "completed" && status !== "skipped" && !optimisticStatus[task.id]) {
       setCompletingTask(task);
       setActualWater("");
-      setActualFertilizer("");
-      setNotes("");
+      setActualFertilizer(task.required_fertilizer_kg?.toString() || "");
+      setNotes(task.notes || "");
     }
   };
 
@@ -269,7 +292,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                   return (
                     <div
                       key={task.id}
-                      onClick={() => handleCompleteClick(task, status)}
+                      onClick={() => handleRowClick(task, status)}
                       className={clsx(
                         "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 shadow-md",
                         isDone && "bg-slate-900/20 border-slate-900/80 opacity-55",
@@ -301,7 +324,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
 
                       {/* Manual task actions: edit + delete */}
                       {isManual && status === "pending" && (
-                        <div className="flex gap-1 shrink-0">
+                        <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={(e) => openEditModal(task, e)}
                             className="p-1.5 bg-slate-900/60 border border-slate-800 rounded-lg text-slate-400 hover:bg-green-500/10 hover:border-green-500/30 hover:text-green-400 transition-all duration-300"
@@ -320,23 +343,34 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                         </div>
                       )}
 
-                      <div className="shrink-0">
+                      <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
                         {isDone && <CheckCircle2 className="w-6 h-6 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)] rounded-full bg-slate-950" />}
-                        {(!isDone && !isSkipped) && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={(e) => handleCompleteClick(task, status, e)}
-                              className="p-1.5 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 hover:bg-green-500/25 transition-all duration-300"
-                              title="Complete"
-                            >
-                              <CheckCircle2 className="w-5 h-5" />
-                            </button>
-                            <button onClick={(e) => handleSkip(task.id, status, e)} className="p-1.5 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 transition-all duration-300" title="Skip">
-                              <SkipForward className="w-5 h-5" />
-                            </button>
-                          </div>
-                        )}
                         {isSkipped && <SkipForward className="w-6 h-6 text-red-500" />}
+                        {!isDone && !isSkipped && (() => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const taskDate = new Date(task.due_date);
+                          const isFuture = taskDate > today;
+                          return isFuture ? (
+                            <span className="text-[10px] md:text-xs font-semibold text-text-muted bg-slate-900 border border-slate-850 px-2.5 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wider">
+                              <Clock className="w-3.5 h-3.5 text-slate-550" />
+                              Scheduled
+                            </span>
+                          ) : (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={(e) => handleCompleteClick(task, status, e)}
+                                className="p-1.5 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 hover:bg-green-500/25 transition-all duration-300"
+                                title="Complete"
+                              >
+                                <CheckCircle2 className="w-5 h-5" />
+                              </button>
+                              <button onClick={(e) => handleSkip(task.id, status, e)} className="p-1.5 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 transition-all duration-300" title="Skip">
+                                <SkipForward className="w-5 h-5" />
+                              </button>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   );

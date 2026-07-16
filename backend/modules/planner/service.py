@@ -249,3 +249,31 @@ async def delete_activity(db: AsyncSession, activity_id: uuid.UUID, account_id: 
             await invalidate_dashboard_cache(plan.project_id)
     except Exception:
         pass
+
+async def reset_activity(db: AsyncSession, activity_id: uuid.UUID, account_id: uuid.UUID):
+    """Reset a completed or skipped activity back to pending status."""
+    activity = await get_activity(db, activity_id, account_id)
+    
+    activity.status = "pending"
+    activity.completed_at = None
+    
+    result = await db.execute(select(ActivityDetail).where(ActivityDetail.activity_id == activity.id))
+    detail = result.scalars().first()
+    if detail:
+        detail.actual_water_liters = None
+        detail.actual_fertilizer_kg = None
+        detail.notes = None
+        detail.attachments = None
+        
+    await db.commit()
+    await db.refresh(activity)
+    
+    try:
+        from core.cache import invalidate_dashboard_cache
+        plan = await db.get(ActivityPlan, activity.plan_id)
+        if plan:
+            await invalidate_dashboard_cache(plan.project_id)
+    except Exception:
+        pass
+        
+    return activity

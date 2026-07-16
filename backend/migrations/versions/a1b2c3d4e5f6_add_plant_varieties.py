@@ -51,7 +51,7 @@ def upgrade() -> None:
         'projects',
         'plant_varieties',
         ['variety_id'],
-        ['plant_varieties.id'],
+        ['id'],
         ondelete='SET NULL',
     )
 

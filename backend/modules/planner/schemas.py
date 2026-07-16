@@ -61,6 +61,11 @@ class ActivityResponse(BaseModel):
     is_ai_recommended: bool = False
     ai_reasoning: Optional[str] = None
 
+    required_fertilizer_kg: Optional[float] = None
+    fertilizer_name: Optional[str] = None
+    actual_fertilizer_kg: Optional[float] = None
+    notes: Optional[str] = None
+
     model_config = ConfigDict(from_attributes=True)
 
     @field_validator("activity_type", mode="before")

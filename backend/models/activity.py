@@ -1,5 +1,5 @@
 from sqlalchemy import String, Boolean, Date, ForeignKey, Numeric, Text, Integer, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from datetime import date, datetime
 from .base import BaseModel
@@ -29,6 +29,24 @@ class FarmingActivity(BaseModel):
     is_ai_recommended: Mapped[bool] = mapped_column(Boolean, default=False)
     ai_reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    detail: Mapped["ActivityDetail"] = relationship("ActivityDetail", back_populates="activity", uselist=False, lazy="joined")
+
+    @property
+    def required_fertilizer_kg(self) -> float | None:
+        return self.detail.required_fertilizer_kg if self.detail else None
+
+    @property
+    def fertilizer_name(self) -> str | None:
+        return self.detail.fertilizer_name if self.detail else None
+
+    @property
+    def actual_fertilizer_kg(self) -> float | None:
+        return self.detail.actual_fertilizer_kg if self.detail else None
+
+    @property
+    def notes(self) -> str | None:
+        return self.detail.notes if self.detail else None
+
 class ActivityDetail(BaseModel):
     __tablename__ = "activity_details"
     
@@ -43,3 +61,5 @@ class ActivityDetail(BaseModel):
     actual_fertilizer_kg: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     attachments: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
+
+    activity: Mapped[FarmingActivity] = relationship("FarmingActivity", back_populates="detail")
