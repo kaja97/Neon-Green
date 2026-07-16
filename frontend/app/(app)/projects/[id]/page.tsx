@@ -6,8 +6,6 @@ import { useUpdateProject, useDeleteProject } from "@/lib/hooks/useProjectMutati
 import FarmingCircle from "@/components/project/FarmingCircle";
 import ActivityBlock from "@/components/blocks/ActivityBlock";
 import WeatherBlock from "@/components/blocks/WeatherBlock";
-import SoilBlock from "@/components/blocks/SoilBlock";
-import DiseaseBlock from "@/components/blocks/DiseaseBlock";
 import AlertBanner from "@/components/blocks/AlertBanner";
 import QuickAskBlock from "@/components/blocks/QuickAskBlock";
 import WeatherCardBlock from "@/components/blocks/WeatherCardBlock";

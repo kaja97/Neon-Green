@@ -29,7 +29,7 @@ async def report_issue(db: AsyncSession, project_id: uuid.UUID, account_id: uuid
     project = await db.get(Project, project_id)
     if not project or project.farmer_id != farmer_id:
         raise HTTPException(status_code=404, detail="Project not found")
-        
+
     issue = ProjectIssue(
         project_id=project_id,
         issue_type=data.issue_type,
@@ -40,10 +40,18 @@ async def report_issue(db: AsyncSession, project_id: uuid.UUID, account_id: uuid
         status="open",
         images=data.images
     )
-    
+
     db.add(issue)
     await db.commit()
     await db.refresh(issue)
+
+    # Invalidate dashboard cache so the disease count updates immediately.
+    try:
+        from core.cache import invalidate_dashboard_cache
+        await invalidate_dashboard_cache(str(project_id))
+    except Exception:
+        pass
+
     return issue
 
 async def get_issues(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
@@ -113,7 +121,15 @@ async def resolve_issue(db: AsyncSession, issue_id: uuid.UUID, account_id: uuid.
         
     issue.status = "resolved"
     issue.resolved_date = date.today()
-    
+
     await db.commit()
     await db.refresh(issue)
+
+    # Invalidate dashboard cache so the disease count updates immediately.
+    try:
+        from core.cache import invalidate_dashboard_cache
+        await invalidate_dashboard_cache(str(issue.project_id))
+    except Exception:
+        pass
+
     return issue
