@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CheckCircle2, SkipForward, Clock, Loader2, Plus, Pencil, Trash2, Sparkles, Sprout, AlertTriangle, Sun } from "lucide-react";
+import { ArrowLeft, CheckCircle2, SkipForward, Clock, Loader2, Plus, Pencil, Trash2, Sparkles, Sprout, AlertTriangle, Sun, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { useQuery } from "@tanstack/react-query";
@@ -483,6 +483,92 @@ export default function PlanPage({ params }: { params: { id: string } }) {
               {completeMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
               Confirm Completion
             </button>
+          </div>
+        )}
+      </Modal>
+
+      {/* Activity Details Modal */}
+      <Modal isOpen={!!detailTask} onClose={() => setDetailTask(null)} title="Activity Details">
+        {detailTask && (
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Title</h4>
+              <p className="text-base text-white mt-0.5">{detailTask.title}</p>
+            </div>
+            {detailTask.description && (
+              <div>
+                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Description / Instructions</h4>
+                <p className="text-sm text-slate-350 mt-0.5 bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 leading-relaxed">{detailTask.description}</p>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Scheduled Date</h4>
+                <p className="text-sm text-white mt-0.5">{new Date(detailTask.due_date).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Status</h4>
+                <span className={clsx("inline-block px-2.5 py-0.5 rounded-full text-xs font-bold uppercase mt-1",
+                  detailTask.status === "completed" ? "bg-green-500/20 text-green-400 border border-green-900/50" :
+                  detailTask.status === "skipped" ? "bg-red-500/20 text-red-400 border border-red-900/50" :
+                  "bg-amber-500/20 text-amber-400 border border-amber-900/50"
+                )}>
+                  {detailTask.status}
+                </span>
+              </div>
+            </div>
+            {detailTask.ai_reasoning && (
+              <div className="p-3 bg-green-500/5 border border-green-500/10 rounded-xl">
+                <h4 className="text-xs font-bold text-green-400 uppercase tracking-wider flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5" /> AI Recommended Reasoning
+                </h4>
+                <p className="text-xs text-slate-300 mt-1 leading-relaxed">{detailTask.ai_reasoning}</p>
+              </div>
+            )}
+            {detailTask.status === "completed" && (
+              <div className="border-t border-slate-850 pt-4 space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  {detailTask.actual_water_liters && (
+                    <div>
+                      <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Actual Water</h4>
+                      <p className="text-sm text-white mt-0.5">{detailTask.actual_water_liters} L</p>
+                    </div>
+                  )}
+                  {detailTask.actual_fertilizer_kg && (
+                    <div>
+                      <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Actual Fertilizer</h4>
+                      <p className="text-sm text-white mt-0.5">{detailTask.actual_fertilizer_kg} kg</p>
+                    </div>
+                  )}
+                </div>
+                {detailTask.notes && (
+                  <div>
+                    <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Farmer Notes</h4>
+                    <p className="text-sm text-slate-300 mt-0.5 leading-relaxed bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">{detailTask.notes}</p>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Reset button: Only allow for completed or skipped past/current tasks */}
+            {(detailTask.status === "completed" || detailTask.status === "skipped") && (() => {
+              const today = new Date();
+              today.setHours(0,0,0,0);
+              const taskDate = new Date(detailTask.due_date);
+              const isFuture = taskDate > today;
+              return !isFuture && (
+                <button
+                  onClick={() => {
+                    resetMutation.mutate(detailTask.id);
+                    setDetailTask(null);
+                  }}
+                  disabled={resetMutation.isPending}
+                  className="w-full flex items-center justify-center gap-2 bg-slate-900 border border-slate-800 text-slate-400 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 mt-4 disabled:opacity-50"
+                >
+                  {resetMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <RotateCcw className="w-5 h-5" />}
+                  Reset Work State back to Pending
+                </button>
+              );
+            })()}
           </div>
         )}
       </Modal>
