@@ -184,14 +184,13 @@ async def test_dashboard_complete():
 
 ```python
 # Test flattened context builder
-def test_build_context_complete():
-    context = build_project_context(project_id)
-    assert "project" in context
+async def test_build_context_complete(db_session):
+    context_str = await build_project_context(db_session, project_id)
+    context = json.loads(context_str)
+    assert "crop" in context
     assert "current_stage" in context
-    assert "weather" in context
     assert "soil" in context
-    assert "recent_activities" in context
-    assert context["project"]["crop_name"] == "Tomato"
+    assert context["crop"] == "Tomato"
 
 # Test AI rate limiting
 async def test_ai_rate_limit():

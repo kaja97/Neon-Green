@@ -79,81 +79,30 @@ Instead of complex RAG (vector embeddings, chunking, retrieval), we use a simple
 ### What Gets Flattened
 
 ```python
-def build_project_context(project_id: str) -> dict:
+async def build_project_context(db: AsyncSession, project_id: uuid.UUID) -> str:
     """
-    Pulls data from ALL related tables for a project and flattens
-    it into a single dict that gets JSON-serialized for the AI.
+    Flatten project state into ~2000 token JSON context string for Gemini.
     """
-    return {
-        # From: projects + plants table
-        "project": {
-            "crop_name": "Tomato",
-            "scientific_name": "Solanum lycopersicum",
-            "area": "1 acre",
-            "plant_count": 2000,
-            "planting_date": "2025-03-01",
-            "days_since_planting": 45,
-            "total_growth_days": 90,
-            "expected_harvest": "2025-05-29",
-            "farming_method": "organic",
-            "status": "active"
-        },
-
-        # From: plant_stages table
-        "current_stage": {
-            "name": "Flowering",
-            "order": 4,
-            "start_day": 42,
-            "end_day": 60,
-            "day_in_stage": 3,
-            "key_indicators": "Yellow flower clusters visible",
-            "critical_actions": "Switch to potassium, reduce nitrogen",
-            "watch_for": "Blossom drop, Late Blight, Whitefly"
-        },
-
-        # From: weather_cache table (5-day forecast)
-        "weather": [
-            {"date": "2025-04-15", "condition": "sunny", "temp_max": 32, "rain_mm": 0, "humidity": 68},
-            {"date": "2025-04-16", "condition": "cloudy", "temp_max": 29, "rain_mm": 5, "humidity": 78},
-            {"date": "2025-04-17", "condition": "rain", "temp_max": 27, "rain_mm": 25, "humidity": 92}
-        ],
-
-        # From: soil_nutrient_results table
-        "soil": {
-            "ph": 6.2,
-            "nitrogen_ppm": 120,
-            "phosphorus_ppm": 45,
-            "potassium_ppm": 185,
-            "organic_matter_pct": 2.1,
-            "status": "Nitrogen LOW, Phosphorus OK, Potassium OK",
-            "last_test_date": "2025-03-20"
-        },
-
-        # From: farming_activities table (last 7 days)
-        "recent_activities": [
-            {"date": "2025-04-14", "type": "watering", "title": "Water 180L", "status": "done"},
-            {"date": "2025-04-13", "type": "fertilizing", "title": "Applied MOP 45kg", "status": "done"},
-            {"date": "2025-04-12", "type": "monitoring", "title": "Pest check", "status": "done"}
-        ],
-
-        # From: farming_activities table (today)
-        "todays_tasks": [
-            {"title": "Water plants 180L", "type": "watering", "priority": 2},
-            {"title": "Monitor for blight", "type": "monitoring", "priority": 3}
-        ],
-
-        # From: project_issues table
-        "active_issues": [
-            {"type": "disease", "description": "Yellow spots on lower leaves", "area_affected": "15%"}
-        ],
-
-        # From: market_prices table
-        "market": {
-            "current_price": "180 LKR/kg",
-            "trend": "rising",
-            "change_pct": "+12%"
-        }
-    }
+    # Returns a JSON string of the following structure:
+    # {
+    #   "crop": "Tomato",
+    #   "scientific_name": "Solanum lycopersicum",
+    #   "farming_method": "organic",
+    #   "area": "1.0 acres",
+    #   "planting_date": "2025-03-01",
+    #   "days_since_planting": 45,
+    #   "current_stage": "Flowering",
+    #   "total_growth_days": 90,
+    #   "expected_harvest": "2025-05-29",
+    #   "pending_activities": 2,
+    #   "soil": {
+    #     "ph": 6.2,
+    #     "nitrogen": "Low",
+    #     "phosphorus": "Medium",
+    #     "potassium": "High"
+    #   },
+    #   "status": "active"
+    # }
 ```
 
 **Total token size:** ~1,500-2,500 tokens (easily fits in Gemini's free tier context window).

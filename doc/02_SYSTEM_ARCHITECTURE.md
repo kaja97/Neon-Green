@@ -135,70 +135,34 @@ All services live as Python modules within a single FastAPI application. Each mo
 When a farmer requests an AI summary or asks a question, the system builds a **flattened context object** from the database:
 
 ```python
-def build_project_context(project_id: str, db: Session) -> dict:
+async def build_project_context(db: AsyncSession, project_id: uuid.UUID) -> str:
     """
-    Flatten all related project tables into a single context dict
-    that gets sent to Google AI Studio as structured input.
+    Flatten project state into ~2000 token JSON context string for Gemini.
     """
-    project = db.get(Project, project_id)
-    plant = project.plant
-    stage = get_current_stage(project)
-    weather = get_5day_forecast(project.location)
-    soil = get_latest_soil_test(project_id)
-    activities_7d = get_recent_activities(project_id, days=7)
-    pending_today = get_todays_activities(project_id)
-    active_issues = get_open_issues(project_id)
-    market = get_latest_price(plant.id, project.location.district)
+    project = await db.get(Project, project_id)
+    plant = await db.get(Plant, project.plant_id)
+    stages = await get_plant_stages(db, project.plant_id)
+    days_since_planting = (date.today() - project.planting_date).days
+    
+    # Calculate current stage...
+    # Query latest soil nutrient result...
+    # Query pending activities count...
 
-    return {
-        "project": {
-            "crop": plant.common_name,
-            "area": f"{project.area} {project.area_unit}",
-            "planting_date": str(project.planting_date),
-            "days_since_planting": (date.today() - project.planting_date).days,
-            "total_growth_days": plant.growth_duration_days,
-            "farming_method": project.farming_method.code,
-            "status": project.status
-        },
-        "current_stage": {
-            "name": stage.stage_name,
-            "day_in_stage": stage.current_day,
-            "key_indicators": stage.key_indicators,
-            "critical_actions": stage.critical_actions,
-            "watch_for": stage.watch_for
-        },
-        "weather_5day": [
-            {"date": d["date"], "condition": d["condition"],
-             "temp_max": d["temp_max"], "rain_mm": d["rainfall_mm"],
-             "humidity": d["humidity_pct"]}
-            for d in weather
-        ],
-        "soil_status": {
-            "ph": soil.ph if soil else None,
-            "nitrogen_ppm": soil.nitrogen_ppm if soil else None,
-            "phosphorus_ppm": soil.phosphorus_ppm if soil else None,
-            "potassium_ppm": soil.potassium_ppm if soil else None,
-            "last_test_date": str(soil.test_date) if soil else "No test"
-        },
-        "recent_activities": [
-            {"date": str(a.scheduled_date), "type": a.activity_type,
-             "title": a.title, "status": a.status}
-            for a in activities_7d
-        ],
-        "todays_tasks": [
-            {"title": t.title, "type": t.activity_type, "priority": t.priority}
-            for t in pending_today
-        ],
-        "active_issues": [
-            {"type": i.issue_type, "description": i.description,
-             "severity": i.affected_area_pct}
-            for i in active_issues
-        ],
-        "market_price": {
-            "price_per_kg": market.price if market else None,
-            "trend": market.trend if market else None
-        }
+    context = {
+        "crop": plant.common_name if plant else "Unknown",
+        "scientific_name": plant.scientific_name if plant else None,
+        "farming_method": project.farming_method,
+        "area": f"{float(project.area)} {project.area_unit}",
+        "planting_date": project.planting_date.isoformat(),
+        "days_since_planting": days_since_planting,
+        "current_stage": current_stage.stage_name if current_stage else "Unknown",
+        "total_growth_days": plant.growth_duration_days if plant else 0,
+        "expected_harvest": project.expected_harvest_date.isoformat() if project.expected_harvest_date else None,
+        "pending_activities": pending_count,
+        "soil": soil_info,
+        "status": project.status
     }
+    return json.dumps(context, indent=2)
 ```
 
 ### Google AI Studio API Call
@@ -210,7 +174,7 @@ import json
 genai.configure(api_key=os.environ["GOOGLE_AI_STUDIO_API_KEY"])
 
 async def get_ai_summary(project_id: str, farmer_query: str = None):
-    context = build_project_context(project_id, db)
+    context = await build_project_context(db, project_id)
 
     system_prompt = """You are a farming expert assistant for Sri Lankan farmers.
     Based on the project data provided, give a concise, actionable summary.

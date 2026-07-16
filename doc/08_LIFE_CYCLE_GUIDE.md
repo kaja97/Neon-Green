@@ -330,7 +330,7 @@ The life cycle engine works deterministically. But the AI layer adds intelligenc
 ### Weekly AI Summary (Celery Beat — Sundays 6 AM)
 ```python
 def generate_weekly_summary(project_id):
-    context = build_project_context(project_id)  # Flatten all tables
+    context = await build_project_context(db, project_id)  # Flatten all tables
     prompt = """
     Based on this farming project data, write a weekly crop health report:
     1. Overall growth assessment (on track / behind / ahead)

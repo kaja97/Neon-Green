@@ -160,6 +160,7 @@ Response 200: {
 ---
 
 ## 2. Harvest Management [NOT FULLY IMPLEMENTED YET]
+Note: Harvest logs table and the custom endpoints are not implemented yet in v1.0. Tapping 'Complete Harvest' simply updates the project status to harvested via `PATCH /projects/{id}/status`. [NOT FULLY IMPLEMENTED YET]
 Note: Harvest logs table and the custom endpoints are not implemented yet in v1.0. Tapping 'Complete Harvest' simply updates the project status to harvested via `PATCH /projects/{id}/status`.
 
 When a project reaches the Harvest stage, the farmer records actual harvest data.

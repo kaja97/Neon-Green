@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Loader2, Sprout, ChevronRight, Filter } from "lucide-react";
 import { useState } from "react";
 import { clsx } from "clsx";
+import { formatFarmingMethod } from "@/lib/utils/formatters";
 
 type ProjectStatus = "all" | "active" | "harvested" | "failed";
 

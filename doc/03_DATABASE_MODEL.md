@@ -617,7 +617,7 @@ In-app and push notification records.
 
 ## Section 10: RAG & AI Tables
 
-### `farmer_rag_documents` [NOT IMPLEMENTED YET]
+### `farmer_rag_documents` [NOT IMPLEMENTED YET] [NOT IMPLEMENTED YET]
 Text documents stored in each farmer's personal knowledge base.
 
 | Column | Type | Notes |
@@ -636,7 +636,7 @@ Text documents stored in each farmer's personal knowledge base.
 
 ---
 
-### `farmer_rag_chunks` [NOT IMPLEMENTED YET]
+### `farmer_rag_chunks` [NOT IMPLEMENTED YET] [NOT IMPLEMENTED YET]
 Vector chunks from RAG documents. Uses pgvector for similarity search.
 
 | Column | Type | Notes |
@@ -764,7 +764,7 @@ The Harvest Market (Farmers selling to Buyers). Links directly to the farming pr
 
 ---
 
-### `orders` [NOT IMPLEMENTED YET]
+### `orders` [NOT IMPLEMENTED YET] [NOT IMPLEMENTED YET]
 Master order record for transactions (both input and harvest markets).
 
 | Column | Type | Notes |
@@ -779,7 +779,7 @@ Master order record for transactions (both input and harvest markets).
 
 ---
 
-### `order_items` [NOT IMPLEMENTED YET]
+### `order_items` [NOT IMPLEMENTED YET] [NOT IMPLEMENTED YET]
 Line items for an order.
 
 | Column | Type | Notes |
