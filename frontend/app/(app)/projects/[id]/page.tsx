@@ -95,6 +95,7 @@ export default function ProjectDashboard({
     project,
     farming_circle,
     todays_activities,
+    upcoming_activities,
     weather_alerts,
     soil_status,
     market_price,
@@ -249,6 +250,7 @@ export default function ProjectDashboard({
         <ActivityBlock
           projectId={params.id}
           activities={todays_activities}
+          upcomingActivities={upcoming_activities}
         />
       </section>
 
