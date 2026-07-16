@@ -39,19 +39,22 @@ export default function DashboardPage() {
       <div className="min-h-[150vh] relative z-10 pt-8 pb-32">
         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-10">
           {/* Header Section */}
-          <div className="flex items-center justify-between glass-card p-6 animate-slide-up">
-            <div>
+          <div className="relative flex items-center justify-between glass-card p-6 overflow-hidden animate-slide-up">
+            {/* Background glowing blob */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 blur-[80px] rounded-full pointer-events-none -mr-20 -mt-20" />
+            <div className="relative z-10">
               <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow-md">
-                Command Center
+                Command Center<span className="text-green-400 text-glow-green">.</span>
               </h1>
-              <p className="text-text-secondary font-medium mt-1.5">
+              <p className="text-text-secondary font-medium mt-1.5 flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_#22c55e]" />
                 {activeProjects.length > 0
                   ? `Managing ${activeProjects.length} active crop${activeProjects.length > 1 ? "s" : ""}`
                   : "Ready to start your first project"}
               </p>
             </div>
 
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3 relative z-10">
               <Link
                 href="/projects"
                 className="flex items-center gap-2 px-4 py-2.5 glass-card-hover text-text-secondary hover:text-white font-semibold text-sm transition-colors"
@@ -72,38 +75,38 @@ export default function DashboardPage() {
           {/* Quick Access */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-slide-up" style={{ animationDelay: "50ms" }}>
             <Link href="/projects" className="glass-card-hover p-4 group flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 group-hover:scale-110 transition-transform">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
                 <FolderOpen className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white">Projects</p>
+                <p className="text-sm font-bold text-white group-hover:text-green-400 transition-colors">Projects</p>
                 <p className="text-xs text-text-muted">{(projects?.length || 0)} total</p>
               </div>
             </Link>
             <Link href="/profile" className="glass-card-hover p-4 group flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-blue-500/10 group-hover:scale-110 transition-transform">
+              <div className="p-2.5 rounded-xl bg-blue-500/10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
                 <User className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white">Profile</p>
+                <p className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">Profile</p>
                 <p className="text-xs text-text-muted">Settings</p>
               </div>
             </Link>
             <Link href="/notifications" className="glass-card-hover p-4 group flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-amber-500/10 group-hover:scale-110 transition-transform">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
                 <Bell className="w-5 h-5 text-amber-400" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white">Alerts</p>
+                <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">Alerts</p>
                 <p className="text-xs text-text-muted">Notifications</p>
               </div>
             </Link>
             <Link href="/projects/new" className="glass-card-hover p-4 group flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-violet-500/10 group-hover:scale-110 transition-transform">
+              <div className="p-2.5 rounded-xl bg-violet-500/10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
                 <Plus className="w-5 h-5 text-violet-400" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white">New</p>
+                <p className="text-sm font-bold text-white group-hover:text-violet-400 transition-colors">New</p>
                 <p className="text-xs text-text-muted">Start project</p>
               </div>
             </Link>
