@@ -158,30 +158,30 @@ export default function LivestockSection() {
       >
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Animal Type</label>
+            <label className="text-sm font-medium text-slate-300">Animal Type</label>
             <input
               {...form.register("animal_type")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="e.g. Cows, Chickens, Goats"
             />
             {form.formState.errors.animal_type && <p className="text-red-500 text-xs">{form.formState.errors.animal_type.message}</p>}
           </div>
           
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Head Count</label>
+            <label className="text-sm font-medium text-slate-300">Head Count</label>
             <input
               type="number"
               {...form.register("count", { valueAsNumber: true })}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
             />
             {form.formState.errors.count && <p className="text-red-500 text-xs">{form.formState.errors.count.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Primary Purpose (Optional)</label>
+            <label className="text-sm font-medium text-slate-300">Primary Purpose (Optional)</label>
             <input
               {...form.register("purpose")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="e.g. Dairy, Meat, Eggs"
             />
           </div>

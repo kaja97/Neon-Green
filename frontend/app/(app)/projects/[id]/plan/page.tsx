@@ -351,57 +351,57 @@ export default function PlanPage({ params }: { params: { id: string } }) {
           {/* For 'other' we ask for a custom Name instead of a generic Title */}
           {taskForm.activity_type === "other" ? (
             <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">Activity Name</label>
+              <label className="text-sm font-medium text-slate-300">Activity Name</label>
               <input
                 type="text"
                 required
                 value={taskForm.name}
                 onChange={(e) => setTaskForm({ ...taskForm, name: e.target.value, title: e.target.value })}
                 placeholder="e.g. Mulch the beds"
-                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
           ) : (
             <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">Task Title</label>
+              <label className="text-sm font-medium text-slate-300">Task Title</label>
               <input
                 type="text"
                 required
                 value={taskForm.title}
                 onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
                 placeholder="e.g. Apply compost to row 3"
-                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
           )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">Type</label>
+              <label className="text-sm font-medium text-slate-300">Type</label>
               <select
                 value={taskForm.activity_type}
                 onChange={(e) => setTaskForm({ ...taskForm, activity_type: e.target.value })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                {ACTIVITY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                {ACTIVITY_TYPES.map((t) => <option key={t.value} value={t.value} className="bg-slate-800 text-white">{t.label}</option>)}
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">Due Date</label>
+              <label className="text-sm font-medium text-slate-300">Due Date</label>
               <input
                 type="date"
                 required
                 value={taskForm.due_date}
                 onChange={(e) => setTaskForm({ ...taskForm, due_date: e.target.value })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Description (optional)</label>
+            <label className="text-sm font-medium text-slate-300">Description (optional)</label>
             <textarea
               value={taskForm.description}
               onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none h-20"
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none h-20"
               placeholder="Notes about this task..."
             />
           </div>
@@ -420,24 +420,24 @@ export default function PlanPage({ params }: { params: { id: string } }) {
       <Modal isOpen={!!completingTask} onClose={() => setCompletingTask(null)} title="Complete Activity">
         {completingTask && (
           <div className="space-y-4">
-            <div className="p-3 bg-green-50 text-green-800 rounded-xl mb-4 text-sm">
+            <div className="p-3 bg-green-950/40 text-green-400 border border-green-900 rounded-xl mb-4 text-sm">
               <span className="font-bold">Task:</span> {completingTask.title}
             </div>
             {completingTask.activity_type === "irrigation" && (
               <div className="space-y-1">
-                <label className="text-sm font-medium text-slate-700">Actual Water Used (Liters)</label>
-                <input type="number" value={actualWater} onChange={e => setActualWater(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Optional" />
+                <label className="text-sm font-medium text-slate-300">Actual Water Used (Liters)</label>
+                <input type="number" value={actualWater} onChange={e => setActualWater(e.target.value)} className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Optional" />
               </div>
             )}
             {completingTask.activity_type === "fertilizer" && (
               <div className="space-y-1">
-                <label className="text-sm font-medium text-slate-700">Actual Fertilizer Used (Kg)</label>
-                <input type="number" value={actualFertilizer} onChange={e => setActualFertilizer(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Optional" />
+                <label className="text-sm font-medium text-slate-300">Actual Fertilizer Used (Kg)</label>
+                <input type="number" value={actualFertilizer} onChange={e => setActualFertilizer(e.target.value)} className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Optional" />
               </div>
             )}
             <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">Notes / Observations</label>
-              <textarea value={notes} onChange={e => setNotes(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none h-24" placeholder="Any unusual signs?" />
+              <label className="text-sm font-medium text-slate-300">Notes / Observations</label>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none h-24" placeholder="Any unusual signs?" />
             </div>
             <button
               onClick={confirmComplete}

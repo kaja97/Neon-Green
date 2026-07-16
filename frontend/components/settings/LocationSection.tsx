@@ -171,50 +171,50 @@ export default function LocationSection() {
       >
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Location Name</label>
+            <label className="text-sm font-medium text-slate-300">Location Name</label>
             <input
               {...form.register("name")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="e.g. North Field"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">District</label>
+            <label className="text-sm font-medium text-slate-300">District</label>
             <input
               {...form.register("district")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Address (Optional)</label>
+            <label className="text-sm font-medium text-slate-300">Address (Optional)</label>
             <input
               {...form.register("address")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Latitude</label>
+              <label className="text-sm font-medium text-slate-300">Latitude</label>
               <input
                 type="number"
                 step="any"
                 {...form.register("latitude", { valueAsNumber: true })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Longitude</label>
+              <label className="text-sm font-medium text-slate-300">Longitude</label>
               <input
                 type="number"
                 step="any"
                 {...form.register("longitude", { valueAsNumber: true })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
           </div>
           <div className="flex items-center gap-2 pt-2">
-            <input type="checkbox" id="is_primary" {...form.register("is_primary")} className="w-4 h-4 text-green-600 rounded border-slate-300" />
-            <label htmlFor="is_primary" className="text-sm font-medium text-slate-700">Set as primary location</label>
+            <input type="checkbox" id="is_primary" {...form.register("is_primary")} className="w-4 h-4 text-green-600 rounded border-slate-700 bg-slate-850" />
+            <label htmlFor="is_primary" className="text-sm font-medium text-slate-300">Set as primary location</label>
           </div>
           <button
             type="submit"

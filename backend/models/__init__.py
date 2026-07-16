@@ -2,7 +2,7 @@ from .base import Base
 from .account import Account, FarmerProfile, VendorProfile, BuyerProfile
 from .farmer import FarmerLocation, FarmerLandDetail, FarmerLivestock
 from .project import Project, ProjectService
-from .plant import Plant, PlantStage, PlantNutrientReq, PlantWaterReq
+from .plant import Plant, PlantStage, PlantNutrientReq, PlantWaterReq, PlantVariety
 from .plant_health import PlantDisease, DiseaseSolution, PlantPest, PestSolution
 from .plant_fertilizer import PlantFertilizerRecommendation
 from .activity import ActivityPlan, FarmingActivity, ActivityDetail
@@ -19,7 +19,7 @@ __all__ = [
     "Account", "FarmerProfile", "VendorProfile", "BuyerProfile",
     "FarmerLocation", "FarmerLandDetail", "FarmerLivestock",
     "Project", "ProjectService",
-    "Plant", "PlantStage", "PlantNutrientReq", "PlantWaterReq",
+    "Plant", "PlantStage", "PlantNutrientReq", "PlantWaterReq", "PlantVariety",
     "PlantDisease", "DiseaseSolution", "PlantPest", "PestSolution",
     "PlantFertilizerRecommendation",
     "ActivityPlan", "FarmingActivity", "ActivityDetail",

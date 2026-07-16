@@ -56,8 +56,24 @@ class PlantNutrientReq(BaseModel):
 
 class PlantWaterReq(BaseModel):
     __tablename__ = "plant_water_requirements"
-    
+
     plant_stage_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("plant_stages.id", ondelete="CASCADE"))
     water_mm_per_day: Mapped[float] = mapped_column(Numeric(6, 2))
     frequency_days: Mapped[int] = mapped_column(Integer)
     drought_tolerance: Mapped[str] = mapped_column(String(50))
+
+
+class PlantVariety(BaseModel):
+    """A named cultivar/variety of a plant (e.g. Tomato → Roma, Cherry).
+
+    A plant may have zero or more varieties. When a farmer creates a project,
+    they pick a plant and then optionally a variety from this table.
+    """
+    __tablename__ = "plant_varieties"
+
+    plant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("plants.id", ondelete="CASCADE"))
+    variety_name: Mapped[str] = mapped_column(String(150))
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Optional override of the parent plant's growth duration for this variety.
+    growth_duration_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)

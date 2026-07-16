@@ -21,6 +21,7 @@ from sqlalchemy.future import select
 from models.plant import Plant, PlantStage, PlantWaterReq, PlantNutrientReq
 from models.plant_health import PlantDisease, DiseaseSolution
 from models.market import MarketPrice
+from models.plant_fertilizer import PlantFertilizerRecommendation
 
 from seed.plants import plants
 from seed.stages import stages
@@ -29,6 +30,7 @@ from seed.nutrient_requirements import nutrient_requirements
 from seed.diseases import diseases
 from seed.disease_solutions import disease_solutions
 from seed.market_prices import generate_market_prices
+from seed.fertilizers import fertilizers
 
 # Expected yields per acre in kg (for revenue estimation)
 YIELD_DATA = {
@@ -211,6 +213,22 @@ async def seed_data():
             )
             session.add(price)
 
+        # ── 8. Fertilizer Recommendations ────────────────
+        print("  🧪 Inserting Fertilizer Recommendations...")
+        for f_data in fertilizers:
+            stage_id = stage_id_map.get(f_data["stage_id"])
+            if not stage_id:
+                continue
+
+            fert_rec = PlantFertilizerRecommendation(
+                plant_stage_id=stage_id,
+                farming_method=f_data["farming_method"],
+                fertilizer_name=f_data["fertilizer_name"],
+                application_rate_per_acre_kg=f_data["rate"],
+                instructions=f_data["instructions"]
+            )
+            session.add(fert_rec)
+
         # ── Commit all ───────────────────────────────────
         await session.commit()
 
@@ -223,6 +241,7 @@ async def seed_data():
     print(f"      Diseases:            {len(diseases)}")
     print(f"      Disease Solutions:    {len(disease_solutions)}")
     print(f"      Market Prices:       {len(market_prices)}")
+    print(f"      Fertilizer Reqs:     {len(fertilizers)}")
 
 if __name__ == "__main__":
     asyncio.run(seed_data())

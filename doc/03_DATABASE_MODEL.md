@@ -269,19 +269,16 @@ Daily water needs per plant per stage. Powers irrigation scheduling.
 ---
 
 ### `plant_fertilizer_recommendations`
-Specific fertilizer products recommended per plant per stage.
+Specific fertilizer products recommended per plant stage and farming method.
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `plant_id` | UUID FK → plants | |
-| `stage_id` | UUID FK → plant_stages | |
-| `fertilizer_type` | VARCHAR(100) | "Urea", "TSP", "MOP", "Compost" |
-| `is_organic` | BOOLEAN | Organic-only flag |
-| `quantity_per_acre` | DECIMAL(10,4) | Amount per acre |
-| `unit` | VARCHAR(20) | `kg`, `L`, `bags` |
-| `application_method` | VARCHAR(100) | `broadcast`, `band`, `foliar`, `drip` |
-| `timing_note` | TEXT | "Apply at planting", "Split 3 ways over the stage" |
+| `plant_stage_id` | UUID FK → plant_stages | On delete cascade |
+| `farming_method` | VARCHAR(50) | `organic`, `conventional`, `integrated` |
+| `fertilizer_name` | VARCHAR(255) | Name of the fertilizer product |
+| `application_rate_per_acre_kg` | DECIMAL(10,2) | Rate of application in kg per acre |
+| `instructions` | TEXT | Specific application instructions |
 
 ---
 

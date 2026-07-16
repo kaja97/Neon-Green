@@ -44,18 +44,18 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             {/* Stop click-through so only the backdrop closes the modal */}
             <div
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh] w-full max-w-lg"
+              className="bg-surface-secondary rounded-3xl shadow-2xl overflow-hidden border border-border flex flex-col max-h-[90vh] w-full max-w-lg"
             >
-              <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
-                <h2 className="text-xl font-bold text-slate-800">{title}</h2>
+              <div className="flex items-center justify-between p-6 border-b border-border bg-surface-primary/50">
+                <h2 className="text-xl font-bold text-text-primary">{title}</h2>
                 <button
                   onClick={onClose}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                  className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-tertiary rounded-full transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="p-6 overflow-y-auto">
+              <div className="p-6 overflow-y-auto text-text-primary">
                 {children}
               </div>
             </div>

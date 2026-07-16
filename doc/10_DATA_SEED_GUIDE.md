@@ -238,51 +238,16 @@ TOMATO_WATER = [
 
 ---
 
-## 6. Fertilizer Recommendations (Example: Tomato — Vegetative stage)
+## 6. Fertilizer Recommendations (Example: Tomato — seed/fertilizers.py)
 
 ```python
-# Organic recommendations for Vegetative stage
-TOMATO_FERT_ORGANIC = [
-    {
-        "stage_order": 3,
-        "fertilizer_type": "Well-rotted Compost",
-        "is_organic": True,
-        "quantity_per_acre": 1000,
-        "unit": "kg",
-        "application_method": "Side dress along plant rows",
-        "timing_note": "Apply at start of vegetative stage, work into top 5cm of soil"
-    },
-    {
-        "stage_order": 3,
-        "fertilizer_type": "Liquid Fish Emulsion",
-        "is_organic": True,
-        "quantity_per_acre": 10,
-        "unit": "L",
-        "application_method": "Foliar spray diluted 1:10 with water",
-        "timing_note": "Apply every 14 days, early morning"
-    }
-]
-
-# Conventional recommendations for Vegetative stage
-TOMATO_FERT_CONVENTIONAL = [
-    {
-        "stage_order": 3,
-        "fertilizer_type": "Urea (46-0-0)",
-        "is_organic": False,
-        "quantity_per_acre": 30,
-        "unit": "kg",
-        "application_method": "Band application 10cm from plant base",
-        "timing_note": "Split into 2 applications: day 22 and day 32"
-    },
-    {
-        "stage_order": 3,
-        "fertilizer_type": "NPK 15-15-15",
-        "is_organic": False,
-        "quantity_per_acre": 25,
-        "unit": "kg",
-        "application_method": "Broadcast and incorporate",
-        "timing_note": "Apply once at start of vegetative stage"
-    }
+# Fertilizer recommendations format in backend/seed/fertilizers.py
+fertilizers = [
+    # ── Tomato ──────────────────────────────
+    {"stage_id": "s2", "farming_method": "conventional", "fertilizer_name": "Starter NPK 10-26-26", "rate": 50, "instructions": "Apply at transplanting as basal dose. Mix well into soil."},
+    {"stage_id": "s2", "farming_method": "organic", "fertilizer_name": "Vermicompost", "rate": 200, "instructions": "Mix into planting holes before transplanting seedlings."},
+    {"stage_id": "s3", "farming_method": "conventional", "fertilizer_name": "Urea (46-0-0)", "rate": 30, "instructions": "Side-dress 10 cm from stem. Water immediately after."},
+    {"stage_id": "s3", "farming_method": "organic", "fertilizer_name": "Blood Meal", "rate": 25, "instructions": "Side-dress around plants. High nitrogen for vegetative growth."},
 ]
 ```
 

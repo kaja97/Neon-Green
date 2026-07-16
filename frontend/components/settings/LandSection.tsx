@@ -184,14 +184,14 @@ export default function LandSection() {
       >
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Location</label>
+            <label className="text-sm font-medium text-slate-300">Location</label>
             <select
               {...form.register("location_id")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
             >
-              <option value="">Select a location...</option>
+              <option value="" className="bg-slate-800 text-white">Select a location...</option>
               {locations?.map((loc: any) => (
-                <option key={loc.id} value={loc.id}>{loc.name}</option>
+                <option key={loc.id} value={loc.id} className="bg-slate-800 text-white">{loc.name}</option>
               ))}
             </select>
             {form.formState.errors.location_id && <p className="text-red-500 text-xs">{form.formState.errors.location_id.message}</p>}
@@ -199,42 +199,57 @@ export default function LandSection() {
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Area</label>
+              <label className="text-sm font-medium text-slate-300">Area</label>
               <input
                 type="number"
                 step="any"
                 {...form.register("total_area", { valueAsNumber: true })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               {form.formState.errors.total_area && <p className="text-red-500 text-xs">{form.formState.errors.total_area.message}</p>}
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Unit</label>
+              <label className="text-sm font-medium text-slate-300">Unit</label>
               <select
                 {...form.register("area_unit")}
-                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                <option value="acres">Acres</option>
-                <option value="hectares">Hectares</option>
-                <option value="perches">Perches</option>
-                <option value="sq_meters">Sq Meters</option>
+                <option value="acres" className="bg-slate-800 text-white">Acres</option>
+                <option value="hectares" className="bg-slate-800 text-white">Hectares</option>
+                <option value="perches" className="bg-slate-800 text-white">Perches</option>
+                <option value="sq_meters" className="bg-slate-800 text-white">Sq Meters</option>
               </select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Soil Type (Optional)</label>
-            <input
+            <label className="text-sm font-medium text-slate-300">Soil Type (Optional)</label>
+            <select
               {...form.register("soil_type")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="e.g. Loamy, Sandy"
-            />
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="" className="bg-slate-800 text-white">-- Select Soil Type --</option>
+              <option value="Loam (Generic)" className="bg-slate-800 text-white">Loam (Generic / Default)</option>
+              <option value="Sandy Loam" className="bg-slate-800 text-white">Sandy Loam</option>
+              <option value="Clay Loam" className="bg-slate-800 text-white">Clay Loam</option>
+              <option value="Silt Loam" className="bg-slate-800 text-white">Silt Loam</option>
+              <option value="Reddish Brown Earths" className="bg-slate-800 text-white">Reddish Brown Earths (RBE - Dry Zone)</option>
+              <option value="Low Humic Gley" className="bg-slate-800 text-white">Low Humic Gley (LHG - Valleys)</option>
+              <option value="Red Yellow Podzolic" className="bg-slate-800 text-white">Red Yellow Podzolic (RYP - Wet Zone)</option>
+              <option value="Non-Calcic Brown" className="bg-slate-800 text-white">Non-Calcic Brown (Intermediate/Dry Zone)</option>
+              <option value="Red Yellow Latosols" className="bg-slate-800 text-white">Red Yellow Latosols (North/North-West)</option>
+              <option value="Alluvial Soils" className="bg-slate-800 text-white">Alluvial Soils (River Valleys)</option>
+              <option value="Sandy Regosols" className="bg-slate-800 text-white">Sandy Regosols (Coastal Sands)</option>
+              <option value="Immature Brown Loams" className="bg-slate-800 text-white">Immature Brown Loams (Hilly Areas)</option>
+              <option value="Bog and Half-Bog Soils" className="bg-slate-800 text-white">Bog and Half-Bog Soils (Wet Zone Marshes)</option>
+              <option value="Grumusols / Clay" className="bg-slate-800 text-white">Grumusols (Clay / Black Cotton Soil)</option>
+            </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Irrigation Type (Optional)</label>
+            <label className="text-sm font-medium text-slate-300">Irrigation Type (Optional)</label>
             <input
               {...form.register("irrigation_type")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="e.g. Drip, Sprinkler, Rain-fed"
             />
           </div>
