@@ -30,7 +30,7 @@ export default function WeatherBlock({ projectId }: { projectId: string }) {
     queryKey: ["weather", projectId],
     queryFn: async () => {
       const res = await api.get(`/weather/${projectId}`);
-      return res.data;
+      return res.data.data;
     }
   });
 

@@ -11,7 +11,7 @@ export default function SoilBlock({ projectId }: { projectId: string }) {
     queryKey: ["soil_tests", projectId],
     queryFn: async () => {
       const res = await api.get(`/soil/tests/${projectId}`);
-      return res.data;
+      return res.data.data;
     }
   });
 

@@ -135,7 +135,7 @@ export default function ProjectsListPage() {
                     {project.name}
                   </h3>
                   <p className="text-sm text-slate-500 mt-0.5">
-                    {project.area} {project.area_unit} · {project.farming_method}
+                    {project.area} {project.area_unit} · {formatFarmingMethod(project.farming_method)}
                   </p>
                 </div>
               </div>

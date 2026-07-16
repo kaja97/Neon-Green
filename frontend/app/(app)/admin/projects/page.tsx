@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { useState } from "react";
 import { Loader2, Search, FileText, AlertTriangle, X, CheckCircle, Leaf, Activity } from "lucide-react";
 import { clsx } from "clsx";
+import { formatFarmingMethod } from "@/lib/utils/formatters";
 
 export default function AdminProjectsPage() {
   const [statusFilter, setStatusFilter] = useState("");
@@ -90,8 +91,8 @@ export default function AdminProjectsPage() {
                       <div className="text-xs text-slate-400 mt-0.5">Started: {new Date(project.created_at).toLocaleDateString()}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold capitalize">
-                        {project.farming_method}
+                      <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold">
+                        {formatFarmingMethod(project.farming_method)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -180,7 +181,7 @@ export default function AdminProjectsPage() {
                       </div>
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <p className="text-xs text-slate-500 mb-1">Methodology</p>
-                        <p className="font-semibold text-slate-900 capitalize">{projectDetails.farming_method}</p>
+                        <p className="font-semibold text-slate-900">{formatFarmingMethod(projectDetails.farming_method)}</p>
                       </div>
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <p className="text-xs text-slate-500 mb-1">Area Footprint</p>
