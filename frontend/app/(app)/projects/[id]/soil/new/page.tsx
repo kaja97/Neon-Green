@@ -34,11 +34,28 @@ export default function NewSoilTestPage({ params }: { params: { id: string } }) 
       queryClient.invalidateQueries({ queryKey: ["soil_tests", params.id] });
       router.push(`/projects/${params.id}/soil`);
     },
+    onError: (err: any) => {
+      console.error(err);
+      alert(err.response?.data?.message || err.response?.data?.detail || "Failed to save soil test results.");
+    }
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate(formData);
+    const payload = {
+      test_date: formData.test_date,
+      tested_by: formData.tested_by.trim() || null,
+      notes: formData.notes.trim() || null,
+      results: {
+        ph_level: isNaN(Number(formData.results.ph_level)) ? 6.5 : Number(formData.results.ph_level),
+        nitrogen_level: formData.results.nitrogen_level,
+        phosphorus_level: formData.results.phosphorus_level,
+        potassium_level: formData.results.potassium_level,
+        organic_matter_perc: isNaN(Number(formData.results.organic_matter_perc)) ? null : Number(formData.results.organic_matter_perc),
+        moisture_level: formData.results.moisture_level || null,
+      }
+    };
+    mutation.mutate(payload);
   };
 
   return (
@@ -118,6 +135,17 @@ export default function NewSoilTestPage({ params }: { params: { id: string } }) 
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="border-t border-slate-100 pt-6 space-y-2">
+            <label className="text-sm font-semibold text-slate-600">Notes / Comments</label>
+            <textarea
+              placeholder="e.g. Soil feels sandy, slight compaction observed, etc."
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={3}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all resize-none"
+            />
           </div>
         </div>
 

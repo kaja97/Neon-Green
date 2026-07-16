@@ -119,7 +119,9 @@ export default function ProjectDashboard({
       icon: FlaskConical,
       label: "Soil",
       value: soil_status ? `pH ${soil_status.ph}` : "No Test",
-      sub: soil_status?.nitrogen_status || "Add Test",
+      sub: soil_status 
+        ? `N:${soil_status.nitrogen_status[0]} | P:${soil_status.phosphorus_status[0]} | K:${soil_status.potassium_status[0]}`
+        : "Add Test",
       color: "text-amber-400",
       bg: "bg-amber-500/10",
     },
@@ -127,8 +129,8 @@ export default function ProjectDashboard({
       href: `/projects/${params.id}/plan`,
       icon: Calendar,
       label: "Plan",
-      value: `${todays_activities?.length || 0} Tasks`,
-      sub: "Today",
+      value: todays_activities && todays_activities.length > 0 ? `${todays_activities.length} Task${todays_activities.length > 1 ? "s" : ""}` : "No Tasks",
+      sub: todays_activities && todays_activities.length > 0 ? todays_activities[0].title : "All caught up",
       color: "text-violet-400",
       bg: "bg-violet-500/10",
     },
@@ -136,8 +138,8 @@ export default function ProjectDashboard({
       href: `/projects/${params.id}/disease`,
       icon: Bug,
       label: "Disease",
-      value: `${active_issues?.length || 0}`,
-      sub: "Issues",
+      value: active_issues && active_issues.length > 0 ? `${active_issues.length} Active` : "Healthy",
+      sub: active_issues && active_issues.length > 0 ? `Latest: ${active_issues[0].title}` : "No issues found",
       color: "text-red-400",
       bg: "bg-red-500/10",
     },
@@ -147,8 +149,10 @@ export default function ProjectDashboard({
       label: "Market",
       value: market_price
         ? `${formatCurrency(market_price.price_per_kg)}/kg`
-        : "N/A",
-      sub: market_price?.trend || "—",
+        : "No Data",
+      sub: market_price 
+        ? `Trend: ${market_price.trend} (${market_price.change_pct > 0 ? "+" : ""}${market_price.change_pct}%)`
+        : "No market data",
       color: "text-emerald-400",
       bg: "bg-emerald-500/10",
     },

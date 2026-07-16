@@ -133,6 +133,8 @@ async def _get_soil_status(db: AsyncSession, project_id: uuid.UUID, account_id: 
         return {
             "ph": latest.results.ph_level,
             "nitrogen_status": latest.results.nitrogen_level,
+            "phosphorus_status": latest.results.phosphorus_level,
+            "potassium_status": latest.results.potassium_level,
             "last_test": latest.test_date.isoformat(),
         }
     except Exception:
