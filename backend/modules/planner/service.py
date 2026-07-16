@@ -55,8 +55,22 @@ async def get_active_plan(db: AsyncSession, project_id: uuid.UUID, account_id: u
     return plan
 
 async def list_activities(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
-    plan = await get_active_plan(db, project_id, account_id)
-        
+    """List all activities for a project. Returns [] when no active plan exists
+    (instead of raising 404) so the UI can render an empty state gracefully."""
+    farmer_id = await _get_farmer_id(db, account_id)
+    # Verify project ownership
+    project = await db.get(Project, project_id)
+    if not project or project.farmer_id != farmer_id:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    result = await db.execute(
+        select(ActivityPlan)
+        .where(ActivityPlan.project_id == project_id, ActivityPlan.is_active == True)
+    )
+    plan = result.scalars().first()
+    if not plan:
+        return []
+
     result = await db.execute(
         select(FarmingActivity)
         .where(FarmingActivity.plan_id == plan.id)
@@ -158,7 +172,7 @@ async def _ensure_active_plan(db: AsyncSession, project_id: uuid.UUID) -> Activi
         plan = ActivityPlan(
             project_id=project_id,
             generated_at=datetime.now(timezone.utc),
-            version="manual-v1",
+            version=0,
             is_active=True,
         )
         db.add(plan)

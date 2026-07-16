@@ -60,6 +60,7 @@ class ProjectResponse(BaseModel):
     plan_generation_status: str
     expected_harvest_date: Optional[date] = None
     actual_harvest_date: Optional[date] = None
+    plant: Optional[PlantResponse] = None
 
 class ProjectStatusUpdate(BaseModel):
     """Status change with state machine enforcement."""

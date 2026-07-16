@@ -64,17 +64,22 @@ export default function RegisterPage() {
       api
         .get("/farming-methods")
         .then((res) => {
-          setFarmingMethods(res.data.data || []);
-          if (res.data.data?.length > 0) {
-            setFarmingMethod(res.data.data[0].code);
+          const mapped = (res.data.data || []).map((m: any) => ({
+            id: m.id,
+            code: m.id,
+            name: m.name
+          }));
+          setFarmingMethods(mapped);
+          if (mapped.length > 0) {
+            setFarmingMethod(mapped[0].code);
           }
         })
         .catch(() => {
           // Fallback if endpoint not ready
           setFarmingMethods([
-            { id: "1", code: "organic", name: "Organic Farming" },
-            { id: "2", code: "inorganic", name: "Conventional Farming" },
-            { id: "3", code: "integrated", name: "Integrated Farming" },
+            { id: "organic", code: "organic", name: "🌿 Organic Farming" },
+            { id: "inorganic", code: "inorganic", name: "🧪 Conventional Farming" },
+            { id: "integrated", code: "integrated", name: "🔄 Integrated Farming" },
           ]);
         });
     }

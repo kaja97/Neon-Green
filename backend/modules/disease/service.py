@@ -82,10 +82,16 @@ async def search_diseases(db: AsyncSession, query: str):
     return []
 
 async def get_disease_solutions(db: AsyncSession, disease_id: uuid.UUID, farming_method: str = "conventional"):
+    methods = [farming_method]
+    if farming_method == "inorganic":
+        methods = ["conventional"]
+    elif farming_method == "integrated":
+        methods = ["conventional", "organic"]
+
     result = await db.execute(
         select(DiseaseSolution).where(
             DiseaseSolution.disease_id == disease_id,
-            DiseaseSolution.farming_method == farming_method
+            DiseaseSolution.farming_method.in_(methods)
         )
     )
     return result.scalars().all()

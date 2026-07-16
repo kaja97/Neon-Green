@@ -116,20 +116,52 @@ export default function NewProjectWizard() {
             {plantsLoading ? (
                <div className="flex justify-center py-12"><Loader2 className="animate-spin text-green-600" /></div>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {plants?.map((plant: any) => (
-                  <button
-                    key={plant.id}
-                    onClick={() => { setFormData({...formData, plant_id: plant.id}); nextStep(); }}
-                    className={clsx(
-                      "p-6 rounded-2xl border-2 transition-all text-left group",
-                      formData.plant_id === plant.id ? "border-green-600 bg-green-50" : "border-slate-200 hover:border-green-300"
-                    )}
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Select Crop / Variety</label>
+                  <select
+                    value={formData.plant_id}
+                    onChange={(e) => setFormData({ ...formData, plant_id: e.target.value })}
+                    className="w-full bg-white border border-slate-300 rounded-xl py-3 px-4 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all text-slate-900"
                   >
-                    <h3 className="font-semibold">{plant.common_name}</h3>
-                    <p className="text-xs text-slate-500">{plant.scientific_name}</p>
-                  </button>
-                ))}
+                    <option value="">-- Choose a crop --</option>
+                    {plants?.map((plant: any) => (
+                      <option key={plant.id} value={plant.id}>
+                        {plant.common_name} {plant.local_name ? `(${plant.local_name})` : ""} - {plant.scientific_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {formData.plant_id && (
+                  (() => {
+                    const selectedPlant = plants?.find((p: any) => p.id === formData.plant_id);
+                    if (!selectedPlant) return null;
+                    return (
+                      <div className="p-5 rounded-2xl border border-green-200 bg-green-50/50 space-y-2 animate-in fade-in duration-300 text-slate-800">
+                        <h3 className="font-bold text-green-800 text-lg">{selectedPlant.common_name}</h3>
+                        {selectedPlant.scientific_name && (
+                          <p className="text-sm">
+                            <span className="font-semibold text-slate-700">Scientific Name:</span> <i>{selectedPlant.scientific_name}</i>
+                          </p>
+                        )}
+                        <p className="text-sm">
+                          <span className="font-semibold text-slate-700">Growth Duration:</span> {selectedPlant.growth_duration_days} days
+                        </p>
+                        {selectedPlant.optimal_ph_min && (
+                          <p className="text-sm">
+                            <span className="font-semibold text-slate-700">Optimal pH:</span> {selectedPlant.optimal_ph_min} - {selectedPlant.optimal_ph_max}
+                          </p>
+                        )}
+                        {selectedPlant.description && (
+                          <p className="text-sm mt-2 italic text-slate-600">
+                            {selectedPlant.description}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()
+                )}
               </div>
             )}
           </div>
@@ -192,24 +224,36 @@ export default function NewProjectWizard() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Farming Method</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <button 
+                    type="button"
                     onClick={() => setFormData({...formData, farming_method: "organic"})} 
                     className={clsx(
-                      "py-3 px-4 rounded-xl border-2 font-semibold text-sm transition-colors",
-                      formData.farming_method === "organic" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-600"
+                      "py-3 px-2 rounded-xl border-2 font-semibold text-xs md:text-sm transition-colors text-center",
+                      formData.farming_method === "organic" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-600 hover:border-amber-300"
                     )}
                   >
                     Organic
                   </button>
                   <button 
-                    onClick={() => setFormData({...formData, farming_method: "conventional"})} 
+                    type="button"
+                    onClick={() => setFormData({...formData, farming_method: "inorganic"})} 
                     className={clsx(
-                      "py-3 px-4 rounded-xl border-2 font-semibold text-sm transition-colors",
-                      formData.farming_method === "conventional" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-600"
+                      "py-3 px-2 rounded-xl border-2 font-semibold text-xs md:text-sm transition-colors text-center",
+                      formData.farming_method === "inorganic" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-600 hover:border-amber-300"
                     )}
                   >
                     Conventional
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setFormData({...formData, farming_method: "integrated"})} 
+                    className={clsx(
+                      "py-3 px-2 rounded-xl border-2 font-semibold text-xs md:text-sm transition-colors text-center",
+                      formData.farming_method === "integrated" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-600 hover:border-amber-300"
+                    )}
+                  >
+                    Integrated
                   </button>
                 </div>
               </div>

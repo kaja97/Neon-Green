@@ -53,9 +53,9 @@ export default function ProjectDashboard({
   const openEdit = () => {
     const p = data?.project;
     setEditForm({
-      name: p?.crop || p?.plant?.common_name || "",
-      area: p?.area_acres || 0,
-      area_unit: "acres",
+      name: p?.name || "",
+      area: p?.area || 0,
+      area_unit: p?.area_unit || "acres",
       farming_method: p?.farming_method || "organic",
     });
     setEditOpen(true);
@@ -166,8 +166,8 @@ export default function ProjectDashboard({
             <ArrowLeft className="w-5 h-5 text-text-secondary" />
           </Link>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white capitalize">
-              {project.crop || project.plant?.common_name || "Farm"}
+            <h1 className="text-3xl font-black text-white tracking-tight drop-shadow-md">
+              {project.plant?.common_name || "Farm Project"}
             </h1>
             <p className="text-text-muted text-sm">
               {project.area} · {project.farming_method || "Farming"}

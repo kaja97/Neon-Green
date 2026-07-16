@@ -2,6 +2,7 @@
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing import Optional
 import uuid
+from core.enums import FarmingMethod
 
 
 # ── Profile ──────────────────────────────────────────────
@@ -10,7 +11,7 @@ class FarmerProfileUpdate(BaseModel):
     full_name: Optional[str] = Field(None, max_length=255)
     primary_language: Optional[str] = Field(None, max_length=10)
     experience_years: Optional[int] = Field(None, ge=0)
-    farming_method: Optional[str] = Field(None, max_length=50)
+    farming_method: Optional[FarmingMethod] = Field(None)
     gender: Optional[str] = Field(None, max_length=20)
     education_level: Optional[str] = Field(None, max_length=50)
     bio: Optional[str] = Field(None, max_length=1000)

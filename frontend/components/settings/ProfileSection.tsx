@@ -127,12 +127,11 @@ export default function ProfileSection() {
             <label className="text-sm font-medium text-slate-700">Farming Method</label>
             <select
               {...form.register("farming_method")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-slate-900"
             >
-              <option value="traditional">Traditional</option>
               <option value="organic">Organic</option>
-              <option value="hydroponic">Hydroponic</option>
-              <option value="mixed">Mixed</option>
+              <option value="inorganic">Conventional / Inorganic</option>
+              <option value="integrated">Integrated</option>
             </select>
           </div>
         </div>

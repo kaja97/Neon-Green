@@ -3,6 +3,7 @@ Project service — project CRUD with status machine enforcement.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from models.project import Project
 from models.plant import Plant, PlantStage
 from models.farmer import FarmerLocation
@@ -113,14 +114,23 @@ async def create_project(db: AsyncSession, account_id: uuid.UUID, data: ProjectC
         project.plan_generation_status = "failed"
 
     await db.commit()
-    await db.refresh(project)
+    
+    # Eager load the plant relation when returning the created project
+    res = await db.execute(
+        select(Project)
+        .where(Project.id == project.id)
+        .options(selectinload(Project.plant))
+    )
+    project = res.scalars().first()
     return project
 
 
 async def list_projects(db: AsyncSession, account_id: uuid.UUID):
     profile = await _get_farmer_profile(db, account_id)
     result = await db.execute(
-        select(Project).where(Project.farmer_id == profile.id)
+        select(Project)
+        .where(Project.farmer_id == profile.id)
+        .options(selectinload(Project.plant))
         .order_by(Project.created_at.desc())
     )
     return result.scalars().all()
@@ -128,7 +138,12 @@ async def list_projects(db: AsyncSession, account_id: uuid.UUID):
 
 async def get_project(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
     profile = await _get_farmer_profile(db, account_id)
-    project = await db.get(Project, project_id)
+    result = await db.execute(
+        select(Project)
+        .where(Project.id == project_id)
+        .options(selectinload(Project.plant))
+    )
+    project = result.scalars().first()
     if not project or project.farmer_id != profile.id:
         raise AppException(ErrorCode.PROJECT_NOT_FOUND)
     return project
