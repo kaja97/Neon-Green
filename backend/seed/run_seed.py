@@ -24,6 +24,7 @@ from models.market import MarketPrice
 from models.plant_fertilizer import PlantFertilizerRecommendation
 
 from seed.plants import plants
+from seed.varieties import varieties
 from seed.stages import stages
 from seed.water import water_requirements
 from seed.nutrient_requirements import nutrient_requirements
@@ -100,14 +101,34 @@ async def seed_data():
             plant = Plant(
                 id=plant_id,
                 common_name=p_data["name"],
-                scientific_name=p_data.get("scientific_name"),
-                category="Vegetable" if p_data["name"] != "Rice" else "Grain",
-                growth_duration_days=p_data["growth_duration_days"],
-                optimal_ph_min=p_data.get("optimal_ph_min"),
-                optimal_ph_max=p_data.get("optimal_ph_max"),
-                expected_yield_per_acre_kg=YIELD_DATA.get(p_data["id"], 0)
+                category="Vegetable" if p_data["name"] != "Rice" else "Grain"
             )
             session.add(plant)
+
+        await session.flush()
+
+        print("  🌱 Inserting Varieties...")
+        from models.plant import PlantVariety
+        for v_data in varieties:
+            plant_id = plant_id_map.get(v_data["plant_id"])
+            if not plant_id:
+                continue
+
+            variety = PlantVariety(
+                id=uuid.uuid4(),
+                plant_id=plant_id,
+                variety_name=v_data["variety_name"],
+                scientific_name=v_data.get("scientific_name"),
+                growth_duration_days=v_data["growth_duration_days"],
+                optimal_ph_min=v_data.get("optimal_ph_min"),
+                optimal_ph_max=v_data.get("optimal_ph_max"),
+                optimal_temp_min=v_data.get("optimal_temp_min"),
+                optimal_temp_max=v_data.get("optimal_temp_max"),
+                optimal_rainfall_mm=v_data.get("optimal_rainfall_mm"),
+                expected_yield_per_acre_kg=v_data.get("expected_yield_per_acre_kg") or YIELD_DATA.get(v_data["plant_id"], 0),
+                description=v_data.get("description")
+            )
+            session.add(variety)
 
         await session.flush()
 
@@ -250,6 +271,7 @@ async def seed_data():
     print("✅ Database seeding completed!")
     print("   📊 Summary:")
     print(f"      Plants:              {len(plants)}")
+    print(f"      Varieties:           {len(varieties)}")
     print(f"      Stages:              {len(stages)}")
     print(f"      Water Requirements:  {len(water_requirements)}")
     print(f"      Nutrient Reqs:       {len(nutrient_requirements)}")

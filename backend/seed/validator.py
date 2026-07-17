@@ -35,9 +35,9 @@ async def validate_seed_data():
                     has_errors = True
                 expected_start = stage.end_day + 1
             
-            if stages[-1].end_day != plant.growth_duration_days:
-                logger.warning(f"Plant {plant.common_name} final stage ends at {stages[-1].end_day}, but total duration is {plant.growth_duration_days}")
-                
+            # Baseline duration is determined by the end_day of the final stage.
+            baseline_duration = stages[-1].end_day
+            logger.info(f"Plant {plant.common_name} has a baseline duration of {baseline_duration} days.")
         # 2. Verify organic fertilizers don't recommend synthetic products
         fertilizers = (await db.execute(select(PlantFertilizerRecommendation))).scalars().all()
         synthetic_terms = ["urea", "tsp", "mop", "npk", "synthetic"]
