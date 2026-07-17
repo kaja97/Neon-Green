@@ -75,19 +75,25 @@ Run seed: `python -m seed.run_seed` from the `backend/` directory.
 
 **The planner engine (`generate_season_plan`) CANNOT function without seeded plant stages, water, and fertilizer data.**
 
-## 6. Critical Query Patterns
+## 6. Critical Query Patterns & Repository Pattern
+
+### Repository Pattern (CRITICAL)
+All direct SQLAlchemy `select()`, `insert()`, `update()`, and `delete()` operations MUST be encapsulated inside Repositories (`repository.py` in each module) which inherit from `BaseRepository`.
+**NEVER** write raw `db.execute(select(...))` directly in `router.py` or `service.py`. Services should call their injected repositories.
 
 ### Activity lookup (most common query in the app)
+Inside `FarmingActivityRepository`:
 ```python
 # Always filter by project_id + date + status together — composite index exists
-activities = await session.execute(
-    select(FarmingActivity)
-    .where(
-        FarmingActivity.project_id == project_id,
-        FarmingActivity.scheduled_date == today,
-        FarmingActivity.status == "pending"
+async def get_pending_activities(self, db: AsyncSession, project_id: uuid.UUID, today: date):
+    return await db.execute(
+        select(FarmingActivity)
+        .where(
+            FarmingActivity.project_id == project_id,
+            FarmingActivity.scheduled_date == today,
+            FarmingActivity.status == "pending"
+        )
     )
-)
 ```
 
 ### Required Indexes (already defined in migration)

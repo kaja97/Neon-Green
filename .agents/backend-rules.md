@@ -2,13 +2,14 @@
 
 ## 1. Project Structure & Module Pattern
 
-Every feature is a self-contained module under `backend/modules/<name>/`. Each module MUST follow this exact structure:
+Every feature is a self-contained module under `backend/modules/<name>/`. Each module MUST follow this exact structure using the **Class-Based Architecture and Repository Pattern**:
 
 ```
 modules/<name>/
-├── __init__.py     ← exports `router` (and optionally `service`)
-├── router.py       ← FastAPI router, endpoint definitions
-├── service.py      ← Business logic, DB calls
+├── __init__.py     ← exports `router`
+├── router.py       ← FastAPI router, endpoint definitions (injects services via Depends)
+├── service.py      ← Business logic classes inheriting from `BaseService`
+├── repository.py   ← DB abstraction classes inheriting from `BaseRepository` (all SQLAlchemy queries go here)
 └── schemas.py      ← Pydantic v2 request/response models
 ```
 
@@ -45,8 +46,10 @@ These already exist at the backend root:
 - `main.py` — FastAPI app, all routers mounted at `/api/v1`
 - `database.py` — async SQLAlchemy engine, `get_db()` dependency
 - `config.py` — `settings` object via Pydantic BaseSettings (reads `.env`)
-- `dependencies.py` — `get_db`, `get_current_user`, `get_current_farmer`, `get_admin_user`
+- `dependencies.py` — **Central DI Factory**. Contains `get_db`, `get_current_user`, AND factory functions for every service (e.g., `get_auth_service()`, `get_project_service()`). Always use these in routers.
 - `models/base.py` — `BaseModel` with `id` (UUID), `created_at`, `updated_at`
+- `core/base_repository.py` — `BaseRepository[ModelType, CreateSchemaType, UpdateSchemaType]` providing standard generic CRUD operations.
+- `core/base_service.py` — `BaseService` providing standardized logging and base methods for services.
 - `core/cache.py` — Redis helpers: `invalidate_dashboard_cache(project_id)`, `DASHBOARD_CACHE_TTL = 180`
 - `core/otp.py` — Redis-backed OTP generation and verification
 - `core/rate_limiter.py` — Sliding window rate limiter
