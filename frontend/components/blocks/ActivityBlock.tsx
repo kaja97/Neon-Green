@@ -21,6 +21,7 @@ export default function ActivityBlock({
 }) {
   const completeMutation = useCompleteActivity(projectId);
   const [optimisticCompleted, setOptimisticCompleted] = useState<string[]>([]);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleComplete = (id: string, status: string) => {
     if (status !== "completed" && !optimisticCompleted.includes(id)) {
@@ -90,12 +91,22 @@ export default function ActivityBlock({
       {/* Next Up — upcoming tasks with dates */}
       {upcoming > 0 && (
         <div className="mt-6 pt-5 border-t border-slate-100">
-          <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4">
-            <CalendarDays className="w-4 h-4 text-violet-500" />
-            Next Up
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-violet-500" />
+              Next Up
+            </h3>
+            {upcoming > 2 && (
+              <button 
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-xs font-semibold text-violet-600 hover:text-violet-700 bg-violet-50 px-3 py-1 rounded-full transition-colors"
+              >
+                {isExpanded ? "Show Less" : `View All (${upcoming})`}
+              </button>
+            )}
+          </div>
           <div className="space-y-3">
-            {upcomingActivities?.map((task) => (
+            {(isExpanded ? upcomingActivities : upcomingActivities?.slice(0, 2))?.map((task) => (
               <div
                 key={task.id}
                 className="flex items-center gap-4 p-3 rounded-2xl bg-violet-50/50 border border-violet-100"

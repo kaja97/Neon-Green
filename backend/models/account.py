@@ -31,13 +31,13 @@ class Account(BaseModel):
     )
 
     farmer_profile: Mapped["FarmerProfile"] = relationship(
-        back_populates="account", uselist=False, cascade="all, delete-orphan"
+        back_populates="account", uselist=False, cascade="all, delete-orphan", lazy="selectin"
     )
     vendor_profile: Mapped["VendorProfile"] = relationship(
-        back_populates="account", uselist=False, cascade="all, delete-orphan"
+        back_populates="account", uselist=False, cascade="all, delete-orphan", lazy="selectin"
     )
     buyer_profile: Mapped["BuyerProfile"] = relationship(
-        back_populates="account", uselist=False, cascade="all, delete-orphan"
+        back_populates="account", uselist=False, cascade="all, delete-orphan", lazy="selectin"
     )
     products: Mapped[list["Product"]] = relationship(
         "Product", back_populates="seller", cascade="all, delete-orphan"

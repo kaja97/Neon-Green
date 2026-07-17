@@ -504,7 +504,11 @@ export default function RegisterPage() {
                 <label className="text-sm font-medium text-text-secondary">
                   Farming Method
                 </label>
-                <div className="grid grid-cols-1 gap-2">
+                <select
+                  value={farmingMethod}
+                  onChange={(e) => setFarmingMethod(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-border text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                >
                   {(farmingMethods.length > 0
                     ? farmingMethods
                     : [
@@ -521,20 +525,11 @@ export default function RegisterPage() {
                         },
                       ]
                   ).map((method) => (
-                    <button
-                      key={method.id}
-                      type="button"
-                      onClick={() => setFarmingMethod(method.code)}
-                      className={`p-3 rounded-xl border text-left text-sm font-medium transition-all ${
-                        farmingMethod === method.code
-                          ? "bg-primary/10 border-primary text-primary"
-                          : "bg-surface-tertiary border-border text-text-secondary hover:border-border-hover"
-                      }`}
-                    >
+                    <option key={method.id} value={method.code}>
                       {method.name}
-                    </button>
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
 
               <div className="space-y-1.5">
