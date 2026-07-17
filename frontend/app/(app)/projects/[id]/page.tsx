@@ -12,6 +12,7 @@ import WeatherCardBlock from "@/components/blocks/WeatherCardBlock";
 import FertilizerLogBlock from "@/components/blocks/FertilizerLogBlock";
 import Modal from "@/components/ui/Modal";
 import { formatCurrency, formatFarmingMethod } from "@/lib/utils/formatters";
+import ParallaxBackground from "@/components/dashboard/ParallaxBackground";
 import {
   ArrowLeft,
   Settings,
@@ -158,7 +159,9 @@ export default function ProjectDashboard({
   ];
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 pb-24">
+    <>
+      <ParallaxBackground />
+      <div className="relative z-10 p-4 md:p-8 max-w-5xl mx-auto space-y-6 pb-24">
       {/* Header */}
       <header className="flex items-center justify-between animate-fade-in">
         <div className="flex items-center gap-3">
@@ -372,6 +375,7 @@ export default function ProjectDashboard({
           </button>
         </form>
       </Modal>
-    </div>
+      </div>
+    </>
   );
 }
