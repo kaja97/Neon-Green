@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Loader2, Plus, Edit2, Trash2, Sprout } from "lucide-react";
-import { clsx } from "clsx";
+import { cn } from "@/lib/utils";
 import Modal from "../ui/Modal";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -254,7 +254,7 @@ export default function LandSection() {
                         form.setValue("irrigation_type", [...selected, type].join(", "));
                       }
                     }}
-                    className={clsx(
+                    className={cn(
                       "py-2 px-3 rounded-xl border text-sm font-semibold transition-all",
                       isSelected
                         ? "bg-blue-500/20 border-blue-500/50 text-blue-400"
