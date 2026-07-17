@@ -145,3 +145,43 @@ def get_soil_service() -> "SoilService":
         rec_repo=SoilRecommendationRepository(),
     )
 
+def get_weather_service() -> "WeatherService":
+    from modules.weather.service import WeatherService
+    from modules.auth.repository import FarmerProfileRepository
+    from modules.project.repository import ProjectRepository
+    from modules.weather.repository import WeatherCacheRepository, WeatherAlertRepository
+    from modules.weather.client import WeatherClient
+    return WeatherService(
+        profile_repo=FarmerProfileRepository(),
+        project_repo=ProjectRepository(),
+        cache_repo=WeatherCacheRepository(),
+        alert_repo=WeatherAlertRepository(),
+        weather_client=WeatherClient(),
+    )
+
+def get_ai_service() -> "AIService":
+    from modules.ai.service import AIService
+    from modules.auth.repository import FarmerProfileRepository
+    from modules.project.repository import ProjectRepository
+    from modules.ai.repository import AIConversationRepository, AIQueryLogRepository, AIProjectSummaryRepository
+    return AIService(
+        profile_repo=FarmerProfileRepository(),
+        project_repo=ProjectRepository(),
+        conv_repo=AIConversationRepository(),
+        log_repo=AIQueryLogRepository(),
+        summary_repo=AIProjectSummaryRepository(),
+    )
+
+def get_planner_service() -> "PlannerService":
+    from modules.planner.service import PlannerService
+    from modules.auth.repository import FarmerProfileRepository
+    from modules.project.repository import ProjectRepository
+    from modules.planner.repository import ActivityPlanRepository, FarmingActivityRepository, ActivityDetailRepository
+    return PlannerService(
+        profile_repo=FarmerProfileRepository(),
+        project_repo=ProjectRepository(),
+        plan_repo=ActivityPlanRepository(),
+        activity_repo=FarmingActivityRepository(),
+        detail_repo=ActivityDetailRepository(),
+    )
+
