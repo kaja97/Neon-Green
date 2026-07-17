@@ -10,7 +10,7 @@ class Project(BaseModel):
 
     farmer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("farmer_profiles.id"))
     plant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("plants.id"))
-    variety_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("plant_varieties.id", ondelete="SET NULL"), nullable=True)
+    variety_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("plant_varieties.id"))
     location_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("farmer_locations.id"))
     land_detail_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("farmer_land_details.id"), nullable=True)
     

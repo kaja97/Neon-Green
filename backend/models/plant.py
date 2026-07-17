@@ -9,24 +9,8 @@ class Plant(BaseModel):
     
     common_name: Mapped[str] = mapped_column(String(100))
     local_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    scientific_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     category: Mapped[str] = mapped_column(String(100))
     sub_category: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    
-    growth_duration_days: Mapped[int] = mapped_column(Integer)
-    
-    planting_season: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
-    
-    optimal_temp_min: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
-    optimal_temp_max: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
-    optimal_rainfall_mm: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
-    optimal_ph_min: Mapped[float | None] = mapped_column(Numeric(3, 1), nullable=True)
-    optimal_ph_max: Mapped[float | None] = mapped_column(Numeric(3, 1), nullable=True)
-    
-    expected_yield_per_acre_kg: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
-    compatible_soil_types: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
-    companion_plants: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
-    incompatible_plants: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -73,7 +57,21 @@ class PlantVariety(BaseModel):
 
     plant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("plants.id", ondelete="CASCADE"))
     variety_name: Mapped[str] = mapped_column(String(150))
+    scientific_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    # Optional override of the parent plant's growth duration for this variety.
-    growth_duration_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    
+    # Biological metrics moved from Plant
+    growth_duration_days: Mapped[int] = mapped_column(Integer)
+    planting_season: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
+    
+    optimal_temp_min: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
+    optimal_temp_max: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
+    optimal_rainfall_mm: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    optimal_ph_min: Mapped[float | None] = mapped_column(Numeric(3, 1), nullable=True)
+    optimal_ph_max: Mapped[float | None] = mapped_column(Numeric(3, 1), nullable=True)
+    
+    expected_yield_per_acre_kg: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    compatible_soil_types: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
+    companion_plants: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
+    incompatible_plants: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)

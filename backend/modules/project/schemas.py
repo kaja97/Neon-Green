@@ -10,13 +10,25 @@ class PlantResponse(BaseModel):
     id: uuid.UUID
     common_name: str
     local_name: Optional[str] = None
-    scientific_name: Optional[str] = None
     category: str
+    sub_category: Optional[str] = None
+    description: Optional[str] = None
+
+class PlantVarietyResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    plant_id: uuid.UUID
+    variety_name: str
+    scientific_name: Optional[str] = None
     growth_duration_days: int
     optimal_temp_min: Optional[float] = None
     optimal_temp_max: Optional[float] = None
+    optimal_rainfall_mm: Optional[float] = None
+    optimal_ph_min: Optional[float] = None
+    optimal_ph_max: Optional[float] = None
     expected_yield_per_acre_kg: Optional[float] = None
     description: Optional[str] = None
+    is_active: bool
 
 class PlantStageResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -36,6 +48,7 @@ class FarmingMethodResponse(BaseModel):
 class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     plant_id: uuid.UUID
+    variety_id: uuid.UUID
     location_id: uuid.UUID
     land_detail_id: Optional[uuid.UUID] = None
     area: float = Field(..., gt=0)
