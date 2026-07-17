@@ -185,3 +185,23 @@ def get_planner_service() -> "PlannerService":
         detail_repo=ActivityDetailRepository(),
     )
 
+def get_market_service() -> "MarketService":
+    from modules.market.service import MarketService
+    from modules.auth.repository import FarmerProfileRepository
+    from modules.project.repository import ProjectRepository
+    from modules.market.repository import MarketPriceRepository
+    return MarketService(
+        profile_repo=FarmerProfileRepository(),
+        project_repo=ProjectRepository(),
+        price_repo=MarketPriceRepository(),
+    )
+
+def get_notification_service() -> "NotificationService":
+    from modules.notification.service import NotificationService
+    from modules.auth.repository import FarmerProfileRepository
+    from modules.notification.repository import NotificationRepository
+    return NotificationService(
+        profile_repo=FarmerProfileRepository(),
+        notification_repo=NotificationRepository(),
+    )
+
