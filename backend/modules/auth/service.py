@@ -193,6 +193,7 @@ async def verify_register_otp(
         account_id=new_account.id,
         farmer_profile_id=new_profile.id,
         access_token=access,
+        refresh_token=refresh,
     )
 
 
@@ -238,6 +239,7 @@ async def login_user(
     return TokenResponse(
         access_token=access,
         role=account.role,
+        refresh_token=refresh,
     )
 
 
@@ -273,7 +275,7 @@ async def refresh_tokens(refresh_token: str) -> TokenResponse:
     new_access, new_refresh = _generate_tokens(user_id, role)
     await _store_refresh_token(user_id, new_refresh)
 
-    return TokenResponse(access_token=new_access, role=role)
+    return TokenResponse(access_token=new_access, role=role, refresh_token=new_refresh)
 
 
 # ── 4. Logout ────────────────────────────────────────────
@@ -303,7 +305,7 @@ async def change_password(
     access, refresh = _generate_tokens(str(user.id), user.role)
     await _store_refresh_token(str(user.id), refresh)
 
-    return TokenResponse(access_token=access, role=user.role)
+    return TokenResponse(access_token=access, role=user.role, refresh_token=refresh)
 
 
 # ── 6. Forgot Password (OTP) ────────────────────────────
@@ -384,7 +386,7 @@ async def verify_forgot_password_otp(
     except Exception:
         pass
 
-    return TokenResponse(access_token=access, role=account.role)
+    return TokenResponse(access_token=access, role=account.role, refresh_token=refresh)
 
 
 # ── 7. Change Email (OTP) ───────────────────────────────

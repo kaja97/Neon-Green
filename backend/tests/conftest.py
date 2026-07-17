@@ -86,8 +86,8 @@ async def create_test_account(
         )
         await conn.execute(
             """INSERT INTO farmer_profiles (id, account_id, full_name,
-               farming_method, primary_language, created_at, updated_at)
-               VALUES ($1::uuid, $2::uuid, 'Test Farmer', 'organic', 'en', now(), now())""",
+               farming_method, primary_language, experience_years, created_at, updated_at)
+               VALUES ($1::uuid, $2::uuid, 'Test Farmer', 'organic', 'en', 0, now(), now())""",
             uuid.UUID(profile_id), uuid.UUID(account_id),
         )
     finally:

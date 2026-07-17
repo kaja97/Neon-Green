@@ -45,6 +45,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int = 900  # 15 minutes in seconds
     role: Optional[str] = None
+    refresh_token: Optional[str] = None
 
 
 # ── Password Management ─────────────────────────────────
@@ -120,6 +121,7 @@ class RegisterResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int = 900
+    refresh_token: Optional[str] = None
 
 
 class OTPSentResponse(BaseModel):

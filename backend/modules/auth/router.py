@@ -69,8 +69,9 @@ async def register_verify(
 ):
     """Verify OTP and create account + farmer profile atomically."""
     result = await service.verify_register_otp(db, data)
-    # Note: refresh token stored in Redis by service, cookie set here
-    return created_response(result.model_dump())
+    if result.refresh_token:
+        _set_refresh_cookie(response, result.refresh_token)
+    return created_response(result.model_dump(exclude={"refresh_token"}))
 
 
 # ─── 1.3 Login ──────────────────────────────────────────
@@ -85,7 +86,9 @@ async def login(
     """Authenticate with email/phone + password. Returns JWT tokens."""
     client_ip = request.client.host if request.client else ""
     tokens = await service.login_user(db, data, client_ip)
-    return success_response(tokens.model_dump())
+    if tokens.refresh_token:
+        _set_refresh_cookie(response, tokens.refresh_token)
+    return success_response(tokens.model_dump(exclude={"refresh_token"}))
 
 
 # ─── 1.4 Refresh Token ──────────────────────────────────
@@ -98,7 +101,9 @@ async def refresh(request: Request, response: Response):
         raise AppException(ErrorCode.AUTH_REFRESH_TOKEN_MISSING)
 
     tokens = await service.refresh_tokens(refresh_token)
-    return success_response(tokens.model_dump())
+    if tokens.refresh_token:
+        _set_refresh_cookie(response, tokens.refresh_token)
+    return success_response(tokens.model_dump(exclude={"refresh_token"}))
 
 
 # ─── 1.5 Logout ─────────────────────────────────────────
@@ -134,6 +139,8 @@ async def change_password(
 ):
     """Change password. Requires current password. Invalidates all sessions."""
     tokens = await service.change_password(db, current_user, data)
+    if tokens.refresh_token:
+        _set_refresh_cookie(response, tokens.refresh_token)
     return success_response({
         "message": "Password changed successfully.",
         "access_token": tokens.access_token,
@@ -163,6 +170,8 @@ async def forgot_password_verify(
 ):
     """Verify OTP and set new password. Returns fresh tokens (auto-login)."""
     tokens = await service.verify_forgot_password_otp(db, data)
+    if tokens.refresh_token:
+        _set_refresh_cookie(response, tokens.refresh_token)
     return success_response({
         "message": "Password reset successfully.",
         "access_token": tokens.access_token,
@@ -249,4 +258,6 @@ async def docs_login(
     data = LoginRequest(email_or_phone=form_data.username, password=form_data.password)
     client_ip = request.client.host if request.client else ""
     tokens = await service.login_user(db, data, client_ip)
+    if tokens.refresh_token:
+        _set_refresh_cookie(response, tokens.refresh_token)
     return {"access_token": tokens.access_token, "token_type": "bearer"}
