@@ -30,15 +30,16 @@ export default function LoginPage() {
       });
 
       const { access_token } = loginRes.data.data;
+      
+      // Update store immediately with token so interceptor uses it
+      useAuthStore.setState({ accessToken: access_token });
 
       // 2. Fetch User Profile
-      const meRes = await api.get("/auth/me", {
-        headers: { Authorization: `Bearer ${access_token}` },
-      });
+      const meRes = await api.get("/auth/me");
 
       const userData = meRes.data.data;
 
-      // 3. Update Store
+      // 3. Finalize Store
       login(
         {
           id: userData.id || userData.account_id,
