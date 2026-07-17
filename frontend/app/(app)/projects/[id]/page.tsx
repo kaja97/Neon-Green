@@ -156,6 +156,15 @@ export default function ProjectDashboard({
       color: "text-emerald-400",
       bg: "bg-emerald-500/10",
     },
+    {
+      href: `/projects/${params.id}/fertilizer`,
+      icon: Sprout,
+      label: "Fertilizer",
+      value: "Nutrition",
+      sub: "Manage fertilizers",
+      color: "text-lime-400",
+      bg: "bg-lime-500/10",
+    },
   ];
 
   return (
@@ -226,7 +235,7 @@ export default function ProjectDashboard({
         <h2 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">
           Services
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <WeatherBlock projectId={params.id} />
           {serviceBlocks.map((block) => {
             const Icon = block.icon;

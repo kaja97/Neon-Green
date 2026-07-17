@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
-import { LayoutDashboard, Users, Database, ArrowLeft, Loader2 } from "lucide-react";
+import { LayoutDashboard, Users, Database, ArrowLeft, Loader2, Sprout } from "lucide-react";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -31,6 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
+    { href: "/admin/projects", label: "Projects", icon: Sprout },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/master-data", label: "Master Data", icon: Database },
   ];
