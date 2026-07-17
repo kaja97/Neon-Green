@@ -72,3 +72,33 @@ async def get_admin_user(
     if current_user.role != "admin":
         raise AppException(ErrorCode.ADMIN_FORBIDDEN)
     return current_user
+
+def get_auth_service() -> "AuthService":
+    from modules.auth.service import AuthService
+    from modules.auth.repository import AccountRepository, FarmerProfileRepository
+    return AuthService(
+        account_repo=AccountRepository(),
+        profile_repo=FarmerProfileRepository(),
+    )
+
+def get_admin_service() -> "AdminService":
+    from modules.admin.service import AdminService
+    from modules.auth.repository import AccountRepository
+    from modules.admin.repository import PlantRepository, DiseaseRepository
+    return AdminService(
+        account_repo=AccountRepository(),
+        plant_repo=PlantRepository(),
+        disease_repo=DiseaseRepository(),
+    )
+
+def get_farmer_service() -> "FarmerService":
+    from modules.farmer.service import FarmerService
+    from modules.auth.repository import FarmerProfileRepository
+    from modules.farmer.repository import FarmerLocationRepository, FarmerLandDetailRepository, FarmerLivestockRepository
+    return FarmerService(
+        profile_repo=FarmerProfileRepository(),
+        location_repo=FarmerLocationRepository(),
+        land_repo=FarmerLandDetailRepository(),
+        livestock_repo=FarmerLivestockRepository(),
+    )
+

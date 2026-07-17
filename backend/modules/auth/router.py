@@ -6,12 +6,12 @@ from fastapi import APIRouter, Depends, Response, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
-from dependencies import get_current_user
+from dependencies import get_current_user, get_auth_service
 from models.account import Account
 from core.response import success_response, created_response, message_response
 from core.errors.exceptions import AppException
 from core.errors.error_codes import ErrorCode
-from . import service
+from .service import AuthService
 from .schemas import (
     RegisterOTPRequest,
     RegisterVerifyRequest,
@@ -53,9 +53,10 @@ def _clear_refresh_cookie(response: Response) -> None:
 async def register_request_otp(
     data: RegisterOTPRequest,
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Send OTP to email for registration verification."""
-    result = await service.request_register_otp(db, data)
+    result = await auth_service.request_register_otp(db, data)
     return success_response(result)
 
 
@@ -66,9 +67,10 @@ async def register_verify(
     data: RegisterVerifyRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Verify OTP and create account + farmer profile atomically."""
-    result = await service.verify_register_otp(db, data)
+    result = await auth_service.verify_register_otp(db, data)
     if result.refresh_token:
         _set_refresh_cookie(response, result.refresh_token)
     return created_response(result.model_dump(exclude={"refresh_token"}))
@@ -82,10 +84,11 @@ async def login(
     request: Request,
     response: Response,
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Authenticate with email/phone + password. Returns JWT tokens."""
     client_ip = request.client.host if request.client else ""
-    tokens = await service.login_user(db, data, client_ip)
+    tokens = await auth_service.login_user(db, data, client_ip)
     if tokens.refresh_token:
         _set_refresh_cookie(response, tokens.refresh_token)
     return success_response(tokens.model_dump(exclude={"refresh_token"}))
@@ -94,13 +97,17 @@ async def login(
 # ─── 1.4 Refresh Token ──────────────────────────────────
 
 @router.post("/refresh", status_code=200)
-async def refresh(request: Request, response: Response):
+async def refresh(
+    request: Request, 
+    response: Response,
+    auth_service: AuthService = Depends(get_auth_service),
+):
     """Rotate access + refresh tokens using httpOnly cookie."""
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         raise AppException(ErrorCode.AUTH_REFRESH_TOKEN_MISSING)
 
-    tokens = await service.refresh_tokens(refresh_token)
+    tokens = await auth_service.refresh_tokens(refresh_token)
     if tokens.refresh_token:
         _set_refresh_cookie(response, tokens.refresh_token)
     return success_response(tokens.model_dump(exclude={"refresh_token"}))
@@ -112,9 +119,10 @@ async def refresh(request: Request, response: Response):
 async def logout(
     response: Response,
     current_user: Account = Depends(get_current_user),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Invalidate refresh token and clear cookie."""
-    await service.logout_user(str(current_user.id))
+    await auth_service.logout_user(str(current_user.id))
     _clear_refresh_cookie(response)
     return message_response("Logged out successfully.")
 
@@ -122,9 +130,12 @@ async def logout(
 # ─── 1.6 Get Current User ───────────────────────────────
 
 @router.get("/me", status_code=200)
-async def get_me(current_user: Account = Depends(get_current_user)):
+async def get_me(
+    current_user: Account = Depends(get_current_user),
+    auth_service: AuthService = Depends(get_auth_service),
+):
     """Return current authenticated user with profile."""
-    data = await service.get_me(current_user)
+    data = await auth_service.get_me(current_user)
     return success_response(data)
 
 
@@ -136,9 +147,10 @@ async def change_password(
     response: Response,
     current_user: Account = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Change password. Requires current password. Invalidates all sessions."""
-    tokens = await service.change_password(db, current_user, data)
+    tokens = await auth_service.change_password(db, current_user, data)
     if tokens.refresh_token:
         _set_refresh_cookie(response, tokens.refresh_token)
     return success_response({
@@ -154,9 +166,10 @@ async def change_password(
 async def forgot_password_request_otp(
     data: ForgotPasswordOTPRequest,
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Send password reset OTP. Returns 200 regardless (no user enumeration)."""
-    result = await service.request_forgot_password_otp(db, data)
+    result = await auth_service.request_forgot_password_otp(db, data)
     return success_response(result)
 
 
@@ -167,9 +180,10 @@ async def forgot_password_verify(
     data: ForgotPasswordVerifyRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Verify OTP and set new password. Returns fresh tokens (auto-login)."""
-    tokens = await service.verify_forgot_password_otp(db, data)
+    tokens = await auth_service.verify_forgot_password_otp(db, data)
     if tokens.refresh_token:
         _set_refresh_cookie(response, tokens.refresh_token)
     return success_response({
@@ -186,9 +200,10 @@ async def change_email_request_otp(
     data: ChangeEmailRequest,
     current_user: Account = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Send OTP to new email address for verification."""
-    result = await service.request_change_email_otp(db, current_user, data)
+    result = await auth_service.request_change_email_otp(db, current_user, data)
     return success_response(result)
 
 
@@ -199,9 +214,10 @@ async def change_email_verify(
     data: ChangeEmailVerifyRequest,
     current_user: Account = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Verify OTP and update email address."""
-    result = await service.verify_change_email_otp(db, current_user, data)
+    result = await auth_service.verify_change_email_otp(db, current_user, data)
     return success_response(result)
 
 
@@ -212,9 +228,10 @@ async def change_phone_request_otp(
     data: ChangePhoneRequest,
     current_user: Account = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Send OTP for phone number change."""
-    result = await service.request_change_phone_otp(db, current_user, data)
+    result = await auth_service.request_change_phone_otp(db, current_user, data)
     return success_response(result)
 
 
@@ -225,9 +242,10 @@ async def change_phone_verify(
     data: ChangePhoneVerifyRequest,
     current_user: Account = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Verify OTP and update phone number."""
-    result = await service.verify_change_phone_otp(db, current_user, data)
+    result = await auth_service.verify_change_phone_otp(db, current_user, data)
     return success_response(result)
 
 
@@ -238,9 +256,10 @@ async def delete_my_account(
     response: Response,
     current_user: Account = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Soft-delete account (set is_active=False). Never hard-deletes."""
-    await service.delete_account(db, current_user)
+    await auth_service.delete_account(db, current_user)
     _clear_refresh_cookie(response)
     return None
 
@@ -253,11 +272,12 @@ async def docs_login(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """OAuth2 form login for Swagger UI. Hidden from API docs."""
     data = LoginRequest(email_or_phone=form_data.username, password=form_data.password)
     client_ip = request.client.host if request.client else ""
-    tokens = await service.login_user(db, data, client_ip)
+    tokens = await auth_service.login_user(db, data, client_ip)
     if tokens.refresh_token:
         _set_refresh_cookie(response, tokens.refresh_token)
     return {"access_token": tokens.access_token, "token_type": "bearer"}

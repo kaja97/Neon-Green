@@ -5,11 +5,11 @@ All endpoints require admin role.
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
-from dependencies import get_admin_user
+from dependencies import get_admin_user, get_admin_service
 from models.account import Account
 from core.response import success_response, paginated_response, message_response
 from core.pagination import PaginationParams, get_pagination
-from . import service
+from .service import AdminService
 from .schemas import AdminRoleUpdate
 from typing import Optional
 
@@ -26,9 +26,10 @@ async def list_users(
     pagination: PaginationParams = Depends(get_pagination),
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
     """List all user accounts. Admin only."""
-    users, total = await service.list_users(db, pagination, role, is_active, search)
+    users, total = await admin_service.list_users(db, pagination, role, is_active, search)
     return paginated_response(users, pagination.page, pagination.per_page, total)
 
 
@@ -39,9 +40,10 @@ async def get_user_detail(
     user_id: str,
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
     """Get detailed user info including profile and project count."""
-    result = await service.get_user_detail(db, user_id)
+    result = await admin_service.get_user_detail(db, user_id)
     return success_response(result)
 
 
@@ -52,9 +54,10 @@ async def deactivate_user(
     user_id: str,
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
     """Soft-delete a user account. Cannot deactivate self."""
-    result = await service.deactivate_user(db, admin, user_id)
+    result = await admin_service.deactivate_user(db, admin, user_id)
     return success_response(result)
 
 
@@ -65,9 +68,10 @@ async def reactivate_user(
     user_id: str,
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
     """Restore a deactivated user account."""
-    result = await service.reactivate_user(db, user_id)
+    result = await admin_service.reactivate_user(db, user_id)
     return success_response(result)
 
 
@@ -79,9 +83,10 @@ async def change_user_role(
     data: AdminRoleUpdate,
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
     """Change user role (farmer ↔ admin)."""
-    result = await service.change_user_role(db, admin, user_id, data.role.value)
+    result = await admin_service.change_user_role(db, admin, user_id, data.role.value)
     return success_response(result)
 
 
@@ -91,9 +96,10 @@ async def change_user_role(
 async def get_admin_stats(
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
     """System-wide statistics for admin dashboard."""
-    result = await service.get_admin_stats(db)
+    result = await admin_service.get_admin_stats(db)
     return success_response(result)
 
 
@@ -105,6 +111,7 @@ async def list_all_projects(
     pagination: PaginationParams = Depends(get_pagination),
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    # Note: Using generic project service logic or inline logic
 ):
     """List all projects across all farmers. Admin overview."""
     from sqlalchemy.future import select
@@ -180,9 +187,10 @@ import uuid
 async def list_all_plants(
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
     """List all plants for admin master-data management."""
-    plants = await service.list_plants(db)
+    plants = await admin_service.list_plants(db)
     from modules.project.schemas import PlantResponse
     return success_response([PlantResponse.model_validate(p).model_dump() for p in plants])
 
@@ -191,8 +199,9 @@ async def create_plant(
     data: PlantCreate,
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
-    result = await service.create_plant(db, data)
+    result = await admin_service.create_plant(db, data)
     return success_response({"id": str(result.id), "common_name": result.common_name})
 
 @router.put("/plants/{plant_id}", status_code=200)
@@ -201,8 +210,9 @@ async def update_plant(
     data: PlantUpdate,
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
-    result = await service.update_plant(db, plant_id, data)
+    result = await admin_service.update_plant(db, plant_id, data)
     return success_response({"id": str(result.id), "message": "Updated successfully"})
 
 @router.delete("/plants/{plant_id}", status_code=200)
@@ -210,17 +220,19 @@ async def delete_plant(
     plant_id: uuid.UUID,
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
-    result = await service.delete_plant(db, plant_id)
+    result = await admin_service.delete_plant(db, plant_id)
     return success_response(result)
 
 @router.get("/diseases", status_code=200)
 async def list_all_diseases(
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
     """List all diseases for admin master-data management."""
-    diseases = await service.list_diseases(db)
+    diseases = await admin_service.list_diseases(db)
     from modules.disease.schemas import DiseaseSearchResponse
     return success_response([DiseaseSearchResponse.model_validate(d).model_dump() for d in diseases])
 
@@ -229,8 +241,9 @@ async def create_disease(
     data: DiseaseCreate,
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
-    result = await service.create_disease(db, data)
+    result = await admin_service.create_disease(db, data)
     return success_response(result)
 
 @router.put("/diseases/{disease_id}", status_code=200)
@@ -239,8 +252,9 @@ async def update_disease(
     data: DiseaseUpdate,
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
-    result = await service.update_disease(db, disease_id, data)
+    result = await admin_service.update_disease(db, disease_id, data)
     return success_response(result)
 
 @router.delete("/diseases/{disease_id}", status_code=200)
@@ -248,6 +262,7 @@ async def delete_disease(
     disease_id: uuid.UUID,
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
-    result = await service.delete_disease(db, disease_id)
+    result = await admin_service.delete_disease(db, disease_id)
     return success_response(result)
