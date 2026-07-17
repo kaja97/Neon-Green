@@ -8,7 +8,7 @@ from models.account import Account
 from core.response import success_response, created_response
 from .schemas import (
     ProjectCreate, ProjectResponse, ProjectStatusUpdate, ProjectUpdate,
-    DashboardResponse, PlantResponse, PlantStageResponse,
+    DashboardResponse, PlantResponse, PlantStageResponse, PlantVarietyResponse,
     FarmingMethodResponse
 )
 from .service import ProjectService
@@ -34,6 +34,15 @@ async def list_plant_stages(
 ):
     stages = await project_service.get_plant_stages(db, plant_id)
     return success_response([PlantStageResponse.model_validate(s).model_dump() for s in stages])
+
+@master_router.get("/plants/{plant_id}/varieties", status_code=200)
+async def list_plant_varieties(
+    plant_id: uuid.UUID, 
+    db: AsyncSession = Depends(get_db),
+    project_service: ProjectService = Depends(get_project_service)
+):
+    varieties = await project_service.get_plant_varieties(db, plant_id)
+    return success_response([PlantVarietyResponse.model_validate(v).model_dump() for v in varieties])
 
 @master_router.get("/farming-methods", status_code=200)
 async def list_farming_methods(

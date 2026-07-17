@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from models.project import Project
-from models.plant import Plant, PlantStage
+from models.plant import Plant, PlantStage, PlantVariety
 from models.farmer import FarmerLocation
 from models.account import FarmerProfile
 from core.errors.exceptions import AppException
@@ -56,6 +56,10 @@ class ProjectService(BaseService):
 
     async def get_plant_stages(self, db: AsyncSession, plant_id: uuid.UUID):
         return await self.stage_repo.get_by_plant(db, plant_id)
+
+    async def get_plant_varieties(self, db: AsyncSession, plant_id: uuid.UUID):
+        result = await db.execute(select(PlantVariety).where(PlantVariety.plant_id == plant_id).order_by(PlantVariety.variety_name))
+        return result.scalars().all()
 
     async def get_farming_methods(self):
         return [

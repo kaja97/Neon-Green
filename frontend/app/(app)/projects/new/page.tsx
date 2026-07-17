@@ -15,6 +15,7 @@ export default function NewProjectWizard() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     plant_id: "",
+    variety_id: "",
     location_id: "",
     area_acres: "",
     area_unit: "acres",
@@ -30,6 +31,16 @@ export default function NewProjectWizard() {
       return res.data.data;
     },
     enabled: !!user,
+  });
+
+  const { data: varieties, isLoading: varietiesLoading } = useQuery({
+    queryKey: ["varieties", formData.plant_id],
+    queryFn: async () => {
+      if (!formData.plant_id) return [];
+      const res = await api.get(`/plants/${formData.plant_id}/varieties`);
+      return res.data.data;
+    },
+    enabled: !!user && !!formData.plant_id,
   });
 
   const { data: profile } = useQuery({
@@ -72,6 +83,7 @@ export default function NewProjectWizard() {
     createProject.mutate({
       name: `Farm Project - ${new Date().toLocaleDateString()}`,
       plant_id: formData.plant_id,
+      variety_id: formData.variety_id,
       location_id: formData.location_id,
       area: parseFloat(formData.area_acres),
       area_unit: formData.area_unit,
@@ -129,43 +141,62 @@ export default function NewProjectWizard() {
             ) : (
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-2">Select Crop / Variety</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">Select Crop</label>
                   <select
                     value={formData.plant_id}
-                    onChange={(e) => setFormData({ ...formData, plant_id: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, plant_id: e.target.value, variety_id: "" })}
                     className={inputClass}
                   >
                     <option value="">-- Choose a crop --</option>
                     {plants?.map((plant: any) => (
                       <option key={plant.id} value={plant.id}>
-                        {plant.common_name} {plant.local_name ? `(${plant.local_name})` : ""} - {plant.scientific_name}
+                        {plant.common_name} {plant.local_name ? `(${plant.local_name})` : ""}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 {formData.plant_id && (
+                  <div className="animate-fade-in">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Select Variety</label>
+                    <select
+                      value={formData.variety_id}
+                      onChange={(e) => setFormData({ ...formData, variety_id: e.target.value })}
+                      className={inputClass}
+                      disabled={varietiesLoading}
+                    >
+                      <option value="">-- Choose a variety --</option>
+                      {varieties?.map((v: any) => (
+                        <option key={v.id} value={v.id}>
+                          {v.variety_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {formData.variety_id && (
                   (() => {
-                    const selectedPlant = plants?.find((p: any) => p.id === formData.plant_id);
-                    if (!selectedPlant) return null;
+                    const selectedVariety = varieties?.find((v: any) => v.id === formData.variety_id);
+                    if (!selectedVariety) return null;
                     return (
                       <div className="p-5 rounded-2xl border border-green-500/20 bg-green-500/[0.05] space-y-2 animate-fade-in">
-                        <h3 className="font-bold text-green-400 text-lg">{selectedPlant.common_name}</h3>
-                        {selectedPlant.scientific_name && (
+                        <h3 className="font-bold text-green-400 text-lg">{selectedVariety.variety_name}</h3>
+                        {selectedVariety.scientific_name && (
                           <p className="text-sm text-text-secondary">
-                            <span className="font-semibold">Scientific Name:</span> <i>{selectedPlant.scientific_name}</i>
+                            <span className="font-semibold">Scientific Name:</span> <i>{selectedVariety.scientific_name}</i>
                           </p>
                         )}
                         <p className="text-sm text-text-secondary">
-                          <span className="font-semibold">Growth Duration:</span> {selectedPlant.growth_duration_days} days
+                          <span className="font-semibold">Growth Duration:</span> {selectedVariety.growth_duration_days} days
                         </p>
-                        {selectedPlant.optimal_ph_min && (
+                        {selectedVariety.optimal_ph_min && (
                           <p className="text-sm text-text-secondary">
-                            <span className="font-semibold">Optimal pH:</span> {selectedPlant.optimal_ph_min} - {selectedPlant.optimal_ph_max}
+                            <span className="font-semibold">Optimal pH:</span> {selectedVariety.optimal_ph_min} - {selectedVariety.optimal_ph_max}
                           </p>
                         )}
-                        {selectedPlant.description && (
-                          <p className="text-sm mt-2 italic text-text-muted">{selectedPlant.description}</p>
+                        {selectedVariety.description && (
+                          <p className="text-sm mt-2 italic text-text-muted">{selectedVariety.description}</p>
                         )}
                       </div>
                     );
@@ -336,7 +367,7 @@ export default function NewProjectWizard() {
           <button
             onClick={step === 4 ? handleCreate : nextStep}
             disabled={
-              (step === 1 && !formData.plant_id) ||
+              (step === 1 && (!formData.plant_id || !formData.variety_id)) ||
               (step === 2 && !formData.location_id) ||
               (step === 3 && (!formData.area_acres || !formData.farming_method)) ||
               (step === 4 && !formData.planting_date)

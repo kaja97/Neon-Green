@@ -5,13 +5,13 @@ from sqlalchemy.future import select
 import logging
 
 from models.project import Project
-from models.plant import Plant, PlantStage, PlantWaterReq, PlantNutrientReq
+from models.plant import Plant, PlantVariety, PlantStage, PlantWaterReq, PlantNutrientReq
 from models.plant_fertilizer import PlantFertilizerRecommendation
 from models.activity import ActivityPlan, FarmingActivity
 
 logger = logging.getLogger(__name__)
 
-def build_generic_stages(plant: Plant):
+def build_generic_stages(plant: Plant, duration: int):
     """Fallback: Build 3 generic stages if no stage data is seeded."""
     return [
         PlantStage(
@@ -29,7 +29,7 @@ def build_generic_stages(plant: Plant):
             stage_name="Vegetative Growth",
             stage_order=2,
             start_day=15,
-            end_day=plant.growth_duration_days - 14,
+            end_day=duration - 14,
             watch_for="Nutrient deficiencies"
         ),
         PlantStage(
@@ -37,8 +37,8 @@ def build_generic_stages(plant: Plant):
             plant_id=plant.id,
             stage_name="Flowering & Harvest",
             stage_order=3,
-            start_day=plant.growth_duration_days - 13,
-            end_day=plant.growth_duration_days,
+            start_day=duration - 13,
+            end_day=duration,
             watch_for="Fruit damage, ripening signs"
         )
     ]
@@ -58,6 +58,11 @@ async def generate_season_plan(project_id: str | uuid.UUID, db: AsyncSession):
         logger.error(f"Plant {project.plant_id} not found.")
         return
 
+    variety = await db.get(PlantVariety, project.variety_id)
+    if not variety:
+        logger.error(f"Variety {project.variety_id} not found.")
+        return
+
     # Fetch stages
     stages_res = await db.execute(
         select(PlantStage).where(PlantStage.plant_id == plant.id).order_by(PlantStage.stage_order)
@@ -67,13 +72,20 @@ async def generate_season_plan(project_id: str | uuid.UUID, db: AsyncSession):
     # Pre-flight checks and fallbacks
     if not stages:
         logger.warning(f"No stages for plant '{plant.common_name}'. Using generic 3-stage fallback.")
-        stages = build_generic_stages(plant)
-    else:
-        # Validate stage continuity — auto-patch gaps
-        for i in range(len(stages) - 1):
-            if stages[i].end_day != stages[i+1].start_day:
-                logger.error(f"Stage gap: {plant.common_name} stage {i+1}→{i+2}. Auto-patching.")
-                stages[i].end_day = stages[i+1].start_day
+        stages = build_generic_stages(plant, variety.growth_duration_days)
+
+    if not project.planting_date:
+        logger.error(f"Project {project_id} has no planting date.")
+        return
+        
+    baseline_duration = stages[-1].end_day if stages else variety.growth_duration_days
+    scale_factor = variety.growth_duration_days / baseline_duration if baseline_duration > 0 else 1.0
+
+    # Validate stage continuity — auto-patch gaps
+    for i in range(len(stages) - 1):
+        if stages[i].end_day != stages[i+1].start_day:
+            logger.error(f"Stage gap: {plant.common_name} stage {i+1}→{i+2}. Auto-patching.")
+            stages[i].end_day = stages[i+1].start_day
 
     # Inactivate old plans
     old_plans_res = await db.execute(
@@ -96,6 +108,9 @@ async def generate_season_plan(project_id: str | uuid.UUID, db: AsyncSession):
     planting_date = project.planting_date
 
     for stage in stages:
+        start_day_scaled = int(stage.start_day * scale_factor)
+        end_day_scaled = int(stage.end_day * scale_factor)
+
         # Water Requirements
         water_req_res = await db.execute(
             select(PlantWaterReq).where(PlantWaterReq.plant_stage_id == stage.id)
@@ -108,7 +123,7 @@ async def generate_season_plan(project_id: str | uuid.UUID, db: AsyncSession):
         )
         fertilizers = fert_res.scalars().all()
 
-        for day_offset in range(stage.start_day, stage.end_day + 1):
+        for day_offset in range(start_day_scaled, end_day_scaled + 1):
             current_date = planting_date + timedelta(days=day_offset)
 
             # WATERING: every X days based on irrigation frequency
@@ -127,7 +142,7 @@ async def generate_season_plan(project_id: str | uuid.UUID, db: AsyncSession):
                 activities.append(act)
 
             # FERTILIZING: start of each stage + 2 days
-            if day_offset == stage.start_day + 2:
+            if day_offset == start_day_scaled + 2:
                 for fert in fertilizers:
                     # Organic / Inorganic filtering rules
                     if project.farming_method == "organic" and fert.farming_method != "organic":
