@@ -18,7 +18,7 @@ class LocationData(BaseModel):
 class RegisterOTPRequest(BaseModel):
     """Step 1: Request OTP to verify email before account creation."""
     email: EmailStr
-    phone: Optional[str] = Field(None, max_length=20, pattern=r"^\+?[1-9]\d{6,14}$")
+    phone: Optional[str] = Field(None, max_length=20, pattern=r"^\+?[0-9]\d{6,14}$")
 
 
 class RegisterVerifyRequest(BaseModel):
@@ -79,7 +79,7 @@ class ChangeEmailVerifyRequest(BaseModel):
 
 
 class ChangePhoneRequest(BaseModel):
-    new_phone: str = Field(..., max_length=20, pattern=r"^\+?[1-9]\d{6,14}$")
+    new_phone: str = Field(..., max_length=20, pattern=r"^\+?[0-9]\d{6,14}$")
 
 
 class ChangePhoneVerifyRequest(BaseModel):

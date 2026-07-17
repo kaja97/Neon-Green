@@ -10,7 +10,7 @@ from models.project import Project
 from models.farmer import FarmerLocation
 from models.weather import WeatherCache, WeatherAlert
 from models.activity import FarmingActivity, ActivityPlan
-from modules.weather.client import fetch_weather_data
+from modules.weather.client import WeatherClient
 
 logger = get_task_logger(__name__)
 
@@ -27,7 +27,8 @@ async def _refresh_weather_cache():
             if not loc:
                 continue
                 
-            raw_data = await fetch_weather_data(float(loc.latitude), float(loc.longitude))
+            client = WeatherClient()
+            raw_data = await client.fetch_weather_data(float(loc.latitude), float(loc.longitude))
             
             # Check cache
             today = date.today()
