@@ -558,6 +558,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
               return !isFuture && (
                 <button
                   onClick={() => {
+                    setOptimisticStatus(prev => { const n = { ...prev }; delete n[detailTask.id]; return n; });
                     resetMutation.mutate(detailTask.id);
                     setDetailTask(null);
                   }}

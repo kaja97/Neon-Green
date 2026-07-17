@@ -17,6 +17,7 @@ export default function NewProjectWizard() {
     plant_id: "",
     location_id: "",
     area_acres: "",
+    area_unit: "acres",
     farming_method: "",
     planting_date: new Date().toISOString().split('T')[0]
   });
@@ -73,7 +74,7 @@ export default function NewProjectWizard() {
       plant_id: formData.plant_id,
       location_id: formData.location_id,
       area: parseFloat(formData.area_acres),
-      area_unit: "acres",
+      area_unit: formData.area_unit,
       farming_method: formData.farming_method,
       planting_date: formData.planting_date
     });
@@ -224,15 +225,30 @@ export default function NewProjectWizard() {
               Land Details &amp; Method
             </h2>
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">Cultivation Area (Acres)</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 1.5"
-                  value={formData.area_acres}
-                  onChange={(e) => setFormData({...formData, area_acres: e.target.value})}
-                  className={inputClass}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">Cultivation Area</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 1.5"
+                    value={formData.area_acres}
+                    onChange={(e) => setFormData({...formData, area_acres: e.target.value})}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">Area Unit</label>
+                  <select
+                    value={formData.area_unit}
+                    onChange={(e) => setFormData({...formData, area_unit: e.target.value})}
+                    className={inputClass}
+                  >
+                    <option value="acres">Acres</option>
+                    <option value="hectares">Hectares</option>
+                    <option value="perches">Perches</option>
+                    <option value="sq_meters">Sq Meters</option>
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">Farming Method</label>

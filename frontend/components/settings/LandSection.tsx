@@ -234,9 +234,39 @@ export default function LandSection() {
               <option value="Grumusols / Clay">Grumusols (Clay / Black Cotton Soil)</option>
             </select>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <label className="text-sm font-medium text-text-secondary">Irrigation Type (Optional)</label>
-            <input {...form.register("irrigation_type")} className={inputClass} placeholder="e.g. Drip, Sprinkler, Rain-fed" />
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {["Drip", "Sprinkler", "Surface", "Rain-fed", "Manual", "Center Pivot"].map((type) => {
+                const currentValue = form.watch("irrigation_type") || "";
+                const selected = currentValue.split(",").map(s => s.trim()).filter(Boolean);
+                const isSelected = selected.includes(type);
+                
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        form.setValue("irrigation_type", selected.filter(t => t !== type).join(", "));
+                      } else {
+                        form.setValue("irrigation_type", [...selected, type].join(", "));
+                      }
+                    }}
+                    className={clsx(
+                      "py-2 px-3 rounded-xl border text-sm font-semibold transition-all",
+                      isSelected
+                        ? "bg-blue-500/20 border-blue-500/50 text-blue-400"
+                        : "bg-surface-tertiary border-border text-text-secondary hover:border-blue-500/30"
+                    )}
+                  >
+                    {type}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Hidden input to register with form */}
+            <input type="hidden" {...form.register("irrigation_type")} />
           </div>
 
           <button
