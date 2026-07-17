@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Link from "next/link";
-import { ArrowLeft, Plus, Loader2, Sprout, ChevronRight, Filter } from "lucide-react";
+import { ArrowLeft, Plus, Loader2, Sprout, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { clsx } from "clsx";
 import { formatFarmingMethod } from "@/lib/utils/formatters";
@@ -33,52 +33,60 @@ export default function ProjectsListPage() {
     failed: projects?.filter((p: any) => p.status === "failed").length || 0,
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case "active": return "bg-green-100 text-green-700";
-      case "harvested": return "bg-amber-100 text-amber-700";
-      case "failed": return "bg-red-100 text-red-700";
-      default: return "bg-slate-100 text-slate-600";
+      case "active":
+        return "bg-green-500/10 text-green-400 border-green-500/20";
+      case "harvested":
+        return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+      case "failed":
+        return "bg-red-500/10 text-red-400 border-red-500/20";
+      default:
+        return "bg-surface-tertiary text-text-muted border-border";
     }
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 bg-slate-50 min-h-screen text-slate-900 pb-24">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 pb-24">
       {/* Header */}
-      <header className="flex items-center justify-between">
+      <header className="flex items-center justify-between animate-fade-in">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="p-2 bg-white shadow-sm hover:bg-slate-100 rounded-full transition-colors border border-slate-200">
-            <ArrowLeft className="w-5 h-5 text-slate-700" />
+          <Link
+            href="/dashboard"
+            className="p-2.5 glass-card-hover rounded-xl text-text-secondary hover:text-white transition-all duration-300"
+          >
+            <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">All Projects</h1>
-            <p className="text-slate-500 text-sm mt-0.5">{statusCounts.all} total projects</p>
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+              All Projects<span className="text-green-400 text-glow-green">.</span>
+            </h1>
+            <p className="text-text-muted text-sm mt-0.5">{statusCounts.all} total projects</p>
           </div>
         </div>
-        <Link
-          href="/projects/new"
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-xl font-semibold shadow-md hover:bg-green-700 transition-all"
-        >
+        <Link href="/projects/new" className="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
           <Plus className="w-4 h-4" />
           New
         </Link>
       </header>
 
       {/* Filter Tabs */}
-      <div className="flex space-x-2 bg-white border border-slate-200 p-1 rounded-2xl shadow-sm">
+      <div className="flex space-x-1 glass-card p-1.5 rounded-2xl animate-slide-up">
         {(["all", "active", "harvested", "failed"] as ProjectStatus[]).map((status) => (
           <button
             key={status}
             onClick={() => setFilter(status)}
             className={clsx(
               "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-sm font-semibold transition-all capitalize",
-              filter === status ? "bg-green-50 text-green-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              filter === status
+                ? "bg-green-500/15 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.15)]"
+                : "text-text-muted hover:text-text-secondary"
             )}
           >
             {status}
             <span className={clsx(
               "text-xs px-1.5 py-0.5 rounded-full",
-              filter === status ? "bg-green-100 text-green-600" : "bg-slate-100 text-slate-400"
+              filter === status ? "bg-green-500/20 text-green-400" : "bg-surface-tertiary text-text-muted"
             )}>
               {statusCounts[status]}
             </span>
@@ -89,30 +97,27 @@ export default function ProjectsListPage() {
       {/* Content */}
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
         </div>
       ) : error ? (
-        <div className="text-center bg-white border border-slate-200 rounded-3xl p-12 shadow-sm">
-          <p className="text-red-500 font-medium">Failed to load projects. Please try again.</p>
+        <div className="glass-card rounded-3xl p-12 text-center">
+          <p className="text-red-400 font-medium">Failed to load projects. Please try again.</p>
         </div>
       ) : filteredProjects.length === 0 ? (
-        <div className="text-center bg-white border border-slate-200 rounded-3xl p-12 shadow-sm">
-          <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Sprout className="w-8 h-8 text-slate-400" />
+        <div className="glass-card-hover rounded-3xl p-12 text-center animate-slide-up">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 animate-float glow-green">
+            <Sprout className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-lg font-bold text-slate-800 mb-2">
+          <h3 className="text-lg font-bold text-white mb-2">
             {filter === "all" ? "No projects yet" : `No ${filter} projects`}
           </h3>
-          <p className="text-slate-500 text-sm mb-6">
+          <p className="text-text-secondary text-sm mb-6 max-w-sm mx-auto">
             {filter === "all"
               ? "Create your first farming project to get started."
               : `You don't have any ${filter} projects.`}
           </p>
           {filter === "all" && (
-            <Link
-              href="/projects/new"
-              className="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-md hover:bg-green-700 transition-all"
-            >
+            <Link href="/projects/new" className="btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm">
               <Plus className="w-4 h-4" />
               Create Project
             </Link>
@@ -120,33 +125,34 @@ export default function ProjectsListPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredProjects.map((project: any) => (
+          {filteredProjects.map((project: any, idx) => (
             <Link
               key={project.id}
               href={`/projects/${project.id}`}
-              className="flex items-center justify-between bg-white border border-slate-200 hover:border-green-300 rounded-2xl p-5 shadow-sm transition-all group"
+              className="group relative flex items-center justify-between glass-card-hover rounded-2xl p-5 animate-slide-up"
+              style={{ animationDelay: `${idx * 60}ms` }}
             >
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-50 rounded-xl group-hover:bg-green-100 transition-colors">
-                  <Sprout className="w-6 h-6 text-green-600" />
+                <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+                  <Sprout className="w-6 h-6 text-green-400" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-800 group-hover:text-green-700 transition-colors">
+                  <h3 className="font-bold text-white group-hover:text-green-400 transition-colors">
                     {project.name}
                   </h3>
-                  <p className="text-sm text-slate-500 mt-0.5">
+                  <p className="text-sm text-text-muted mt-0.5">
                     {project.area} {project.area_unit} · {formatFarmingMethod(project.farming_method)}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <span className={clsx(
-                  "text-xs font-semibold px-3 py-1 rounded-full capitalize",
-                  getStatusColor(project.status)
+                  "text-xs font-semibold px-3 py-1 rounded-full capitalize border",
+                  getStatusBadge(project.status)
                 )}>
                   {project.status}
                 </span>
-                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-green-500 transition-colors" />
+                <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
               </div>
             </Link>
           ))}

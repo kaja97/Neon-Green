@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { LayoutDashboard, Users, Database, ArrowLeft, Loader2 } from "lucide-react";
+import ThemeToggle from "@/components/layout/ThemeToggle";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore();
@@ -22,8 +23,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!user || user.role !== "admin") {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
-        <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+      <div className="flex h-screen items-center justify-center bg-surface-primary">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -35,15 +36,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden text-slate-900">
+    <div className="flex h-screen bg-surface-primary overflow-hidden text-text-primary">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex">
-        <div className="p-6 border-b border-slate-200">
-          <Link href="/dashboard" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors mb-4 text-sm font-medium">
+      <aside className="w-64 glass-card rounded-none border-y-0 border-l-0 flex flex-col hidden md:flex">
+        <div className="p-6 border-b border-border">
+          <Link href="/dashboard" className="flex items-center gap-2 text-text-secondary hover:text-white transition-colors mb-4 text-sm font-medium">
             <ArrowLeft className="w-4 h-4" />
             Back to App
           </Link>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">Admin Portal</h1>
+          <h1 className="text-xl font-black text-white tracking-tight">
+            Admin Portal<span className="text-neon-purple">.</span>
+          </h1>
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
@@ -54,23 +57,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors",
-                  isActive ? "bg-green-50 text-green-700" : "text-slate-600 hover:bg-slate-50"
+                  "flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all",
+                  isActive
+                    ? "bg-neon-purple/10 text-neon-purple border border-neon-purple/20"
+                    : "text-text-secondary hover:bg-surface-tertiary hover:text-white"
                 )}
               >
-                <Icon className={clsx("w-5 h-5", isActive ? "text-green-600" : "text-slate-400")} />
+                <Icon className={clsx("w-5 h-5", isActive ? "text-neon-purple" : "text-text-muted")} />
                 {item.label}
               </Link>
             );
           })}
         </nav>
+        <div className="p-4 border-t border-border">
+          <ThemeToggle />
+        </div>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
-        <div className="p-4 md:hidden flex items-center justify-between bg-white border-b border-slate-200">
-           <h1 className="text-lg font-bold">Admin Portal</h1>
-           <Link href="/dashboard" className="text-sm font-medium text-slate-500">Exit</Link>
+        <div className="p-4 md:hidden flex items-center justify-between glass-card rounded-none border-x-0 border-t-0">
+          <h1 className="text-lg font-bold text-white">Admin Portal</h1>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link href="/dashboard" className="text-sm font-medium text-text-secondary">Exit</Link>
+          </div>
         </div>
         {children}
       </main>

@@ -8,6 +8,8 @@ from core.base_repository import BaseRepository
 from models.marketplace import Product
 
 class ProductRepository(BaseRepository[Product, dict, dict]):
+    def __init__(self):
+        super().__init__(Product)
     async def get_multi_by_seller(
         self, db: AsyncSession, *, seller_id: uuid.UUID, skip: int = 0, limit: int = 100
     ) -> List[Product]:

@@ -61,6 +61,21 @@ YIELD_DATA = {
     "p25": 6000,   # Beetroot
     "p26": 5000,   # Radish
     "p27": 9000,   # Yam
+    "p28": 8000,   # Cabbage
+    "p29": 7000,   # Carrot
+    "p30": 6000,   # Pumpkin
+    "p31": 5000,   # Cucumber
+    "p32": 8000,   # Watermelon
+    "p33": 9000,   # Papaya
+    "p34": 10000,  # Banana
+    "p35": 2000,   # Garlic
+    "p36": 3000,   # Ginger
+    "p37": 3000,   # Turmeric
+    "p38": 1000,   # Black Pepper
+    "p39": 8000,   # Mango
+    "p40": 4000,   # Lettuce
+    "p41": 7000,   # Cauliflower
+    "p42": 6000,   # Bell Pepper
 }
 
 async def seed_data():

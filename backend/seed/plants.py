@@ -216,5 +216,125 @@ plants = [
         "growth_duration_days": 240,
         "optimal_ph_min": 5.5,
         "optimal_ph_max": 6.5
+    },
+    {
+        "id": "p28",
+        "name": "Cabbage",
+        "scientific_name": "Brassica oleracea",
+        "growth_duration_days": 100,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 6.8
+    },
+    {
+        "id": "p29",
+        "name": "Carrot",
+        "scientific_name": "Daucus carota",
+        "growth_duration_days": 75,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 6.8
+    },
+    {
+        "id": "p30",
+        "name": "Pumpkin",
+        "scientific_name": "Cucurbita pepo",
+        "growth_duration_days": 110,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 6.8
+    },
+    {
+        "id": "p31",
+        "name": "Cucumber",
+        "scientific_name": "Cucumis sativus",
+        "growth_duration_days": 60,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 6.8
+    },
+    {
+        "id": "p32",
+        "name": "Watermelon",
+        "scientific_name": "Citrullus lanatus",
+        "growth_duration_days": 90,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 6.8
+    },
+    {
+        "id": "p33",
+        "name": "Papaya",
+        "scientific_name": "Carica papaya",
+        "growth_duration_days": 270,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 6.5
+    },
+    {
+        "id": "p34",
+        "name": "Banana",
+        "scientific_name": "Musa spp.",
+        "growth_duration_days": 365,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 7.0
+    },
+    {
+        "id": "p35",
+        "name": "Garlic",
+        "scientific_name": "Allium sativum",
+        "growth_duration_days": 120,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 7.0
+    },
+    {
+        "id": "p36",
+        "name": "Ginger",
+        "scientific_name": "Zingiber officinale",
+        "growth_duration_days": 240,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 6.5
+    },
+    {
+        "id": "p37",
+        "name": "Turmeric",
+        "scientific_name": "Curcuma longa",
+        "growth_duration_days": 240,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 6.5
+    },
+    {
+        "id": "p38",
+        "name": "Black Pepper",
+        "scientific_name": "Piper nigrum",
+        "growth_duration_days": 365,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 6.5
+    },
+    {
+        "id": "p39",
+        "name": "Mango",
+        "scientific_name": "Mangifera indica",
+        "growth_duration_days": 365,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 7.5
+    },
+    {
+        "id": "p40",
+        "name": "Lettuce",
+        "scientific_name": "Lactuca sativa",
+        "growth_duration_days": 50,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 7.0
+    },
+    {
+        "id": "p41",
+        "name": "Cauliflower",
+        "scientific_name": "Brassica oleracea",
+        "growth_duration_days": 90,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 6.8
+    },
+    {
+        "id": "p42",
+        "name": "Bell Pepper",
+        "scientific_name": "Capsicum annuum",
+        "growth_duration_days": 90,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 6.8
     }
 ]

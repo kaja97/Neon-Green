@@ -103,4 +103,63 @@ varieties = [
 
     # ── p27: Yam ────────────────────────────────
     {"plant_id": "p27", "variety_name": "Lesser Yam", "description": "Local lesser yam, starchy tubers."},
+
+    # ── p28: Cabbage ────────────────────────────
+    {"plant_id": "p28", "variety_name": "Green Cabbage", "description": "Standard firm green heads."},
+    {"plant_id": "p28", "variety_name": "Red Cabbage", "description": "Deep red-purple leaves, sweet flavor."},
+
+    # ── p29: Carrot ─────────────────────────────
+    {"plant_id": "p29", "variety_name": "Nantes", "description": "Cylindrical, sweet, and crisp."},
+    {"plant_id": "p29", "variety_name": "Kuroda", "description": "Heat tolerant, good for tropical regions."},
+
+    # ── p30: Pumpkin ────────────────────────────
+    {"plant_id": "p30", "variety_name": "Sugar Pumpkin", "description": "Small, sweet, excellent for cooking."},
+    {"plant_id": "p30", "variety_name": "Giant Pumpkin", "description": "Large variety, high yield."},
+
+    # ── p31: Cucumber ───────────────────────────
+    {"plant_id": "p31", "variety_name": "Slicing Cucumber", "description": "Long, dark green, good for salads."},
+    {"plant_id": "p31", "variety_name": "Pickling Cucumber", "description": "Small, bumpy skin, ideal for pickling."},
+
+    # ── p32: Watermelon ─────────────────────────
+    {"plant_id": "p32", "variety_name": "Sugar Baby", "description": "Small, very sweet, dark green rind."},
+    {"plant_id": "p32", "variety_name": "Crimson Sweet", "description": "Large, striped, excellent flavor."},
+
+    # ── p33: Papaya ─────────────────────────────
+    {"plant_id": "p33", "variety_name": "Red Lady", "description": "Dwarf, early bearing, sweet red flesh."},
+    {"plant_id": "p33", "variety_name": "Solo", "description": "Small, sweet fruit, yellow-orange flesh."},
+
+    # ── p34: Banana ─────────────────────────────
+    {"plant_id": "p34", "variety_name": "Cavendish", "description": "Standard dessert banana, high yield."},
+    {"plant_id": "p34", "variety_name": "Red Banana", "description": "Red skin, sweet creamy flesh."},
+
+    # ── p35: Garlic ─────────────────────────────
+    {"plant_id": "p35", "variety_name": "Softneck", "description": "Standard white garlic, stores well."},
+    {"plant_id": "p35", "variety_name": "Hardneck", "description": "Stronger flavor, produces scapes."},
+
+    # ── p36: Ginger ─────────────────────────────
+    {"plant_id": "p36", "variety_name": "Local Ginger", "description": "Pungent and fibrous."},
+    {"plant_id": "p36", "variety_name": "Giant Ginger", "description": "Large rhizomes, less fibrous."},
+
+    # ── p37: Turmeric ───────────────────────────
+    {"plant_id": "p37", "variety_name": "Local Turmeric", "description": "High curcumin content, deep orange."},
+
+    # ── p38: Black Pepper ───────────────────────
+    {"plant_id": "p38", "variety_name": "Panniyur", "description": "High yielding, long spikes."},
+    {"plant_id": "p38", "variety_name": "Karimunda", "description": "Popular traditional variety, adaptable."},
+
+    # ── p39: Mango ──────────────────────────────
+    {"plant_id": "p39", "variety_name": "Alphonso", "description": "Rich, sweet, premium quality."},
+    {"plant_id": "p39", "variety_name": "Tommy Atkins", "description": "Disease resistant, long shelf life."},
+
+    # ── p40: Lettuce ────────────────────────────
+    {"plant_id": "p40", "variety_name": "Iceberg", "description": "Crisp heads, heat sensitive."},
+    {"plant_id": "p40", "variety_name": "Butterhead", "description": "Soft leaves, sweet flavor."},
+
+    # ── p41: Cauliflower ────────────────────────
+    {"plant_id": "p41", "variety_name": "Snowball", "description": "Classic white heads."},
+    {"plant_id": "p41", "variety_name": "Tropical White", "description": "Heat tolerant variety."},
+
+    # ── p42: Bell Pepper ────────────────────────
+    {"plant_id": "p42", "variety_name": "California Wonder", "description": "Blocky, thick-walled, green to red."},
+    {"plant_id": "p42", "variety_name": "Yellow Wonder", "description": "Sweet, turns yellow when ripe."},
 ]

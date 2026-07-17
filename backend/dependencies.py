@@ -47,6 +47,19 @@ async def get_current_user(
     if not user.is_active:
         raise AppException(ErrorCode.AUTH_LOGIN_ACCOUNT_DEACTIVATED)
 
+    # Auto-create FarmerProfile for legacy accounts to prevent 404s
+    if not user.farmer_profile:
+        from models.account import FarmerProfile
+        profile = FarmerProfile(
+            account_id=user.id,
+            full_name=user.email.split("@")[0].replace(".", " ").title(),
+            farming_method="integrated"
+        )
+        db.add(profile)
+        await db.commit()
+        await db.refresh(profile)
+        user.farmer_profile = profile
+
     return user
 
 

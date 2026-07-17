@@ -39,13 +39,13 @@ export default function ActivityBlock({
   const upcoming = upcomingActivities?.length || 0;
 
   return (
-    <div className="bg-white border rounded-3xl p-6 min-w-[320px] md:col-span-2 shadow-sm">
+    <div className="glass-card rounded-3xl p-6 min-w-[320px] md:col-span-2 animate-slide-up">
       {/* Today's Tasks */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+        <h3 className="font-semibold text-white flex items-center gap-2">
           Today&apos;s Tasks
         </h3>
-        <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-md">
+        <span className="text-xs font-medium text-green-400 bg-green-500/10 px-2 py-1 rounded-lg border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.15)]">
           {done}/{total} Done
         </span>
       </div>
@@ -57,49 +57,49 @@ export default function ActivityBlock({
           return (
             <div
               key={task.id}
-              className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer"
+              className="flex items-center gap-4 p-3 rounded-2xl hover:bg-surface-tertiary/60 transition-colors cursor-pointer"
               onClick={() => handleComplete(task.id, task.status)}
             >
               <button className="flex-shrink-0" disabled={isDone || completeMutation.isPending}>
                 {isDone ? (
-                  <CheckCircle2 className="w-7 h-7 text-green-600" />
+                  <CheckCircle2 className="w-7 h-7 text-green-400 shadow-[0_0_12px_rgba(34,197,94,0.4)]" />
                 ) : (
-                  <Circle className="w-7 h-7 text-slate-300 hover:text-green-500 transition-colors" />
+                  <Circle className="w-7 h-7 text-text-muted hover:text-green-400 transition-colors" />
                 )}
               </button>
               <div className="flex-1">
                 <h4
                   className={clsx(
                     "font-medium",
-                    isDone ? "text-slate-400 line-through" : "text-slate-700"
+                    isDone ? "text-text-muted line-through" : "text-white"
                   )}
                 >
                   {task.title}
                 </h4>
                 <div className="flex items-center gap-2 mt-1">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-xs text-slate-500">Today</span>
+                  <Clock className="w-3.5 h-3.5 text-text-muted" />
+                  <span className="text-xs text-text-muted">Today</span>
                 </div>
               </div>
             </div>
           );
         }) : (
-          <p className="text-sm text-slate-500 text-center py-4">No tasks scheduled for today.</p>
+          <p className="text-sm text-text-muted text-center py-4">No tasks scheduled for today.</p>
         )}
       </div>
 
       {/* Next Up — upcoming tasks with dates */}
       {upcoming > 0 && (
-        <div className="mt-6 pt-5 border-t border-slate-100">
+        <div className="mt-6 pt-5 border-t border-border">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-violet-500" />
+            <h3 className="font-semibold text-white flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-violet-400" />
               Next Up
             </h3>
             {upcoming > 2 && (
-              <button 
+              <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="text-xs font-semibold text-violet-600 hover:text-violet-700 bg-violet-50 px-3 py-1 rounded-full transition-colors"
+                className="text-xs font-semibold text-violet-400 hover:text-violet-300 bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20 transition-colors"
               >
                 {isExpanded ? "Show Less" : `View All (${upcoming})`}
               </button>
@@ -109,14 +109,14 @@ export default function ActivityBlock({
             {(isExpanded ? upcomingActivities : upcomingActivities?.slice(0, 2))?.map((task) => (
               <div
                 key={task.id}
-                className="flex items-center gap-4 p-3 rounded-2xl bg-violet-50/50 border border-violet-100"
+                className="flex items-center gap-4 p-3 rounded-2xl bg-violet-500/[0.06] border border-violet-500/15"
               >
-                <Circle className="w-7 h-7 text-violet-300 flex-shrink-0" />
+                <Circle className="w-7 h-7 text-violet-400/50 flex-shrink-0" />
                 <div className="flex-1">
-                  <h4 className="font-medium text-slate-700">{task.title}</h4>
+                  <h4 className="font-medium text-white">{task.title}</h4>
                   <div className="flex items-center gap-2 mt-1">
-                    <CalendarDays className="w-3.5 h-3.5 text-violet-400" />
-                    <span className="text-xs text-violet-500">
+                    <CalendarDays className="w-3.5 h-3.5 text-violet-400/70" />
+                    <span className="text-xs text-violet-400">
                       {formatDate(task.due_date)}
                     </span>
                   </div>
@@ -130,8 +130,8 @@ export default function ActivityBlock({
       {/* Empty state when nothing at all */}
       {total === 0 && upcoming === 0 && (
         <div className="text-center py-6">
-          <CalendarDays className="w-10 h-10 text-slate-200 mx-auto mb-2" />
-          <p className="text-sm text-slate-400">No upcoming tasks. You&apos;re all caught up!</p>
+          <CalendarDays className="w-10 h-10 text-text-muted mx-auto mb-2" />
+          <p className="text-sm text-text-muted">No upcoming tasks. You&apos;re all caught up!</p>
         </div>
       )}
     </div>

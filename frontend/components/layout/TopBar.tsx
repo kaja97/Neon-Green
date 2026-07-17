@@ -6,6 +6,7 @@ import { useOffline } from "@/lib/hooks/useOffline";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
+import ThemeToggle from "@/components/layout/ThemeToggle";
 
 export default function TopBar() {
   const isOffline = useOffline();
@@ -92,6 +93,9 @@ export default function TopBar() {
               <span className="hidden sm:inline">Admin</span>
             </Link>
           )}
+
+          {/* Theme toggle */}
+          <ThemeToggle />
 
           {/* Notifications */}
           <Link

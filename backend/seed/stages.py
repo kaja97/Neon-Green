@@ -216,4 +216,124 @@ stages = [
     {"id": "s160", "plant_id": "p27", "stage_name": "Tuber Initiation", "stage_order": 4, "start_day": 131, "end_day": 170},
     {"id": "s161", "plant_id": "p27", "stage_name": "Tuber Bulking", "stage_order": 5, "start_day": 171, "end_day": 220},
     {"id": "s162", "plant_id": "p27", "stage_name": "Harvesting", "stage_order": 6, "start_day": 221, "end_day": 240},
+
+    # Cabbage (p28)
+    {"id": "s163", "plant_id": "p28", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 7},
+    {"id": "s164", "plant_id": "p28", "stage_name": "Seedling", "stage_order": 2, "start_day": 8, "end_day": 25},
+    {"id": "s165", "plant_id": "p28", "stage_name": "Early Vegetative", "stage_order": 3, "start_day": 26, "end_day": 45},
+    {"id": "s166", "plant_id": "p28", "stage_name": "Head Formation", "stage_order": 4, "start_day": 46, "end_day": 70},
+    {"id": "s167", "plant_id": "p28", "stage_name": "Head Maturation", "stage_order": 5, "start_day": 71, "end_day": 90},
+    {"id": "s168", "plant_id": "p28", "stage_name": "Harvesting", "stage_order": 6, "start_day": 91, "end_day": 100},
+
+    # Carrot (p29)
+    {"id": "s169", "plant_id": "p29", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 7},
+    {"id": "s170", "plant_id": "p29", "stage_name": "Seedling", "stage_order": 2, "start_day": 8, "end_day": 20},
+    {"id": "s171", "plant_id": "p29", "stage_name": "Vegetative", "stage_order": 3, "start_day": 21, "end_day": 35},
+    {"id": "s172", "plant_id": "p29", "stage_name": "Root Initiation", "stage_order": 4, "start_day": 36, "end_day": 50},
+    {"id": "s173", "plant_id": "p29", "stage_name": "Root Bulking", "stage_order": 5, "start_day": 51, "end_day": 65},
+    {"id": "s174", "plant_id": "p29", "stage_name": "Harvesting", "stage_order": 6, "start_day": 66, "end_day": 75},
+
+    # Pumpkin (p30)
+    {"id": "s175", "plant_id": "p30", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 7},
+    {"id": "s176", "plant_id": "p30", "stage_name": "Seedling/Vine Growth", "stage_order": 2, "start_day": 8, "end_day": 30},
+    {"id": "s177", "plant_id": "p30", "stage_name": "Flowering", "stage_order": 3, "start_day": 31, "end_day": 50},
+    {"id": "s178", "plant_id": "p30", "stage_name": "Fruit Set", "stage_order": 4, "start_day": 51, "end_day": 70},
+    {"id": "s179", "plant_id": "p30", "stage_name": "Fruit Development", "stage_order": 5, "start_day": 71, "end_day": 95},
+    {"id": "s180", "plant_id": "p30", "stage_name": "Harvesting", "stage_order": 6, "start_day": 96, "end_day": 110},
+
+    # Cucumber (p31)
+    {"id": "s181", "plant_id": "p31", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 5},
+    {"id": "s182", "plant_id": "p31", "stage_name": "Seedling/Vine Growth", "stage_order": 2, "start_day": 6, "end_day": 20},
+    {"id": "s183", "plant_id": "p31", "stage_name": "Flowering", "stage_order": 3, "start_day": 21, "end_day": 35},
+    {"id": "s184", "plant_id": "p31", "stage_name": "Fruit Set", "stage_order": 4, "start_day": 36, "end_day": 45},
+    {"id": "s185", "plant_id": "p31", "stage_name": "Fruit Development", "stage_order": 5, "start_day": 46, "end_day": 55},
+    {"id": "s186", "plant_id": "p31", "stage_name": "Harvesting", "stage_order": 6, "start_day": 56, "end_day": 60},
+
+    # Watermelon (p32)
+    {"id": "s187", "plant_id": "p32", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 7},
+    {"id": "s188", "plant_id": "p32", "stage_name": "Seedling/Vine Growth", "stage_order": 2, "start_day": 8, "end_day": 25},
+    {"id": "s189", "plant_id": "p32", "stage_name": "Flowering", "stage_order": 3, "start_day": 26, "end_day": 45},
+    {"id": "s190", "plant_id": "p32", "stage_name": "Fruit Set", "stage_order": 4, "start_day": 46, "end_day": 60},
+    {"id": "s191", "plant_id": "p32", "stage_name": "Fruit Development", "stage_order": 5, "start_day": 61, "end_day": 80},
+    {"id": "s192", "plant_id": "p32", "stage_name": "Harvesting", "stage_order": 6, "start_day": 81, "end_day": 90},
+
+    # Papaya (p33)
+    {"id": "s193", "plant_id": "p33", "stage_name": "Germination/Seedling", "stage_order": 1, "start_day": 0, "end_day": 30},
+    {"id": "s194", "plant_id": "p33", "stage_name": "Establishment", "stage_order": 2, "start_day": 31, "end_day": 60},
+    {"id": "s195", "plant_id": "p33", "stage_name": "Vegetative Growth", "stage_order": 3, "start_day": 61, "end_day": 120},
+    {"id": "s196", "plant_id": "p33", "stage_name": "Flowering", "stage_order": 4, "start_day": 121, "end_day": 180},
+    {"id": "s197", "plant_id": "p33", "stage_name": "Fruit Development", "stage_order": 5, "start_day": 181, "end_day": 240},
+    {"id": "s198", "plant_id": "p33", "stage_name": "Harvesting", "stage_order": 6, "start_day": 241, "end_day": 270},
+
+    # Banana (p34)
+    {"id": "s199", "plant_id": "p34", "stage_name": "Sucker Establishment", "stage_order": 1, "start_day": 0, "end_day": 60},
+    {"id": "s200", "plant_id": "p34", "stage_name": "Early Vegetative", "stage_order": 2, "start_day": 61, "end_day": 120},
+    {"id": "s201", "plant_id": "p34", "stage_name": "Active Vegetative", "stage_order": 3, "start_day": 121, "end_day": 200},
+    {"id": "s202", "plant_id": "p34", "stage_name": "Shooting/Flowering", "stage_order": 4, "start_day": 201, "end_day": 260},
+    {"id": "s203", "plant_id": "p34", "stage_name": "Fruit Development", "stage_order": 5, "start_day": 261, "end_day": 330},
+    {"id": "s204", "plant_id": "p34", "stage_name": "Harvesting", "stage_order": 6, "start_day": 331, "end_day": 365},
+
+    # Garlic (p35)
+    {"id": "s205", "plant_id": "p35", "stage_name": "Clove Sprouting", "stage_order": 1, "start_day": 0, "end_day": 15},
+    {"id": "s206", "plant_id": "p35", "stage_name": "Establishment", "stage_order": 2, "start_day": 16, "end_day": 35},
+    {"id": "s207", "plant_id": "p35", "stage_name": "Vegetative Growth", "stage_order": 3, "start_day": 36, "end_day": 60},
+    {"id": "s208", "plant_id": "p35", "stage_name": "Bulb Initiation", "stage_order": 4, "start_day": 61, "end_day": 85},
+    {"id": "s209", "plant_id": "p35", "stage_name": "Bulb Bulking", "stage_order": 5, "start_day": 86, "end_day": 105},
+    {"id": "s210", "plant_id": "p35", "stage_name": "Harvesting", "stage_order": 6, "start_day": 106, "end_day": 120},
+
+    # Ginger (p36)
+    {"id": "s211", "plant_id": "p36", "stage_name": "Sprouting", "stage_order": 1, "start_day": 0, "end_day": 30},
+    {"id": "s212", "plant_id": "p36", "stage_name": "Establishment", "stage_order": 2, "start_day": 31, "end_day": 60},
+    {"id": "s213", "plant_id": "p36", "stage_name": "Vegetative Growth", "stage_order": 3, "start_day": 61, "end_day": 120},
+    {"id": "s214", "plant_id": "p36", "stage_name": "Rhizome Initiation", "stage_order": 4, "start_day": 121, "end_day": 160},
+    {"id": "s215", "plant_id": "p36", "stage_name": "Rhizome Bulking", "stage_order": 5, "start_day": 161, "end_day": 210},
+    {"id": "s216", "plant_id": "p36", "stage_name": "Harvesting", "stage_order": 6, "start_day": 211, "end_day": 240},
+
+    # Turmeric (p37)
+    {"id": "s217", "plant_id": "p37", "stage_name": "Sprouting", "stage_order": 1, "start_day": 0, "end_day": 30},
+    {"id": "s218", "plant_id": "p37", "stage_name": "Establishment", "stage_order": 2, "start_day": 31, "end_day": 60},
+    {"id": "s219", "plant_id": "p37", "stage_name": "Vegetative Growth", "stage_order": 3, "start_day": 61, "end_day": 120},
+    {"id": "s220", "plant_id": "p37", "stage_name": "Rhizome Initiation", "stage_order": 4, "start_day": 121, "end_day": 160},
+    {"id": "s221", "plant_id": "p37", "stage_name": "Rhizome Bulking", "stage_order": 5, "start_day": 161, "end_day": 210},
+    {"id": "s222", "plant_id": "p37", "stage_name": "Harvesting", "stage_order": 6, "start_day": 211, "end_day": 240},
+
+    # Black Pepper (p38)
+    {"id": "s223", "plant_id": "p38", "stage_name": "Cutting Establishment", "stage_order": 1, "start_day": 0, "end_day": 60},
+    {"id": "s224", "plant_id": "p38", "stage_name": "Early Vine Growth", "stage_order": 2, "start_day": 61, "end_day": 120},
+    {"id": "s225", "plant_id": "p38", "stage_name": "Active Vine Growth", "stage_order": 3, "start_day": 121, "end_day": 200},
+    {"id": "s226", "plant_id": "p38", "stage_name": "Spike Initiation/Flowering", "stage_order": 4, "start_day": 201, "end_day": 260},
+    {"id": "s227", "plant_id": "p38", "stage_name": "Berry Development", "stage_order": 5, "start_day": 261, "end_day": 330},
+    {"id": "s228", "plant_id": "p38", "stage_name": "Harvesting", "stage_order": 6, "start_day": 331, "end_day": 365},
+
+    # Mango (p39)
+    {"id": "s229", "plant_id": "p39", "stage_name": "Sapling Establishment", "stage_order": 1, "start_day": 0, "end_day": 60},
+    {"id": "s230", "plant_id": "p39", "stage_name": "Early Vegetative", "stage_order": 2, "start_day": 61, "end_day": 120},
+    {"id": "s231", "plant_id": "p39", "stage_name": "Mature Vegetative", "stage_order": 3, "start_day": 121, "end_day": 200},
+    {"id": "s232", "plant_id": "p39", "stage_name": "Flowering/Panicle Emergence", "stage_order": 4, "start_day": 201, "end_day": 260},
+    {"id": "s233", "plant_id": "p39", "stage_name": "Fruit Development", "stage_order": 5, "start_day": 261, "end_day": 330},
+    {"id": "s234", "plant_id": "p39", "stage_name": "Harvesting", "stage_order": 6, "start_day": 331, "end_day": 365},
+
+    # Lettuce (p40)
+    {"id": "s235", "plant_id": "p40", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 5},
+    {"id": "s236", "plant_id": "p40", "stage_name": "Seedling", "stage_order": 2, "start_day": 6, "end_day": 15},
+    {"id": "s237", "plant_id": "p40", "stage_name": "Early Leaf Growth", "stage_order": 3, "start_day": 16, "end_day": 25},
+    {"id": "s238", "plant_id": "p40", "stage_name": "Rosette Formation", "stage_order": 4, "start_day": 26, "end_day": 35},
+    {"id": "s239", "plant_id": "p40", "stage_name": "Head Maturation", "stage_order": 5, "start_day": 36, "end_day": 45},
+    {"id": "s240", "plant_id": "p40", "stage_name": "Harvesting", "stage_order": 6, "start_day": 46, "end_day": 50},
+
+    # Cauliflower (p41)
+    {"id": "s241", "plant_id": "p41", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 7},
+    {"id": "s242", "plant_id": "p41", "stage_name": "Seedling", "stage_order": 2, "start_day": 8, "end_day": 25},
+    {"id": "s243", "plant_id": "p41", "stage_name": "Early Vegetative", "stage_order": 3, "start_day": 26, "end_day": 45},
+    {"id": "s244", "plant_id": "p41", "stage_name": "Curd Initiation", "stage_order": 4, "start_day": 46, "end_day": 60},
+    {"id": "s245", "plant_id": "p41", "stage_name": "Curd Development", "stage_order": 5, "start_day": 61, "end_day": 80},
+    {"id": "s246", "plant_id": "p41", "stage_name": "Harvesting", "stage_order": 6, "start_day": 81, "end_day": 90},
+
+    # Bell Pepper (p42)
+    {"id": "s247", "plant_id": "p42", "stage_name": "Germination", "stage_order": 1, "start_day": 0, "end_day": 7},
+    {"id": "s248", "plant_id": "p42", "stage_name": "Seedling", "stage_order": 2, "start_day": 8, "end_day": 25},
+    {"id": "s249", "plant_id": "p42", "stage_name": "Vegetative Growth", "stage_order": 3, "start_day": 26, "end_day": 45},
+    {"id": "s250", "plant_id": "p42", "stage_name": "Flowering", "stage_order": 4, "start_day": 46, "end_day": 60},
+    {"id": "s251", "plant_id": "p42", "stage_name": "Fruit Development", "stage_order": 5, "start_day": 61, "end_day": 80},
+    {"id": "s252", "plant_id": "p42", "stage_name": "Harvesting", "stage_order": 6, "start_day": 81, "end_day": 90},
 ]

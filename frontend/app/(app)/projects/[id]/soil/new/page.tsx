@@ -51,120 +51,160 @@ export default function NewSoilTestPage({ params }: { params: { id: string } }) 
         nitrogen_level: formData.results.nitrogen_level,
         phosphorus_level: formData.results.phosphorus_level,
         potassium_level: formData.results.potassium_level,
-        organic_matter_perc: isNaN(Number(formData.results.organic_matter_perc)) ? null : Number(formData.results.organic_matter_perc),
-        moisture_level: formData.results.moisture_level || null,
-      }
+        organic_matter_perc: Number(formData.results.organic_matter_perc),
+        moisture_level: formData.results.moisture_level,
+      },
     };
     mutation.mutate(payload);
   };
 
+  const inputClass =
+    "w-full bg-surface-tertiary border border-border rounded-xl py-3 px-4 text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all";
+
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-8 bg-slate-50 min-h-screen pb-24">
-      <header className="flex items-center gap-4">
-        <Link href={`/projects/${params.id}/soil`} className="p-2 bg-white shadow-sm hover:bg-slate-100 rounded-full transition-colors">
-          <ArrowLeft className="w-5 h-5 text-slate-700" />
+    <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-8 pb-24">
+      {/* Header */}
+      <header className="flex items-center gap-4 animate-fade-in">
+        <Link
+          href={`/projects/${params.id}/soil`}
+          className="p-2.5 glass-card-hover rounded-xl text-text-secondary hover:text-white transition-all duration-300"
+        >
+          <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Log Soil Test</h1>
-          <p className="text-slate-500 text-sm">Enter your lab results</p>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+            New Soil Test<span className="text-amber-400">.</span>
+          </h1>
+          <p className="text-text-muted text-sm mt-0.5">Record your latest lab results</p>
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-6 shadow-sm">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-600">Test Date</label>
-              <input
-                type="date"
-                required
-                value={formData.test_date}
-                onChange={(e) => setFormData({ ...formData, test_date: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-600">Tested By (Lab Name)</label>
-              <input
-                type="text"
-                placeholder="e.g. AgriLab"
-                value={formData.tested_by}
-                onChange={(e) => setFormData({ ...formData, tested_by: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all"
-              />
-            </div>
+      <form onSubmit={handleSubmit} className="glass-card rounded-3xl p-6 md:p-8 space-y-6 animate-slide-up">
+        {/* Test Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-text-secondary">Test Date</label>
+            <input
+              type="date"
+              value={formData.test_date}
+              onChange={(e) => setFormData({ ...formData, test_date: e.target.value })}
+              className={`${inputClass} [color-scheme:dark]`}
+            />
           </div>
-
-          <div className="border-t border-slate-100 pt-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-4">Nutrient Results</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-600">pH Level</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  required
-                  value={formData.results.ph_level}
-                  onChange={(e) => setFormData({ ...formData, results: { ...formData.results, ph_level: parseFloat(e.target.value) } })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-600">Organic Matter %</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.results.organic_matter_perc}
-                  onChange={(e) => setFormData({ ...formData, results: { ...formData.results, organic_matter_perc: parseFloat(e.target.value) } })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all"
-                />
-              </div>
-
-              {["nitrogen_level", "phosphorus_level", "potassium_level"].map((nutrient) => (
-                <div key={nutrient} className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-600 capitalize">{nutrient.replace("_level", "")} (NPK)</label>
-                  <select
-                    value={(formData.results as any)[nutrient]}
-                    onChange={(e) => setFormData({ ...formData, results: { ...formData.results, [nutrient]: e.target.value } })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all"
-                  >
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                  </select>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="border-t border-slate-100 pt-6 space-y-2">
-            <label className="text-sm font-semibold text-slate-600">Notes / Comments</label>
-            <textarea
-              placeholder="e.g. Soil feels sandy, slight compaction observed, etc."
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all resize-none"
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-text-secondary">Tested By</label>
+            <input
+              type="text"
+              placeholder="Lab or tester name"
+              value={formData.tested_by}
+              onChange={(e) => setFormData({ ...formData, tested_by: e.target.value })}
+              className={inputClass}
             />
           </div>
         </div>
 
-        <div className="flex justify-end gap-4">
-          <Link
-            href={`/projects/${params.id}/soil`}
-            className="px-6 py-3 rounded-xl font-medium text-slate-600 hover:bg-slate-200 transition-colors bg-slate-100"
-          >
-            Cancel
-          </Link>
-          <button
-            type="submit"
-            disabled={mutation.isPending}
-            className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition-colors flex items-center gap-2 shadow-sm"
-          >
-            {mutation.isPending && <Loader2 className="w-5 h-5 animate-spin" />}
-            Save & Generate Recommendations
-          </button>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-text-secondary">Notes</label>
+          <textarea
+            placeholder="Any observations or notes..."
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            rows={3}
+            className={`${inputClass} resize-none`}
+          />
         </div>
+
+        {/* Results */}
+        <div className="border-t border-border pt-6">
+          <h2 className="text-lg font-bold text-white mb-6">Test Results</h2>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">pH Level</label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.results.ph_level}
+                onChange={(e) => setFormData({ ...formData, results: { ...formData.results, ph_level: parseFloat(e.target.value) || 0 } })}
+                className={inputClass}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Nitrogen</label>
+              <select
+                value={formData.results.nitrogen_level}
+                onChange={(e) => setFormData({ ...formData, results: { ...formData.results, nitrogen_level: e.target.value } })}
+                className={inputClass}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Phosphorus</label>
+              <select
+                value={formData.results.phosphorus_level}
+                onChange={(e) => setFormData({ ...formData, results: { ...formData.results, phosphorus_level: e.target.value } })}
+                className={inputClass}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Potassium</label>
+              <select
+                value={formData.results.potassium_level}
+                onChange={(e) => setFormData({ ...formData, results: { ...formData.results, potassium_level: e.target.value } })}
+                className={inputClass}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Organic Matter %</label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.results.organic_matter_perc}
+                onChange={(e) => setFormData({ ...formData, results: { ...formData.results, organic_matter_perc: parseFloat(e.target.value) || 0 } })}
+                className={inputClass}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text-secondary">Moisture</label>
+              <select
+                value={formData.results.moisture_level}
+                onChange={(e) => setFormData({ ...formData, results: { ...formData.results, moisture_level: e.target.value } })}
+                className={inputClass}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={mutation.isPending}
+          className="w-full btn-primary py-3 text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {mutation.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            "Save Soil Test"
+          )}
+        </button>
       </form>
     </div>
   );

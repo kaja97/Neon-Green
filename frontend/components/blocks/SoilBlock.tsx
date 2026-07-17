@@ -17,8 +17,8 @@ export default function SoilBlock({ projectId }: { projectId: string }) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-center min-h-[120px] shadow-sm">
-        <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
+      <div className="glass-card p-4 flex items-center justify-center min-h-[120px]">
+        <Loader2 className="w-6 h-6 text-primary animate-spin" />
       </div>
     );
   }
@@ -28,18 +28,19 @@ export default function SoilBlock({ projectId }: { projectId: string }) {
 
   const value = latestTest?.results ? `pH ${latestTest.results.ph_level}` : "pH --";
   const sub = latestTest?.results ? `N: ${latestTest.results.nitrogen_level}` : "No tests";
+  const isLow = sub.includes("Low");
 
   return (
     <Link
       href={`/projects/${projectId}/soil`}
-      className="bg-white border border-slate-200 rounded-2xl p-4 hover:border-slate-300 transition-all hover:shadow-lg group block shadow-sm"
+      className="glass-card-hover p-4 group block"
     >
-      <div className="p-2 rounded-xl w-fit mb-3 bg-amber-50 group-hover:scale-110 transition-transform">
-        <FlaskConical className="w-5 h-5 text-amber-500" />
+      <div className="p-2 rounded-xl w-fit mb-3 bg-amber-500/10 group-hover:scale-110 transition-transform">
+        <FlaskConical className="w-5 h-5 text-amber-400" />
       </div>
-      <p className="text-xs text-slate-500 mb-0.5">Soil</p>
-      <p className="text-lg font-bold text-slate-800">{value}</p>
-      <p className={clsx("text-xs", sub.includes("Low") ? "text-rose-500" : "text-slate-500")}>{sub}</p>
+      <p className="text-xs text-text-muted mb-0.5">Soil</p>
+      <p className="text-base font-bold text-white">{value}</p>
+      <p className={clsx("text-xs", isLow ? "text-red-400" : "text-text-muted")}>{sub}</p>
     </Link>
   );
 }

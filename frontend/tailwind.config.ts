@@ -1,6 +1,8 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  // Theme class lives on <html> ("dark" | "light"); driven by ThemeProvider.
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -13,7 +15,7 @@ const config: Config = {
         mono: ["JetBrains Mono", "Fira Code", "monospace"],
       },
       colors: {
-        // Brand Colors
+        // Brand Colors (static — consistent across themes)
         primary: {
           DEFAULT: "#10b981",
           foreground: "#ffffff",
@@ -35,34 +37,36 @@ const config: Config = {
           blue: "#3b82f6",
           purple: "#8b5cf6",
         },
-        // Surface Palette (Dark)
+        // Surface Palette — theme-aware via CSS variables.
+        // Each resolves to hsl(var(--…)) so dark/light swap from globals.css.
         surface: {
-          primary: "#0a0f12",
-          secondary: "#111827",
-          tertiary: "#1e2736",
-          elevated: "#283548",
+          primary: "hsl(var(--color-surface-primary))",
+          secondary: "hsl(var(--color-surface-secondary))",
+          tertiary: "hsl(var(--color-surface-tertiary))",
+          elevated: "hsl(var(--color-surface-elevated))",
         },
-        // Text
+        // Text — theme-aware
         text: {
-          primary: "#f1f5f9",
-          secondary: "#94a3b8",
-          muted: "#64748b",
+          primary: "hsl(var(--color-text-primary))",
+          secondary: "hsl(var(--color-text-secondary))",
+          muted: "hsl(var(--color-text-muted))",
         },
-        // Borders
-        border: "#1e293b",
+        // Borders — theme-aware
+        border: "hsl(var(--color-border))",
+        "border-hover": "hsl(var(--color-border-hover))",
 
-        // Aliases for shadcn/ui compatibility
-        background: "#0a0f12",
-        foreground: "#f1f5f9",
-        card: "#111827",
-        "card-foreground": "#f1f5f9",
-        muted: "#1e293b",
-        "muted-foreground": "#94a3b8",
-        accent: "#1e2736",
-        "accent-foreground": "#f1f5f9",
+        // Aliases for shadcn/ui compatibility — also theme-aware
+        background: "hsl(var(--color-surface-primary))",
+        foreground: "hsl(var(--color-text-primary))",
+        card: "hsl(var(--color-surface-secondary))",
+        "card-foreground": "hsl(var(--color-text-primary))",
+        muted: "hsl(var(--color-surface-tertiary))",
+        "muted-foreground": "hsl(var(--color-text-secondary))",
+        accent: "hsl(var(--color-surface-elevated))",
+        "accent-foreground": "hsl(var(--color-text-primary))",
         destructive: "#ef4444",
         "destructive-foreground": "#ffffff",
-        input: "#1e293b",
+        input: "hsl(var(--color-border))",
         ring: "#10b981",
       },
       borderRadius: {

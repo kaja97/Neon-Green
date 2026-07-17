@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import QueryProvider from "@/components/providers/QueryProvider";
+import ThemeProvider from "@/components/providers/ThemeProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -38,17 +39,26 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
+// No-flash theme bootstrap: read persisted theme from localStorage BEFORE paint
+// and stamp the correct class on <html>. Falls back to dark.
+const themeBootstrap = `(function(){try{var s=localStorage.getItem('ui-storage');var t=s?JSON.parse(s).state?.theme:null;var c=(t==='light')?'light':'dark';var d=document.documentElement;d.classList.remove('dark','light');d.classList.add(c);}catch(e){document.documentElement.classList.add('dark');}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+      </head>
       <body
         className={`${inter.variable} font-sans antialiased bg-surface-primary text-text-primary`}
       >
-        <QueryProvider>{children}</QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

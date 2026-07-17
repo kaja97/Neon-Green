@@ -216,4 +216,124 @@ water_requirements = [
     {"plant_id": "p27", "stage_id": "s160", "water_mm_per_day": 5.0, "irrigation_frequency_days": 3},
     {"plant_id": "p27", "stage_id": "s161", "water_mm_per_day": 4.5, "irrigation_frequency_days": 4},
     {"plant_id": "p27", "stage_id": "s162", "water_mm_per_day": 1.0, "irrigation_frequency_days": 8},
+
+    # Cabbage Water Requirements (p28, s163-s168)
+    {"plant_id": "p28", "stage_id": "s163", "water_mm_per_day": 2.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p28", "stage_id": "s164", "water_mm_per_day": 3.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p28", "stage_id": "s165", "water_mm_per_day": 4.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p28", "stage_id": "s166", "water_mm_per_day": 5.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p28", "stage_id": "s167", "water_mm_per_day": 4.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p28", "stage_id": "s168", "water_mm_per_day": 2.0, "irrigation_frequency_days": 5},
+
+    # Carrot Water Requirements (p29, s169-s174)
+    {"plant_id": "p29", "stage_id": "s169", "water_mm_per_day": 2.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p29", "stage_id": "s170", "water_mm_per_day": 3.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p29", "stage_id": "s171", "water_mm_per_day": 4.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p29", "stage_id": "s172", "water_mm_per_day": 5.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p29", "stage_id": "s173", "water_mm_per_day": 4.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p29", "stage_id": "s174", "water_mm_per_day": 1.5, "irrigation_frequency_days": 5},
+
+    # Pumpkin Water Requirements (p30, s175-s180)
+    {"plant_id": "p30", "stage_id": "s175", "water_mm_per_day": 2.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p30", "stage_id": "s176", "water_mm_per_day": 4.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p30", "stage_id": "s177", "water_mm_per_day": 5.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p30", "stage_id": "s178", "water_mm_per_day": 6.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p30", "stage_id": "s179", "water_mm_per_day": 5.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p30", "stage_id": "s180", "water_mm_per_day": 2.0, "irrigation_frequency_days": 5},
+
+    # Cucumber Water Requirements (p31, s181-s186)
+    {"plant_id": "p31", "stage_id": "s181", "water_mm_per_day": 3.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p31", "stage_id": "s182", "water_mm_per_day": 4.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p31", "stage_id": "s183", "water_mm_per_day": 6.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p31", "stage_id": "s184", "water_mm_per_day": 7.0, "irrigation_frequency_days": 1},
+    {"plant_id": "p31", "stage_id": "s185", "water_mm_per_day": 6.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p31", "stage_id": "s186", "water_mm_per_day": 3.0, "irrigation_frequency_days": 3},
+
+    # Watermelon Water Requirements (p32, s187-s192)
+    {"plant_id": "p32", "stage_id": "s187", "water_mm_per_day": 2.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p32", "stage_id": "s188", "water_mm_per_day": 4.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p32", "stage_id": "s189", "water_mm_per_day": 5.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p32", "stage_id": "s190", "water_mm_per_day": 6.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p32", "stage_id": "s191", "water_mm_per_day": 5.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p32", "stage_id": "s192", "water_mm_per_day": 2.0, "irrigation_frequency_days": 7},
+
+    # Papaya Water Requirements (p33, s193-s198)
+    {"plant_id": "p33", "stage_id": "s193", "water_mm_per_day": 3.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p33", "stage_id": "s194", "water_mm_per_day": 4.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p33", "stage_id": "s195", "water_mm_per_day": 5.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p33", "stage_id": "s196", "water_mm_per_day": 6.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p33", "stage_id": "s197", "water_mm_per_day": 5.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p33", "stage_id": "s198", "water_mm_per_day": 4.0, "irrigation_frequency_days": 4},
+
+    # Banana Water Requirements (p34, s199-s204)
+    {"plant_id": "p34", "stage_id": "s199", "water_mm_per_day": 4.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p34", "stage_id": "s200", "water_mm_per_day": 5.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p34", "stage_id": "s201", "water_mm_per_day": 7.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p34", "stage_id": "s202", "water_mm_per_day": 8.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p34", "stage_id": "s203", "water_mm_per_day": 7.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p34", "stage_id": "s204", "water_mm_per_day": 4.0, "irrigation_frequency_days": 4},
+
+    # Garlic Water Requirements (p35, s205-s210)
+    {"plant_id": "p35", "stage_id": "s205", "water_mm_per_day": 2.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p35", "stage_id": "s206", "water_mm_per_day": 3.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p35", "stage_id": "s207", "water_mm_per_day": 4.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p35", "stage_id": "s208", "water_mm_per_day": 5.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p35", "stage_id": "s209", "water_mm_per_day": 3.0, "irrigation_frequency_days": 4},
+    {"plant_id": "p35", "stage_id": "s210", "water_mm_per_day": 0.5, "irrigation_frequency_days": 10},
+
+    # Ginger Water Requirements (p36, s211-s216)
+    {"plant_id": "p36", "stage_id": "s211", "water_mm_per_day": 3.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p36", "stage_id": "s212", "water_mm_per_day": 4.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p36", "stage_id": "s213", "water_mm_per_day": 5.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p36", "stage_id": "s214", "water_mm_per_day": 6.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p36", "stage_id": "s215", "water_mm_per_day": 4.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p36", "stage_id": "s216", "water_mm_per_day": 1.5, "irrigation_frequency_days": 7},
+
+    # Turmeric Water Requirements (p37, s217-s222)
+    {"plant_id": "p37", "stage_id": "s217", "water_mm_per_day": 3.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p37", "stage_id": "s218", "water_mm_per_day": 4.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p37", "stage_id": "s219", "water_mm_per_day": 5.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p37", "stage_id": "s220", "water_mm_per_day": 6.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p37", "stage_id": "s221", "water_mm_per_day": 4.5, "irrigation_frequency_days": 3},
+    {"plant_id": "p37", "stage_id": "s222", "water_mm_per_day": 1.5, "irrigation_frequency_days": 7},
+
+    # Black Pepper Water Requirements (p38, s223-s228)
+    {"plant_id": "p38", "stage_id": "s223", "water_mm_per_day": 3.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p38", "stage_id": "s224", "water_mm_per_day": 4.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p38", "stage_id": "s225", "water_mm_per_day": 5.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p38", "stage_id": "s226", "water_mm_per_day": 6.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p38", "stage_id": "s227", "water_mm_per_day": 5.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p38", "stage_id": "s228", "water_mm_per_day": 2.5, "irrigation_frequency_days": 5},
+
+    # Mango Water Requirements (p39, s229-s234)
+    {"plant_id": "p39", "stage_id": "s229", "water_mm_per_day": 3.0, "irrigation_frequency_days": 4},
+    {"plant_id": "p39", "stage_id": "s230", "water_mm_per_day": 4.0, "irrigation_frequency_days": 4},
+    {"plant_id": "p39", "stage_id": "s231", "water_mm_per_day": 5.0, "irrigation_frequency_days": 5},
+    {"plant_id": "p39", "stage_id": "s232", "water_mm_per_day": 6.0, "irrigation_frequency_days": 5},
+    {"plant_id": "p39", "stage_id": "s233", "water_mm_per_day": 5.5, "irrigation_frequency_days": 5},
+    {"plant_id": "p39", "stage_id": "s234", "water_mm_per_day": 2.0, "irrigation_frequency_days": 10},
+
+    # Lettuce Water Requirements (p40, s235-s240)
+    {"plant_id": "p40", "stage_id": "s235", "water_mm_per_day": 2.0, "irrigation_frequency_days": 1},
+    {"plant_id": "p40", "stage_id": "s236", "water_mm_per_day": 3.0, "irrigation_frequency_days": 1},
+    {"plant_id": "p40", "stage_id": "s237", "water_mm_per_day": 4.0, "irrigation_frequency_days": 1},
+    {"plant_id": "p40", "stage_id": "s238", "water_mm_per_day": 5.0, "irrigation_frequency_days": 1},
+    {"plant_id": "p40", "stage_id": "s239", "water_mm_per_day": 4.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p40", "stage_id": "s240", "water_mm_per_day": 2.0, "irrigation_frequency_days": 3},
+
+    # Cauliflower Water Requirements (p41, s241-s246)
+    {"plant_id": "p41", "stage_id": "s241", "water_mm_per_day": 2.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p41", "stage_id": "s242", "water_mm_per_day": 3.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p41", "stage_id": "s243", "water_mm_per_day": 4.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p41", "stage_id": "s244", "water_mm_per_day": 6.0, "irrigation_frequency_days": 2},
+    {"plant_id": "p41", "stage_id": "s245", "water_mm_per_day": 5.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p41", "stage_id": "s246", "water_mm_per_day": 2.0, "irrigation_frequency_days": 5},
+
+    # Bell Pepper Water Requirements (p42, s247-s252)
+    {"plant_id": "p42", "stage_id": "s247", "water_mm_per_day": 2.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p42", "stage_id": "s248", "water_mm_per_day": 3.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p42", "stage_id": "s249", "water_mm_per_day": 4.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p42", "stage_id": "s250", "water_mm_per_day": 5.5, "irrigation_frequency_days": 2},
+    {"plant_id": "p42", "stage_id": "s251", "water_mm_per_day": 5.0, "irrigation_frequency_days": 3},
+    {"plant_id": "p42", "stage_id": "s252", "water_mm_per_day": 2.0, "irrigation_frequency_days": 4},
 ]
