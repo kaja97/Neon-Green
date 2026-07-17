@@ -11,13 +11,14 @@ import {
   ArrowLeft,
   Check,
   UserPlus,
+  Store,
+  User,
+  Sprout
 } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/authStore";
 import api from "@/lib/api";
 
 type Step = 1 | 2 | 3;
-
-const STEP_LABELS = ["Account Details", "Verify Identity", "Farm Profile"];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function RegisterPage() {
   const [step, setStep] = useState<Step>(1);
 
   // Step 1: Basic Info
+  const [role, setRole] = useState("buyer");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -37,7 +39,7 @@ export default function RegisterPage() {
   const [otpCode, setOtpCode] = useState("");
   const [countdown, setCountdown] = useState(120);
 
-  // Step 3: Farm Profile
+  // Step 3: Profile
   const [farmingMethod, setFarmingMethod] = useState("organic");
   const [experienceYears, setExperienceYears] = useState("");
   const [primaryLanguage, setPrimaryLanguage] = useState("en");
@@ -45,9 +47,18 @@ export default function RegisterPage() {
     Array<{ id: string; code: string; name: string }>
   >([]);
 
+  // Vendor specific
+  const [businessName, setBusinessName] = useState("");
+  const [taxId, setTaxId] = useState("");
+
+  // Buyer specific
+  const [buyerType, setBuyerType] = useState("Individual");
+
   // UI State
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const STEP_LABELS = ["Account Details", "Verify Identity", role === "farmer" ? "Farm Profile" : role === "vendor" ? "Vendor Details" : "Buyer Info"];
 
   // Timer for OTP countdown
   useEffect(() => {
@@ -58,9 +69,9 @@ export default function RegisterPage() {
     return () => clearTimeout(timer);
   }, [step, countdown]);
 
-  // Fetch farming methods when step 3 is reached
+  // Fetch farming methods when step 3 is reached and role is farmer
   useEffect(() => {
-    if (step === 3 && farmingMethods.length === 0) {
+    if (step === 3 && role === "farmer" && farmingMethods.length === 0) {
       api
         .get("/farming-methods")
         .then((res) => {
@@ -83,7 +94,7 @@ export default function RegisterPage() {
           ]);
         });
     }
-  }, [step, farmingMethods.length]);
+  }, [step, role, farmingMethods.length]);
 
   // Step 1: Request OTP
   const handleStep1 = async (e: React.FormEvent) => {
@@ -122,7 +133,6 @@ export default function RegisterPage() {
       return;
     }
 
-    // Just validate the OTP format locally, actual verification happens in step 3
     setStep(3);
   };
 
@@ -133,16 +143,26 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const res = await api.post("/auth/register/verify", {
+      const payload: any = {
         email,
         phone: phone || undefined,
         otp_code: otpCode,
         password,
         full_name: fullName,
-        farming_method: farmingMethod,
-        primary_language: primaryLanguage,
-      });
+        role: role,
+      };
 
+      if (role === "farmer") {
+        payload.farming_method = farmingMethod;
+        payload.primary_language = primaryLanguage;
+      } else if (role === "vendor") {
+        payload.business_name = businessName || fullName;
+        payload.tax_id = taxId;
+      } else {
+        payload.buyer_type = buyerType;
+      }
+
+      const res = await api.post("/auth/register/verify", payload);
       const { access_token } = res.data.data;
 
       // Fetch user profile
@@ -150,20 +170,28 @@ export default function RegisterPage() {
         headers: { Authorization: `Bearer ${access_token}` },
       });
       const userData = meRes.data.data;
+      
+      const profileName = userData.farmer_profile?.full_name || userData.vendor_profile?.business_name || userData.buyer_profile?.full_name;
 
       // Auto-login
       login(
         {
           id: userData.id || userData.account_id,
           email: userData.email,
-          role: userData.role || "farmer",
-          name: userData.farmer_profile?.full_name,
+          role: userData.role || role,
+          name: profileName,
         },
         access_token
       );
 
-      // Redirect to dashboard (NOT login)
-      router.push("/dashboard");
+      // Redirect based on role
+      if (role === "vendor") {
+        router.push("/market");
+      } else if (role === "buyer") {
+        router.push("/market");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       setError(
         err.response?.data?.error?.message || "Registration failed. Please try again."
@@ -203,7 +231,7 @@ export default function RegisterPage() {
             ? "Join Neon Agri"
             : step === 2
               ? `Enter the code sent to ${email}`
-              : "Set up your farming profile"}
+              : "Set up your profile"}
         </p>
       </div>
 
@@ -215,7 +243,7 @@ export default function RegisterPage() {
           const isDone = step > stepNum;
 
           return (
-            <div key={label} className="flex-1 flex flex-col items-center gap-1.5">
+            <div key={idx} className="flex-1 flex flex-col items-center gap-1.5">
               <div className="w-full flex items-center gap-1">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
@@ -237,7 +265,7 @@ export default function RegisterPage() {
                 )}
               </div>
               <span
-                className={`text-[10px] font-medium ${
+                className={`text-[10px] font-medium whitespace-nowrap ${
                   isActive ? "text-primary" : "text-text-muted"
                 }`}
               >
@@ -260,6 +288,49 @@ export default function RegisterPage() {
         <form onSubmit={handleStep1} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text-secondary">
+              I want to register as a:
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setRole("farmer")}
+                className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${
+                  role === "farmer"
+                    ? "bg-primary/10 border-primary text-primary glow-green-sm"
+                    : "bg-surface-tertiary border-border text-text-secondary hover:border-border-hover"
+                }`}
+              >
+                <Sprout className="w-5 h-5" />
+                <span className="text-xs font-semibold">Farmer</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("vendor")}
+                className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${
+                  role === "vendor"
+                    ? "bg-neon-gold/10 border-neon-gold text-neon-gold glow-gold-sm"
+                    : "bg-surface-tertiary border-border text-text-secondary hover:border-border-hover"
+                }`}
+              >
+                <Store className="w-5 h-5" />
+                <span className="text-xs font-semibold">Vendor</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("buyer")}
+                className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${
+                  role === "buyer"
+                    ? "bg-neon-blue/10 border-neon-blue text-neon-blue glow-blue-sm"
+                    : "bg-surface-tertiary border-border text-text-secondary hover:border-border-hover"
+                }`}
+              >
+                <User className="w-5 h-5" />
+                <span className="text-xs font-semibold">Buyer</span>
+              </button>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-secondary">
               Full Name <span className="text-red-400">*</span>
             </label>
             <input
@@ -278,7 +349,7 @@ export default function RegisterPage() {
             </label>
             <input
               type="email"
-              placeholder="farmer@example.com"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -423,86 +494,146 @@ export default function RegisterPage() {
         </form>
       )}
 
-      {/* Step 3: Farm Profile */}
+      {/* Step 3: Profile */}
       {step === 3 && (
         <form onSubmit={handleStep3} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text-secondary">
-              Farming Method
-            </label>
-            <div className="grid grid-cols-1 gap-2">
-              {(farmingMethods.length > 0
-                ? farmingMethods
-                : [
-                    { id: "1", code: "organic", name: "🌿 Organic Farming" },
-                    {
-                      id: "2",
-                      code: "inorganic",
-                      name: "🧪 Conventional Farming",
-                    },
-                    {
-                      id: "3",
-                      code: "integrated",
-                      name: "🔄 Integrated Farming",
-                    },
-                  ]
-              ).map((method) => (
-                <button
-                  key={method.id}
-                  type="button"
-                  onClick={() => setFarmingMethod(method.code)}
-                  className={`p-3 rounded-xl border text-left text-sm font-medium transition-all ${
-                    farmingMethod === method.code
-                      ? "bg-primary/10 border-primary text-primary"
-                      : "bg-surface-tertiary border-border text-text-secondary hover:border-border-hover"
-                  }`}
-                >
-                  {method.name}
-                </button>
-              ))}
-            </div>
-          </div>
+          
+          {role === "farmer" && (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-text-secondary">
+                  Farming Method
+                </label>
+                <div className="grid grid-cols-1 gap-2">
+                  {(farmingMethods.length > 0
+                    ? farmingMethods
+                    : [
+                        { id: "1", code: "organic", name: "🌿 Organic Farming" },
+                        {
+                          id: "2",
+                          code: "inorganic",
+                          name: "🧪 Conventional Farming",
+                        },
+                        {
+                          id: "3",
+                          code: "integrated",
+                          name: "🔄 Integrated Farming",
+                        },
+                      ]
+                  ).map((method) => (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => setFarmingMethod(method.code)}
+                      className={`p-3 rounded-xl border text-left text-sm font-medium transition-all ${
+                        farmingMethod === method.code
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-surface-tertiary border-border text-text-secondary hover:border-border-hover"
+                      }`}
+                    >
+                      {method.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text-secondary">
-              Years of Experience
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              placeholder="e.g., 5"
-              value={experienceYears}
-              onChange={(e) => setExperienceYears(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-            />
-          </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-text-secondary">
+                  Years of Experience
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="e.g., 5"
+                  value={experienceYears}
+                  onChange={(e) => setExperienceYears(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                />
+              </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text-secondary">
-              Preferred Language
-            </label>
-            <div className="flex gap-2">
-              {[
-                { code: "en", label: "English" },
-                { code: "si", label: "සිංහල" },
-                { code: "ta", label: "தமிழ்" },
-              ].map((lang) => (
-                <button
-                  key={lang.code}
-                  type="button"
-                  onClick={() => setPrimaryLanguage(lang.code)}
-                  className={`flex-1 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
-                    primaryLanguage === lang.code
-                      ? "bg-primary/10 border-primary text-primary"
-                      : "bg-surface-tertiary border-border text-text-secondary hover:border-border-hover"
-                  }`}
-                >
-                  {lang.label}
-                </button>
-              ))}
-            </div>
-          </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-text-secondary">
+                  Preferred Language
+                </label>
+                <div className="flex gap-2">
+                  {[
+                    { code: "en", label: "English" },
+                    { code: "si", label: "සිංහල" },
+                    { code: "ta", label: "தமிழ்" },
+                  ].map((lang) => (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => setPrimaryLanguage(lang.code)}
+                      className={`flex-1 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                        primaryLanguage === lang.code
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-surface-tertiary border-border text-text-secondary hover:border-border-hover"
+                      }`}
+                    >
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {role === "vendor" && (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-text-secondary">
+                  Business / Shop Name <span className="text-text-muted">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Green Grocers Ltd"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-neon-gold focus:border-transparent transition-all"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-text-secondary">
+                  Business Registration / Tax ID <span className="text-text-muted">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., PV12345"
+                  value={taxId}
+                  onChange={(e) => setTaxId(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-neon-gold focus:border-transparent transition-all"
+                />
+              </div>
+            </>
+          )}
+
+          {role === "buyer" && (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-text-secondary">
+                  What best describes you?
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["Individual", "Restaurant", "Wholesaler", "Supermarket"].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setBuyerType(type)}
+                      className={`p-3 rounded-xl border text-center text-sm font-medium transition-all ${
+                        buyerType === type
+                          ? "bg-neon-blue/10 border-neon-blue text-neon-blue"
+                          : "bg-surface-tertiary border-border text-text-secondary hover:border-border-hover"
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button
@@ -516,7 +647,13 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-[2] h-12 btn-primary flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+              className={`flex-[2] h-12 flex items-center justify-center gap-2 text-sm font-semibold rounded-xl text-white transition-all duration-300 disabled:opacity-50 ${
+                role === "vendor"
+                  ? "bg-neon-gold hover:bg-neon-gold/80 glow-gold-sm"
+                  : role === "buyer"
+                  ? "bg-neon-blue hover:bg-neon-blue/80 glow-blue-sm"
+                  : "bg-primary hover:bg-primary/80 glow-green-sm"
+              }`}
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

@@ -205,3 +205,10 @@ def get_notification_service() -> "NotificationService":
         notification_repo=NotificationRepository(),
     )
 
+def get_marketplace_service() -> "MarketplaceService":
+    from modules.marketplace.service import MarketplaceService
+    from modules.marketplace.repository import ProductRepository
+    return MarketplaceService(
+        product_repo=ProductRepository(),
+    )
+

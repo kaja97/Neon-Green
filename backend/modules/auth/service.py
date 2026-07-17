@@ -107,36 +107,63 @@ class AuthService(BaseService):
             email=data.email,
             phone=data.phone,
             password_hash=hashed_pwd,
-            role="farmer",
+            role=data.role,
             is_verified=True,
         )
         
+        profile_id = None
         try:
             new_account = await self.account_repo.create(db, obj_in=account_in)
             
-            profile_in = FarmerProfileCreate(
-                account_id=str(new_account.id),
-                full_name=data.full_name,
-                farming_method=data.farming_method.value,
-                primary_language=data.primary_language,
-                experience_years=0
-            )
-            new_profile = await self.profile_repo.create(db, obj_in=profile_in)
-
-            if data.location:
-                from models.farmer import FarmerLocation
-                from geoalchemy2.elements import WKTElement
-                new_location = FarmerLocation(
-                    farmer_id=new_profile.id,
-                    name=data.location.label,
-                    district=data.location.district,
-                    centroid=WKTElement(
-                        f"POINT({data.location.longitude} {data.location.latitude})",
-                        srid=4326,
-                    ),
-                    is_primary=True,
+            if data.role == "farmer":
+                profile_in = FarmerProfileCreate(
+                    account_id=str(new_account.id),
+                    full_name=data.full_name,
+                    farming_method=data.farming_method.value if data.farming_method else "integrated",
+                    primary_language=data.primary_language,
+                    experience_years=0
                 )
-                db.add(new_location)
+                new_profile = await self.profile_repo.create(db, obj_in=profile_in)
+                profile_id = new_profile.id
+    
+                if data.location:
+                    from models.farmer import FarmerLocation
+                    from geoalchemy2.elements import WKTElement
+                    new_location = FarmerLocation(
+                        farmer_id=new_profile.id,
+                        name=data.location.label,
+                        district=data.location.district,
+                        centroid=WKTElement(
+                            f"POINT({data.location.longitude} {data.location.latitude})",
+                            srid=4326,
+                        ),
+                        is_primary=True,
+                    )
+                    db.add(new_location)
+            
+            elif data.role == "vendor":
+                from models.account import VendorProfile
+                vendor_profile = VendorProfile(
+                    account_id=new_account.id,
+                    business_name=data.business_name or data.full_name,
+                    tax_id=data.tax_id,
+                    warehouse_location=data.warehouse_location,
+                )
+                db.add(vendor_profile)
+                await db.flush()
+                profile_id = vendor_profile.id
+                
+            elif data.role == "buyer":
+                from models.account import BuyerProfile
+                buyer_profile = BuyerProfile(
+                    account_id=new_account.id,
+                    full_name=data.full_name,
+                    buyer_type=data.buyer_type or "Individual",
+                    delivery_address=data.delivery_address,
+                )
+                db.add(buyer_profile)
+                await db.flush()
+                profile_id = buyer_profile.id
                 
             await db.commit()
         except IntegrityError as e:
@@ -155,7 +182,7 @@ class AuthService(BaseService):
 
         return RegisterResponse(
             account_id=new_account.id,
-            farmer_profile_id=new_profile.id,
+            profile_id=profile_id,
             access_token=access,
             refresh_token=refresh,
         )
@@ -402,4 +429,20 @@ class AuthService(BaseService):
             }
         else:
             data["farmer_profile"] = None
+            
+        if user.vendor_profile:
+            data["vendor_profile"] = {
+                "id": str(user.vendor_profile.id),
+                "business_name": user.vendor_profile.business_name,
+                "rating": user.vendor_profile.rating,
+                "is_verified": user.vendor_profile.is_verified,
+            }
+            
+        if user.buyer_profile:
+            data["buyer_profile"] = {
+                "id": str(user.buyer_profile.id),
+                "full_name": user.buyer_profile.full_name,
+                "buyer_type": user.buyer_profile.buyer_type,
+            }
+            
         return data

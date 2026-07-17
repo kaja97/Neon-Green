@@ -26,11 +26,25 @@ class RegisterVerifyRequest(BaseModel):
     email: EmailStr
     otp_code: str = Field(..., min_length=6, max_length=6)
     password: str = Field(..., min_length=8, max_length=72)
+    role: str = Field(default="buyer", pattern="^(farmer|vendor|buyer)$")
+    
+    # Common fields
     full_name: str = Field(..., min_length=2, max_length=255)
-    farming_method: FarmingMethod
-    primary_language: str = Field(default="en", max_length=10)
     phone: Optional[str] = Field(None, max_length=20)
+    
+    # Farmer specific fields
+    farming_method: Optional[FarmingMethod] = None
+    primary_language: Optional[str] = Field(default="en", max_length=10)
     location: Optional[LocationData] = None
+    
+    # Vendor specific fields
+    business_name: Optional[str] = Field(None, max_length=255)
+    tax_id: Optional[str] = Field(None, max_length=100)
+    warehouse_location: Optional[str] = None
+    
+    # Buyer specific fields
+    buyer_type: Optional[str] = Field(default="Individual", max_length=50)
+    delivery_address: Optional[str] = None
 
 
 # ── Login ────────────────────────────────────────────────
@@ -105,6 +119,19 @@ class FarmerProfileShort(BaseModel):
     experience_years: int
 
 
+class VendorProfileShort(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    business_name: str
+    rating: float
+    is_verified: bool
+
+class BuyerProfileShort(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    full_name: str
+    buyer_type: str
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
@@ -113,11 +140,13 @@ class UserResponse(BaseModel):
     role: str
     is_verified: bool = False
     farmer_profile: Optional[FarmerProfileShort] = None
+    vendor_profile: Optional[VendorProfileShort] = None
+    buyer_profile: Optional[BuyerProfileShort] = None
 
 
 class RegisterResponse(BaseModel):
     account_id: uuid.UUID
-    farmer_profile_id: uuid.UUID
+    profile_id: Optional[uuid.UUID] = None
     access_token: str
     token_type: str = "bearer"
     expires_in: int = 900

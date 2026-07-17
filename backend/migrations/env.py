@@ -38,6 +38,19 @@ target_metadata = Base.metadata
 # ... etc.
 
 
+def include_object(object, name, type_, reflected, compare_to):
+    if type_ == "table" and name in {
+        'spatial_ref_sys', 'topology', 'layer', 'geometry_columns', 'geography_columns',
+        'addr', 'addrfeat', 'bg', 'county', 'county_lookup', 'countysub_lookup', 'cousub',
+        'direction_lookup', 'edges', 'faces', 'featnames', 'geocode_settings', 
+        'geocode_settings_default', 'loader_lookuptables', 'loader_platform', 'loader_variables',
+        'pagc_gaz', 'pagc_lex', 'pagc_rules', 'place', 'place_lookup', 'secondary_unit_lookup',
+        'state', 'state_lookup', 'street_type_lookup', 'tabblock', 'tabblock20', 'tract',
+        'zip_lookup', 'zip_lookup_all', 'zip_lookup_base', 'zip_state', 'zip_state_loc', 'zcta5'
+    }:
+        return False
+    return True
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -56,6 +69,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -63,7 +77,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection, 
+        target_metadata=target_metadata,
+        include_object=include_object,
+    )
 
     with context.begin_transaction():
         context.run_migrations()
