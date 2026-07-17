@@ -1,77 +1,71 @@
-import httpx
-from datetime import datetime, timedelta
 from typing import Dict, Any
-import logging
+from datetime import datetime, timedelta
+from core.base_client import BaseAPIClient
 from config import settings
 
-logger = logging.getLogger(__name__)
+class WeatherClient(BaseAPIClient):
+    def __init__(self):
+        super().__init__(base_url="https://api.openweathermap.org/data/2.5")
+        self.api_key = settings.OPENWEATHER_API_KEY
 
-async def fetch_weather_data(lat: float, lon: float) -> Dict[str, Any]:
-    api_key = settings.OPENWEATHER_API_KEY
-    
-    if not api_key:
-        logger.warning("No OPENWEATHER_API_KEY set. Using mock weather data.")
-        return _get_mock_weather(lat, lon)
-        
-    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={api_key}&units=metric"
-    
-    async with httpx.AsyncClient() as client:
+    async def fetch_weather_data(self, lat: float, lon: float) -> Dict[str, Any]:
+        if not self.api_key:
+            self.logger.warning("No OPENWEATHER_API_KEY set. Using mock weather data.")
+            return self._get_mock_weather(lat, lon)
+            
         try:
-            response = await client.get(url, timeout=10.0)
-            response.raise_for_status()
-            return response.json()
+            params = {
+                "lat": lat,
+                "lon": lon,
+                "appid": self.api_key,
+                "units": "metric"
+            }
+            return await self.get("/forecast", params=params)
         except Exception as e:
-            logger.error(f"Failed to fetch from OpenWeatherMap: {e}")
-            logger.info("Falling back to mock weather data.")
-            return _get_mock_weather(lat, lon)
+            self.logger.error(f"Failed to fetch from OpenWeatherMap: {e}")
+            self.logger.info("Falling back to mock weather data.")
+            return self._get_mock_weather(lat, lon)
 
-def _get_mock_weather(lat: float, lon: float) -> Dict[str, Any]:
-    # Returns a fake OpenWeatherMap 5-day / 3-hour forecast structure
-    now = datetime.utcnow()
-    
-    list_data = []
-    
-    # Generate 40 items (5 days * 8 intervals/day)
-    for i in range(40):
-        dt = now + timedelta(hours=3 * i)
+    def _get_mock_weather(self, lat: float, lon: float) -> Dict[str, Any]:
+        now = datetime.utcnow()
+        list_data = []
         
-        # Fake some rain on day 2
-        rain = 0
-        if 8 <= i < 16:
-            rain = 6.5 # mm per 3h
+        for i in range(40):
+            dt = now + timedelta(hours=3 * i)
+            rain = 0
+            if 8 <= i < 16:
+                rain = 6.5
+            temp = 28.0
+            if 24 <= i < 32:
+                temp = 35.0
+                
+            item = {
+                "dt": int(dt.timestamp()),
+                "dt_txt": dt.strftime("%Y-%m-%d %H:%M:%S"),
+                "main": {
+                    "temp": temp,
+                    "humidity": 75,
+                },
+                "weather": [
+                    {
+                        "main": "Rain" if rain > 0 else "Clouds",
+                        "description": "light rain" if rain > 0 else "scattered clouds",
+                        "icon": "10d" if rain > 0 else "03d"
+                    }
+                ],
+                "wind": {
+                    "speed": 4.5
+                },
+            }
             
-        # Fake some heat on day 4
-        temp = 28.0
-        if 24 <= i < 32:
-            temp = 35.0
+            if rain > 0:
+                item["rain"] = {"3h": rain}
+                
+            list_data.append(item)
             
-        item = {
-            "dt": int(dt.timestamp()),
-            "dt_txt": dt.strftime("%Y-%m-%d %H:%M:%S"),
-            "main": {
-                "temp": temp,
-                "humidity": 75,
+        return {
+            "city": {
+                "coord": {"lat": lat, "lon": lon}
             },
-            "weather": [
-                {
-                    "main": "Rain" if rain > 0 else "Clouds",
-                    "description": "light rain" if rain > 0 else "scattered clouds",
-                    "icon": "10d" if rain > 0 else "03d"
-                }
-            ],
-            "wind": {
-                "speed": 4.5 # m/s
-            },
+            "list": list_data
         }
-        
-        if rain > 0:
-            item["rain"] = {"3h": rain}
-            
-        list_data.append(item)
-        
-    return {
-        "city": {
-            "coord": {"lat": lat, "lon": lon}
-        },
-        "list": list_data
-    }

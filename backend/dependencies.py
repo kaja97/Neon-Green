@@ -102,3 +102,46 @@ def get_farmer_service() -> "FarmerService":
         livestock_repo=FarmerLivestockRepository(),
     )
 
+def get_project_service() -> "ProjectService":
+    from modules.project.service import ProjectService
+    from modules.auth.repository import FarmerProfileRepository
+    from modules.admin.repository import PlantRepository
+    from modules.project.repository import ProjectRepository, PlantStageRepository
+    return ProjectService(
+        profile_repo=FarmerProfileRepository(),
+        project_repo=ProjectRepository(),
+        plant_repo=PlantRepository(),
+        stage_repo=PlantStageRepository(),
+    )
+
+def get_dashboard_service() -> "DashboardService":
+    from modules.project.dashboard import DashboardService
+    return DashboardService(
+        project_service=get_project_service(),
+    )
+
+def get_disease_service() -> "DiseaseService":
+    from modules.disease.service import DiseaseService
+    from modules.auth.repository import FarmerProfileRepository
+    from modules.project.repository import ProjectRepository
+    from modules.disease.repository import ProjectIssueRepository, DiseaseSolutionRepository
+    return DiseaseService(
+        profile_repo=FarmerProfileRepository(),
+        project_repo=ProjectRepository(),
+        issue_repo=ProjectIssueRepository(),
+        solution_repo=DiseaseSolutionRepository(),
+    )
+
+def get_soil_service() -> "SoilService":
+    from modules.soil.service import SoilService
+    from modules.auth.repository import FarmerProfileRepository
+    from modules.project.repository import ProjectRepository
+    from modules.soil.repository import SoilTestRepository, SoilNutrientResultRepository, SoilRecommendationRepository
+    return SoilService(
+        profile_repo=FarmerProfileRepository(),
+        project_repo=ProjectRepository(),
+        test_repo=SoilTestRepository(),
+        result_repo=SoilNutrientResultRepository(),
+        rec_repo=SoilRecommendationRepository(),
+    )
+

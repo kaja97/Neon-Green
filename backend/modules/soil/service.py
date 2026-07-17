@@ -6,110 +6,100 @@ import uuid
 from models.project import Project
 from models.account import FarmerProfile
 from models.soil import SoilTest, SoilNutrientResult, SoilRecommendation
+from core.base_service import BaseService
+from modules.auth.repository import FarmerProfileRepository
+from modules.project.repository import ProjectRepository
+from .repository import SoilTestRepository, SoilNutrientResultRepository, SoilRecommendationRepository
 from .schemas import SoilTestCreate
-
 from .calculator import calculate_nutrient_gaps
 
+class SoilService(BaseService):
+    def __init__(
+        self,
+        profile_repo: FarmerProfileRepository,
+        project_repo: ProjectRepository,
+        test_repo: SoilTestRepository,
+        result_repo: SoilNutrientResultRepository,
+        rec_repo: SoilRecommendationRepository
+    ):
+        super().__init__()
+        self.profile_repo = profile_repo
+        self.project_repo = project_repo
+        self.test_repo = test_repo
+        self.result_repo = result_repo
+        self.rec_repo = rec_repo
 
-async def _get_farmer_id(db: AsyncSession, account_id: uuid.UUID) -> uuid.UUID:
-    """Resolve the authenticated account to its farmer profile id.
+    async def _get_farmer_id(self, db: AsyncSession, account_id: uuid.UUID) -> uuid.UUID:
+        result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == account_id))
+        profile = result.scalars().first()
+        if not profile:
+            raise HTTPException(status_code=404, detail="Farmer profile not found")
+        return profile.id
 
-    Project ownership is keyed on FarmerProfile.id, not Account.id (see
-    dependencies.get_current_user), so ownership checks must resolve through here.
-    """
-    result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == account_id))
-    profile = result.scalars().first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="Farmer profile not found")
-    return profile.id
-
-
-async def submit_soil_test(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID, data: SoilTestCreate):
-    # Verify project
-    farmer_id = await _get_farmer_id(db, account_id)
-    project = await db.get(Project, project_id)
-    if not project or project.farmer_id != farmer_id:
-        raise HTTPException(status_code=404, detail="Project not found")
+    async def submit_soil_test(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID, data: SoilTestCreate):
+        farmer_id = await self._get_farmer_id(db, account_id)
+        project = await self.project_repo.get(db, project_id)
+        if not project or project.farmer_id != farmer_id:
+            raise HTTPException(status_code=404, detail="Project not found")
+            
+        soil_test = SoilTest(
+            project_id=project_id,
+            test_date=data.test_date,
+            tested_by=data.tested_by,
+            status="completed",
+            notes=data.notes
+        )
+        db.add(soil_test)
+        await db.flush()
         
-    # Create Test
-    soil_test = SoilTest(
-        project_id=project_id,
-        test_date=data.test_date,
-        tested_by=data.tested_by,
-        status="completed",
-        notes=data.notes
-    )
-    db.add(soil_test)
-    await db.flush() # get ID
-    
-    # Create Result
-    soil_res = SoilNutrientResult(
-        soil_test_id=soil_test.id,
-        ph_level=data.results.ph_level,
-        nitrogen_level=data.results.nitrogen_level,
-        phosphorus_level=data.results.phosphorus_level,
-        potassium_level=data.results.potassium_level,
-        organic_matter_perc=data.results.organic_matter_perc,
-        moisture_level=data.results.moisture_level
-    )
-    db.add(soil_res)
-    
-    # Generate Recommendations
-    recs = calculate_nutrient_gaps(soil_test, soil_res, project.farming_method)
-    db.add_all(recs)
-    
-    await db.commit()
-    await db.refresh(soil_test)
-
-    # Attach result and recommendations so SoilTestDetailResponse can serialize them.
-    # (db.refresh only loads mapped columns, not dynamic relationships.)
-    soil_test.results = soil_res
-    rec_query = await db.execute(
-        select(SoilRecommendation).where(SoilRecommendation.soil_test_id == soil_test.id)
-    )
-    soil_test.recommendations = rec_query.scalars().all()
-
-    return soil_test
-
-async def get_soil_tests(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
-    farmer_id = await _get_farmer_id(db, account_id)
-    project = await db.get(Project, project_id)
-    if not project or project.farmer_id != farmer_id:
-        raise HTTPException(status_code=404, detail="Project not found")
+        soil_res = SoilNutrientResult(
+            soil_test_id=soil_test.id,
+            ph_level=data.results.ph_level,
+            nitrogen_level=data.results.nitrogen_level,
+            phosphorus_level=data.results.phosphorus_level,
+            potassium_level=data.results.potassium_level,
+            organic_matter_perc=data.results.organic_matter_perc,
+            moisture_level=data.results.moisture_level
+        )
+        db.add(soil_res)
         
-    result = await db.execute(
-        select(SoilTest).where(SoilTest.project_id == project_id).order_by(SoilTest.test_date.desc())
-    )
-    tests = result.scalars().all()
-    
-    # For details, load the latest test completely
-    if not tests:
-        return []
+        recs = calculate_nutrient_gaps(soil_test, soil_res, project.farming_method)
+        db.add_all(recs)
         
-    # Populate the first one with details as a convenience
-    latest = tests[0]
-    
-    res_query = await db.execute(select(SoilNutrientResult).where(SoilNutrientResult.soil_test_id == latest.id))
-    latest.results = res_query.scalars().first()
-    
-    rec_query = await db.execute(select(SoilRecommendation).where(SoilRecommendation.soil_test_id == latest.id))
-    latest.recommendations = rec_query.scalars().all()
-    
-    return tests
+        await db.commit()
+        await db.refresh(soil_test)
 
-async def get_soil_recommendations(db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
-    farmer_id = await _get_farmer_id(db, account_id)
-    project = await db.get(Project, project_id)
-    if not project or project.farmer_id != farmer_id:
-        raise HTTPException(status_code=404, detail="Project not found")
+        soil_test.results = soil_res
+        soil_test.recommendations = await self.rec_repo.get_by_test(db, soil_test.id)
+
+        return soil_test
+
+    async def get_soil_tests(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
+        farmer_id = await self._get_farmer_id(db, account_id)
+        project = await self.project_repo.get(db, project_id)
+        if not project or project.farmer_id != farmer_id:
+            raise HTTPException(status_code=404, detail="Project not found")
+            
+        tests = await self.test_repo.get_by_project(db, project_id)
         
-    # Get latest test
-    result = await db.execute(
-        select(SoilTest).where(SoilTest.project_id == project_id).order_by(SoilTest.test_date.desc())
-    )
-    latest = result.scalars().first()
-    if not latest:
-        return []
+        if not tests:
+            return []
+            
+        latest = tests[0]
+        latest.results = await self.result_repo.get_by_test(db, latest.id)
+        latest.recommendations = await self.rec_repo.get_by_test(db, latest.id)
         
-    rec_query = await db.execute(select(SoilRecommendation).where(SoilRecommendation.soil_test_id == latest.id))
-    return rec_query.scalars().all()
+        return tests
+
+    async def get_soil_recommendations(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
+        farmer_id = await self._get_farmer_id(db, account_id)
+        project = await self.project_repo.get(db, project_id)
+        if not project or project.farmer_id != farmer_id:
+            raise HTTPException(status_code=404, detail="Project not found")
+            
+        tests = await self.test_repo.get_by_project(db, project_id)
+        if not tests:
+            return []
+            
+        latest = tests[0]
+        return await self.rec_repo.get_by_test(db, latest.id)
