@@ -167,7 +167,7 @@ nutrient_requirements = [
     {"stage_id": "s122", "nitrogen_kg": 25, "phosphorus_kg": 12, "potassium_kg": 15},
     {"stage_id": "s123", "nitrogen_kg": 30, "phosphorus_kg": 20, "potassium_kg": 25},
     {"stage_id": "s124", "nitrogen_kg": 20, "phosphorus_kg": 15, "potassium_kg": 25},
-    {"stage_id": "s125", "nitrogen_kg": 10, "nitrogen_kg": 10, "potassium_kg": 30},
+    {"stage_id": "s125", "nitrogen_kg": 10, "phosphorus_kg": 10, "potassium_kg": 30},
     {"stage_id": "s126", "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 8},
 
     # Foxtail Millet (p22)

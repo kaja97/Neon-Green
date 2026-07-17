@@ -20,6 +20,9 @@ const locationSchema = z.object({
 
 type LocationFormValues = z.infer<typeof locationSchema>;
 
+const inputClass =
+  "w-full px-4 py-2 bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all";
+
 export default function LocationSection() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,7 +42,7 @@ export default function LocationSection() {
       name: "",
       district: "",
       address: "",
-      latitude: 7.8731, // Default SL roughly
+      latitude: 7.8731,
       longitude: 80.7718,
       is_primary: false,
     },
@@ -106,18 +109,18 @@ export default function LocationSection() {
   if (isLoading) {
     return (
       <div className="flex h-40 items-center justify-center">
-        <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm p-6">
+    <div className="glass-card rounded-3xl overflow-hidden p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-slate-800">Farm Locations</h2>
+        <h2 className="text-xl font-bold text-white">Farm Locations</h2>
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-xl font-semibold hover:bg-green-100 transition-colors"
+          className="flex items-center gap-2 bg-green-500/10 text-green-400 border border-green-500/20 px-4 py-2 rounded-xl font-semibold hover:bg-green-500/20 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Location
@@ -126,25 +129,25 @@ export default function LocationSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {locations?.length === 0 ? (
-          <p className="text-slate-500 text-sm col-span-full">No locations added yet.</p>
+          <p className="text-text-muted text-sm col-span-full">No locations added yet.</p>
         ) : (
           locations?.map((loc: any) => (
-            <div key={loc.id} className="border border-slate-200 rounded-2xl p-4 flex flex-col justify-between hover:border-green-300 transition-colors">
+            <div key={loc.id} className="glass-card rounded-2xl p-4 flex flex-col justify-between hover:border-green-500/20 transition-colors">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="w-5 h-5 text-green-600" />
-                  <h3 className="font-bold text-slate-800">{loc.name}</h3>
+                  <MapPin className="w-5 h-5 text-green-400" />
+                  <h3 className="font-bold text-white">{loc.name}</h3>
                   {loc.is_primary && (
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Primary</span>
+                    <span className="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full font-medium border border-green-500/20">Primary</span>
                   )}
                 </div>
-                <p className="text-sm text-slate-500 mb-1">{loc.district}</p>
-                {loc.address && <p className="text-xs text-slate-400 truncate">{loc.address}</p>}
+                <p className="text-sm text-text-muted mb-1">{loc.district}</p>
+                {loc.address && <p className="text-xs text-text-muted truncate">{loc.address}</p>}
               </div>
-              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100 justify-end">
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border justify-end">
                 <button
                   onClick={() => handleOpenModal(loc)}
-                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                  className="p-2 text-text-muted hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                 >
                   <Edit2 className="w-4 h-4" />
                 </button>
@@ -154,7 +157,7 @@ export default function LocationSection() {
                       deleteMutation.mutate(loc.id);
                     }
                   }}
-                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 text-text-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -171,55 +174,35 @@ export default function LocationSection() {
       >
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Location Name</label>
-            <input
-              {...form.register("name")}
-              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="e.g. North Field"
-            />
+            <label className="text-sm font-medium text-text-secondary">Location Name</label>
+            <input {...form.register("name")} className={inputClass} placeholder="e.g. North Field" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">District</label>
-            <input
-              {...form.register("district")}
-              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
+            <label className="text-sm font-medium text-text-secondary">District</label>
+            <input {...form.register("district")} className={inputClass} />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Address (Optional)</label>
-            <input
-              {...form.register("address")}
-              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
+            <label className="text-sm font-medium text-text-secondary">Address (Optional)</label>
+            <input {...form.register("address")} className={inputClass} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Latitude</label>
-              <input
-                type="number"
-                step="any"
-                {...form.register("latitude", { valueAsNumber: true })}
-                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
+              <label className="text-sm font-medium text-text-secondary">Latitude</label>
+              <input type="number" step="any" {...form.register("latitude", { valueAsNumber: true })} className={inputClass} />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Longitude</label>
-              <input
-                type="number"
-                step="any"
-                {...form.register("longitude", { valueAsNumber: true })}
-                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
+              <label className="text-sm font-medium text-text-secondary">Longitude</label>
+              <input type="number" step="any" {...form.register("longitude", { valueAsNumber: true })} className={inputClass} />
             </div>
           </div>
           <div className="flex items-center gap-2 pt-2">
-            <input type="checkbox" id="is_primary" {...form.register("is_primary")} className="w-4 h-4 text-green-600 rounded border-slate-700 bg-slate-850" />
-            <label htmlFor="is_primary" className="text-sm font-medium text-slate-300">Set as primary location</label>
+            <input type="checkbox" id="is_primary" {...form.register("is_primary")} className="w-4 h-4 text-primary rounded border-border bg-surface-tertiary" />
+            <label htmlFor="is_primary" className="text-sm font-medium text-text-secondary">Set as primary location</label>
           </div>
           <button
             type="submit"
             disabled={saveMutation.isPending}
-            className="w-full bg-green-600 text-white px-4 py-2.5 rounded-xl font-semibold shadow-md hover:bg-green-700 transition-all flex justify-center"
+            className="w-full btn-primary px-4 py-2.5 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {saveMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Location"}
           </button>

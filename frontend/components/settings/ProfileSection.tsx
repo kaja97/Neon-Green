@@ -20,6 +20,9 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
+const inputClass =
+  "w-full px-4 py-2 bg-surface-tertiary border border-border rounded-xl text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all";
+
 export default function ProfileSection() {
   const queryClient = useQueryClient();
 
@@ -79,34 +82,34 @@ export default function ProfileSection() {
   if (isLoading) {
     return (
       <div className="flex h-40 items-center justify-center">
-        <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm p-6">
-      <h2 className="text-xl font-bold text-slate-800 mb-6">Personal Details</h2>
-      
+    <div className="glass-card rounded-3xl overflow-hidden p-6">
+      <h2 className="text-xl font-bold text-white mb-6">Personal Details</h2>
+
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Full Name</label>
+            <label className="text-sm font-medium text-text-secondary">Full Name</label>
             <input
               {...form.register("full_name")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              className={inputClass}
               placeholder="Your full name"
             />
             {form.formState.errors.full_name && (
-              <p className="text-red-500 text-xs">{form.formState.errors.full_name.message}</p>
+              <p className="text-red-400 text-xs">{form.formState.errors.full_name.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Primary Language</label>
+            <label className="text-sm font-medium text-text-secondary">Primary Language</label>
             <select
               {...form.register("primary_language")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+              className={inputClass}
             >
               <option value="en">English</option>
               <option value="si">Sinhala</option>
@@ -115,19 +118,19 @@ export default function ProfileSection() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Experience (Years)</label>
+            <label className="text-sm font-medium text-text-secondary">Experience (Years)</label>
             <input
               type="number"
               {...form.register("experience_years", { valueAsNumber: true })}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              className={inputClass}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Farming Method</label>
+            <label className="text-sm font-medium text-text-secondary">Farming Method</label>
             <select
               {...form.register("farming_method")}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-slate-900"
+              className={inputClass}
             >
               <option value="organic">Organic</option>
               <option value="inorganic">Conventional / Inorganic</option>
@@ -137,20 +140,20 @@ export default function ProfileSection() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Bio / Notes</label>
+          <label className="text-sm font-medium text-text-secondary">Bio / Notes</label>
           <textarea
             {...form.register("bio")}
             rows={3}
-            className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+            className={`${inputClass} resize-none`}
             placeholder="Tell us a bit about your farm..."
           />
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-slate-100">
+        <div className="flex justify-end pt-4 border-t border-border">
           <button
             type="submit"
             disabled={updateMutation.isPending}
-            className="flex items-center gap-2 bg-green-600 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 btn-primary px-6 py-2.5 text-sm disabled:opacity-50"
           >
             {updateMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
             Save Changes
