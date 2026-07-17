@@ -17,6 +17,9 @@ const livestockSchema = z.object({
 
 type LivestockFormValues = z.infer<typeof livestockSchema>;
 
+const inputClass =
+  "w-full px-4 py-2 bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all";
+
 export default function LivestockSection() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -94,18 +97,18 @@ export default function LivestockSection() {
   if (isLoading) {
     return (
       <div className="flex h-40 items-center justify-center">
-        <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm p-6">
+    <div className="glass-card rounded-3xl overflow-hidden p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-slate-800">Livestock</h2>
+        <h2 className="text-xl font-bold text-white">Livestock</h2>
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-xl font-semibold hover:bg-green-100 transition-colors"
+          className="flex items-center gap-2 bg-green-500/10 text-green-400 border border-green-500/20 px-4 py-2 rounded-xl font-semibold hover:bg-green-500/20 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Livestock
@@ -114,24 +117,24 @@ export default function LivestockSection() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {livestock?.length === 0 ? (
-          <p className="text-slate-500 text-sm col-span-full">No livestock added yet.</p>
+          <p className="text-text-muted text-sm col-span-full">No livestock added yet.</p>
         ) : (
           livestock?.map((ls: any) => (
-            <div key={ls.id} className="border border-slate-200 rounded-2xl p-4 flex flex-col justify-between hover:border-green-300 transition-colors">
+            <div key={ls.id} className="glass-card rounded-2xl p-4 flex flex-col justify-between hover:border-green-500/20 transition-colors">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Bird className="w-5 h-5 text-indigo-500" />
-                  <h3 className="font-bold text-slate-800 capitalize">{ls.animal_type}</h3>
+                  <Bird className="w-5 h-5 text-indigo-400" />
+                  <h3 className="font-bold text-white capitalize">{ls.animal_type}</h3>
                 </div>
                 <div className="flex gap-2 items-center mb-1">
-                  <span className="text-sm font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">Count: {ls.count}</span>
+                  <span className="text-sm font-semibold text-text-secondary bg-surface-tertiary px-2 py-1 rounded-lg">Count: {ls.count}</span>
                 </div>
-                {ls.purpose && <p className="text-xs text-slate-500 mt-2 line-clamp-2">Purpose: {ls.purpose}</p>}
+                {ls.purpose && <p className="text-xs text-text-muted mt-2 line-clamp-2">Purpose: {ls.purpose}</p>}
               </div>
-              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100 justify-end">
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border justify-end">
                 <button
                   onClick={() => handleOpenModal(ls)}
-                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                  className="p-2 text-text-muted hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"
                 >
                   <Edit2 className="w-4 h-4" />
                 </button>
@@ -141,7 +144,7 @@ export default function LivestockSection() {
                       deleteMutation.mutate(ls.id);
                     }
                   }}
-                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 text-text-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -158,38 +161,26 @@ export default function LivestockSection() {
       >
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Animal Type</label>
-            <input
-              {...form.register("animal_type")}
-              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="e.g. Cows, Chickens, Goats"
-            />
-            {form.formState.errors.animal_type && <p className="text-red-500 text-xs">{form.formState.errors.animal_type.message}</p>}
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Head Count</label>
-            <input
-              type="number"
-              {...form.register("count", { valueAsNumber: true })}
-              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-            {form.formState.errors.count && <p className="text-red-500 text-xs">{form.formState.errors.count.message}</p>}
+            <label className="text-sm font-medium text-text-secondary">Animal Type</label>
+            <input {...form.register("animal_type")} className={inputClass} placeholder="e.g. Cows, Chickens, Goats" />
+            {form.formState.errors.animal_type && <p className="text-red-400 text-xs">{form.formState.errors.animal_type.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Primary Purpose (Optional)</label>
-            <input
-              {...form.register("purpose")}
-              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="e.g. Dairy, Meat, Eggs"
-            />
+            <label className="text-sm font-medium text-text-secondary">Head Count</label>
+            <input type="number" {...form.register("count", { valueAsNumber: true })} className={inputClass} />
+            {form.formState.errors.count && <p className="text-red-400 text-xs">{form.formState.errors.count.message}</p>}
           </div>
-          
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-text-secondary">Primary Purpose (Optional)</label>
+            <input {...form.register("purpose")} className={inputClass} placeholder="e.g. Dairy, Meat, Eggs" />
+          </div>
+
           <button
             type="submit"
             disabled={saveMutation.isPending}
-            className="w-full bg-green-600 text-white px-4 py-2.5 rounded-xl font-semibold shadow-md hover:bg-green-700 transition-all flex justify-center mt-6"
+            className="w-full btn-primary px-4 py-2.5 text-sm flex items-center justify-center gap-2 mt-6 disabled:opacity-50"
           >
             {saveMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Livestock"}
           </button>
