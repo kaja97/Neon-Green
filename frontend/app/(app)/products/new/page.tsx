@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Store, Loader2 } from "lucide-react";
+import { ArrowLeft, Store, Loader2, Upload, X, ImageIcon } from "lucide-react";
 import Link from "next/link";
+import api from "@/lib/api";
 import { useCategories, useCreateProduct } from "@/lib/hooks/useMarketplace";
 
 export default function NewProductPage() {
@@ -28,17 +29,60 @@ export default function NewProductPage() {
     return categories.find((c) => c.id === formData.category_id) || null;
   }, [categories, formData.category_id]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      const availableSlots = 5 - selectedImages.length;
+      const filesToAdd = filesArray.slice(0, availableSlots);
+      
+      setSelectedImages((prev) => [...prev, ...filesToAdd]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    let uploadedUrls: string[] = [];
+    
+    if (selectedImages.length > 0) {
+      setIsUploading(true);
+      try {
+        const uploadData = new FormData();
+        selectedImages.forEach((file) => {
+          uploadData.append("files", file);
+        });
+        
+        const res = await api.post("/marketplace/products/images", uploadData, {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        });
+        uploadedUrls = res.data;
+      } catch (error) {
+        console.error("Failed to upload images", error);
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    }
+
     createProduct.mutate(
       {
         ...formData,
         quantity_available: parseFloat(formData.quantity_available),
         price_per_unit: parseFloat(formData.price_per_unit),
+        images: uploadedUrls.length > 0 ? uploadedUrls : undefined
       },
       {
         onSuccess: () => {
-          router.push("/marketplace"); // Or wherever the list is
+          router.push("/market"); // Go to market page
         },
       }
     );
@@ -192,6 +236,45 @@ export default function NewProductPage() {
           </div>
 
           <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+              Product Images <span className="text-slate-500 text-xs font-normal">(Max 5 images)</span>
+            </label>
+            
+            <div className="flex flex-wrap gap-4">
+              {selectedImages.map((file, idx) => (
+                <div key={idx} className="relative w-24 h-24 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden group">
+                  {file.type.startsWith('image/') ? (
+                    <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageIcon className="w-8 h-8 text-slate-500" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(idx)}
+                    className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              
+              {selectedImages.length < 5 && (
+                <label className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center gap-1 text-slate-400 hover:border-neon-gold hover:text-neon-gold transition-colors cursor-pointer bg-slate-900/50">
+                  <Upload className="w-5 h-5" />
+                  <span className="text-xs font-medium">Add</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">Description (Optional)</label>
             <textarea
               placeholder="Add more details about the quality, origin, or specifications..."
@@ -204,15 +287,15 @@ export default function NewProductPage() {
           <div className="pt-4">
             <button
               type="submit"
-              disabled={createProduct.isPending}
+              disabled={createProduct.isPending || isUploading}
               className="w-full md:w-auto px-8 h-12 bg-green-500/10 border border-green-500/20 text-green-400 font-bold rounded-xl hover:bg-green-500/20 transition-all flex items-center justify-center gap-2"
             >
-              {createProduct.isPending ? (
+              {(createProduct.isPending || isUploading) ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <Store className="w-5 h-5" />
               )}
-              {createProduct.isPending ? "Listing Product..." : "List Product on Marketplace"}
+              {(createProduct.isPending || isUploading) ? "Listing Product..." : "List Product on Marketplace"}
             </button>
           </div>
 

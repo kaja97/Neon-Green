@@ -10,8 +10,10 @@ import {
   Package, 
   TrendingUp,
   ChevronRight,
-  Sprout
+  Sprout,
+  Plus
 } from "lucide-react";
+import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 
@@ -60,30 +62,40 @@ export default function MarketPage() {
           </p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex p-1 rounded-xl bg-surface-tertiary">
-          <button
-            onClick={() => setActiveTab("products")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === "products"
-                ? "bg-surface-elevated text-neon-gold shadow-sm"
-                : "text-text-muted hover:text-text-secondary"
-            }`}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          {/* Tab Navigation */}
+          <div className="flex p-1 rounded-xl bg-surface-tertiary">
+            <button
+              onClick={() => setActiveTab("products")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "products"
+                  ? "bg-surface-elevated text-neon-gold shadow-sm"
+                  : "text-text-muted hover:text-text-secondary"
+              }`}
+            >
+              <ShoppingBag className="w-4 h-4" />
+              Products
+            </button>
+            <button
+              onClick={() => setActiveTab("farmers")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "farmers"
+                  ? "bg-surface-elevated text-neon-gold shadow-sm"
+                  : "text-text-muted hover:text-text-secondary"
+              }`}
+            >
+              <Sprout className="w-4 h-4" />
+              Farmer Directory
+            </button>
+          </div>
+          
+          <Link 
+            href="/products/new" 
+            className="h-10 px-4 bg-neon-gold text-black font-semibold rounded-xl hover:bg-neon-gold/90 transition-all flex items-center gap-2 text-sm"
           >
-            <ShoppingBag className="w-4 h-4" />
-            Products
-          </button>
-          <button
-            onClick={() => setActiveTab("farmers")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === "farmers"
-                ? "bg-surface-elevated text-neon-gold shadow-sm"
-                : "text-text-muted hover:text-text-secondary"
-            }`}
-          >
-            <Sprout className="w-4 h-4" />
-            Farmer Directory
-          </button>
+            <Plus className="w-4 h-4" />
+            List Product
+          </Link>
         </div>
       </div>
 

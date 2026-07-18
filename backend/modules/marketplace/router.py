@@ -1,6 +1,8 @@
 import uuid
+import os
+import shutil
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, UploadFile, File, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
@@ -11,6 +13,34 @@ from .schemas import ProductCreate, ProductResponse, FarmerDirectoryResponse, Ca
 from .service import MarketplaceService
 
 router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
+
+@router.post("/products/images", response_model=List[str], status_code=status.HTTP_201_CREATED)
+async def upload_product_images(
+    files: List[UploadFile] = File(...),
+    current_user: Account = Depends(get_current_user)
+):
+    """Upload product images (max 5)"""
+    if len(files) > 5:
+        raise HTTPException(status_code=400, detail="Maximum 5 images allowed")
+        
+    uploaded_urls = []
+    upload_dir = "uploads/products"
+    
+    for file in files:
+        if not file.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="Only image files are allowed")
+            
+        file_extension = file.filename.split(".")[-1]
+        unique_filename = f"{uuid.uuid4()}.{file_extension}"
+        file_path = os.path.join(upload_dir, unique_filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        uploaded_urls.append(f"/static/uploads/products/{unique_filename}")
+        
+    return uploaded_urls
+
 
 @router.get("/categories", response_model=List[CategoryResponse])
 async def list_categories(

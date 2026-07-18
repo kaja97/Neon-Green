@@ -10,11 +10,37 @@ from sqlalchemy.future import select
 
 async def seed_categories():
     categories_data = {
-        "Vegetables": ["Tomato", "Carrot", "Onion", "Potato", "Cabbage"],
-        "Livestock": ["Goat", "Chicken", "Milk", "Eggs", "Cattle"],
-        "Farming Tools": ["Tractor", "Shovel", "Irrigation Pipes", "Sprayer"],
-        "Fertilizer & Chemicals": ["Organic Compost", "Urea", "Pesticides", "Herbicides"],
-        "Other": ["Seeds", "Packaging", "Consulting"]
+        "Food & Crops": [
+            "Vegetables", "Fruits", "Grains & Cereals", "Spices & Herbs", 
+            "Pulses & Legumes", "Nuts & Oilseeds", "Root Crops", "Plantation Crops"
+        ],
+        "Livestock & Animals": [
+            "Cattle", "Goats & Sheep", "Poultry (Chicken/Ducks)", 
+            "Pigs", "Fish & Aquaculture", "Pets", "Bees & Honey"
+        ],
+        "Animal Products": [
+            "Milk & Dairy", "Eggs", "Meat", "Wool & Hides", "Manure"
+        ],
+        "Seeds & Plants": [
+            "Vegetable Seeds", "Fruit Saplings", "Grain Seeds", 
+            "Flower Seeds", "Ornamental Plants", "Forestry Seedlings"
+        ],
+        "Fertilizers & Soil": [
+            "Organic Compost", "Chemical Fertilizers (Urea, NPK)", 
+            "Liquid Fertilizers", "Peat Moss", "Soil Conditioners", "Mulch"
+        ],
+        "Farming Tools & Equipment": [
+            "Hand Tools (Shovels, Hoes)", "Irrigation Systems & Pipes", 
+            "Sprayers", "Greenhouse Equipment", "Protective Gear", "Harvesting Tools"
+        ],
+        "Vehicles & Machinery": [
+            "Tractors", "Harvesters", "Tillers & Cultivators", 
+            "Trailers", "Water Pumps", "Generators"
+        ],
+        "Services & Other": [
+            "Farming Consulting", "Labor Services", "Packaging Materials", 
+            "Transport Services", "Storage Services"
+        ]
     }
     
     async with async_session() as db:

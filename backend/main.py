@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
+from fastapi.staticfiles import StaticFiles
+import os
 from config import settings
 from core.errors.exceptions import AppException
 from core.errors.handlers import (
@@ -27,6 +29,10 @@ app = FastAPI(
     description="Personalized AI Farming Assistant Platform",
     version="1.0.0"
 )
+
+# ── Static Files ─────────────────────────────────────────
+os.makedirs("uploads", exist_ok=True)
+app.mount("/static/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # ── Global Exception Handlers ────────────────────────────
 app.add_exception_handler(AppException, app_exception_handler)
