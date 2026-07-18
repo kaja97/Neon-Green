@@ -10,7 +10,8 @@ from core.errors.error_codes import ErrorCode
 from models.marketplace import Product, ProductCategory, ProductSubCategory
 from models.account import Account, FarmerProfile
 from models.project import Project
-from models.plant import Plant
+from models.plant import Plant, PlantVariety
+from models.farmer import FarmerLocation
 
 from .repository import ProductRepository
 from .schemas import ProductCreate, ProductUpdate, FarmerDirectoryResponse
@@ -108,22 +109,44 @@ class MarketplaceService(BaseService):
         
         directory = []
         for account, profile in rows:
-            # Fetch active projects for this farmer
+            # Fetch primary location for this farmer
+            loc_query = (
+                select(FarmerLocation)
+                .where(FarmerLocation.farmer_id == profile.id)
+                .order_by(FarmerLocation.is_primary.desc())
+                .limit(1)
+            )
+            loc_res = await db.execute(loc_query)
+            primary_location = loc_res.scalars().first()
+            
+            # Fetch active projects for this farmer with plant + variety + location info
             proj_query = (
-                select(Project, Plant)
+                select(Project, Plant, FarmerLocation)
                 .join(Plant, Project.plant_id == Plant.id)
+                .outerjoin(FarmerLocation, Project.location_id == FarmerLocation.id)
                 .where(Project.farmer_id == profile.id, Project.status == "active")
             )
             proj_res = await db.execute(proj_query)
             proj_rows = proj_res.all()
             
             projects = []
-            for proj, plant in proj_rows:
+            for proj, plant, loc in proj_rows:
+                # Try to get variety name
+                variety_name = None
+                if proj.variety_id:
+                    variety = await db.get(PlantVariety, proj.variety_id)
+                    if variety:
+                        variety_name = variety.variety_name
+                
                 projects.append({
                     "id": proj.id,
                     "plant_name": plant.common_name,
+                    "plant_category": plant.category,
+                    "plant_sub_category": plant.sub_category,
+                    "variety_name": variety_name,
                     "status": proj.status,
-                    "planting_date": proj.planting_date.isoformat() if proj.planting_date else None
+                    "planting_date": proj.planting_date.isoformat() if proj.planting_date else None,
+                    "location_district": loc.district if loc else None,
                 })
                 
             directory.append({
@@ -132,7 +155,85 @@ class MarketplaceService(BaseService):
                 "full_name": profile.full_name,
                 "farming_method": profile.farming_method,
                 "experience_years": profile.experience_years,
+                "bio": profile.bio,
+                "district": primary_location.district if primary_location else None,
                 "projects": projects
             })
             
         return directory
+
+    async def get_farmer_detail(self, db: AsyncSession, farmer_profile_id: uuid.UUID) -> dict:
+        """Get detailed info for a specific farmer."""
+        # Fetch farmer profile
+        query = (
+            select(Account, FarmerProfile)
+            .join(FarmerProfile, Account.id == FarmerProfile.account_id)
+            .where(FarmerProfile.id == farmer_profile_id)
+        )
+        result = await db.execute(query)
+        row = result.first()
+        
+        if not row:
+            raise AppException(ErrorCode.NOT_FOUND, "Farmer not found")
+        
+        account, profile = row
+        
+        # Fetch all locations
+        loc_query = select(FarmerLocation).where(FarmerLocation.farmer_id == profile.id)
+        loc_res = await db.execute(loc_query)
+        locations = [
+            {"id": loc.id, "name": loc.name, "district": loc.district}
+            for loc in loc_res.scalars().all()
+        ]
+        
+        # Fetch all projects with details
+        proj_query = (
+            select(Project, Plant, FarmerLocation)
+            .join(Plant, Project.plant_id == Plant.id)
+            .outerjoin(FarmerLocation, Project.location_id == FarmerLocation.id)
+            .where(Project.farmer_id == profile.id)
+        )
+        proj_res = await db.execute(proj_query)
+        proj_rows = proj_res.all()
+        
+        projects = []
+        for proj, plant, loc in proj_rows:
+            variety_name = None
+            if proj.variety_id:
+                variety = await db.get(PlantVariety, proj.variety_id)
+                if variety:
+                    variety_name = variety.variety_name
+            
+            projects.append({
+                "id": proj.id,
+                "name": proj.name,
+                "plant_name": plant.common_name,
+                "plant_category": plant.category,
+                "plant_sub_category": plant.sub_category,
+                "variety_name": variety_name,
+                "status": proj.status,
+                "farming_method": proj.farming_method,
+                "planting_date": proj.planting_date.isoformat() if proj.planting_date else None,
+                "expected_harvest_date": proj.expected_harvest_date.isoformat() if proj.expected_harvest_date else None,
+                "expected_yield_kg": float(proj.expected_yield_kg) if proj.expected_yield_kg else None,
+                "expected_revenue": float(proj.expected_revenue) if proj.expected_revenue else None,
+                "actual_yield_kg": float(proj.actual_yield_kg) if proj.actual_yield_kg else None,
+                "actual_revenue": float(proj.actual_revenue) if proj.actual_revenue else None,
+                "area": float(proj.area),
+                "area_unit": proj.area_unit,
+                "location_name": loc.name if loc else None,
+                "location_district": loc.district if loc else None,
+            })
+        
+        return {
+            "account_id": account.id,
+            "farmer_profile_id": profile.id,
+            "full_name": profile.full_name,
+            "farming_method": profile.farming_method,
+            "experience_years": profile.experience_years,
+            "bio": profile.bio,
+            "email": account.email,
+            "phone": account.phone,
+            "locations": locations,
+            "projects": projects,
+        }

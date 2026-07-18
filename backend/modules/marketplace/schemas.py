@@ -66,12 +66,21 @@ class ProductDetailResponse(ProductResponse):
     
 # ── Farmer Directory (for Vendors) ────────────────────────
 
+class FarmerLocationShort(BaseModel):
+    id: uuid.UUID
+    name: str
+    district: str
+
 class FarmerProjectShort(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     plant_name: str
+    plant_category: Optional[str] = None
+    plant_sub_category: Optional[str] = None
+    variety_name: Optional[str] = None
     status: str
     planting_date: str
+    location_district: Optional[str] = None
 
 class FarmerDirectoryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -80,4 +89,40 @@ class FarmerDirectoryResponse(BaseModel):
     full_name: str
     farming_method: str
     experience_years: int
+    bio: Optional[str] = None
+    district: Optional[str] = None  # Primary location district
     projects: List[FarmerProjectShort] = []
+
+# ── Farmer Detail ────────────────────────────────────────
+
+class FarmerProjectDetail(BaseModel):
+    id: uuid.UUID
+    name: str
+    plant_name: str
+    plant_category: Optional[str] = None
+    plant_sub_category: Optional[str] = None
+    variety_name: Optional[str] = None
+    status: str
+    farming_method: str
+    planting_date: str
+    expected_harvest_date: Optional[str] = None
+    expected_yield_kg: Optional[float] = None
+    expected_revenue: Optional[float] = None
+    actual_yield_kg: Optional[float] = None
+    actual_revenue: Optional[float] = None
+    area: float
+    area_unit: str
+    location_name: Optional[str] = None
+    location_district: Optional[str] = None
+
+class FarmerDetailResponse(BaseModel):
+    account_id: uuid.UUID
+    farmer_profile_id: uuid.UUID
+    full_name: str
+    farming_method: str
+    experience_years: int
+    bio: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    locations: List[FarmerLocationShort] = []
+    projects: List[FarmerProjectDetail] = []

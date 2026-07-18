@@ -15,7 +15,9 @@ import {
   Plus,
   X,
   DollarSign,
-  Tag
+  Tag,
+  Leaf,
+  Calendar
 } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
@@ -45,9 +47,15 @@ export default function MarketPage() {
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Product filters
   const [selectedCategory, setSelectedCategory] = useState("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
   const [categories, setCategories] = useState<any[]>([]);
+
+  // Farmer filters
+  const [farmerPlantType, setFarmerPlantType] = useState("");
+  const [farmerDistrict, setFarmerDistrict] = useState("");
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -85,11 +93,30 @@ export default function MarketPage() {
     fetchData();
   }, [activeTab]);
 
+  // Get unique plant types and districts from farmer data for filter dropdowns
+  const farmerFilterOptions = useMemo(() => {
+    const plantTypes = new Set<string>();
+    const districts = new Set<string>();
+    
+    farmers.forEach((f) => {
+      if (f.district) districts.add(f.district);
+      f.projects?.forEach((p: any) => {
+        if (p.plant_name) plantTypes.add(p.plant_name);
+        if (p.plant_category) plantTypes.add(p.plant_category);
+        if (p.location_district) districts.add(p.location_district);
+      });
+    });
+    
+    return {
+      plantTypes: Array.from(plantTypes).sort(),
+      districts: Array.from(districts).sort(),
+    };
+  }, [farmers]);
+
   // Filtered products
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
     
-    // Search by name, description, category
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       filtered = filtered.filter((p) => 
@@ -100,12 +127,10 @@ export default function MarketPage() {
       );
     }
 
-    // Filter by category
     if (selectedCategory) {
       filtered = filtered.filter((p) => p.category_id === selectedCategory);
     }
 
-    // Filter by price range
     filtered = filtered.filter((p) => {
       const price = p.price_per_unit || 0;
       return price >= priceRange[0] && price <= priceRange[1];
@@ -116,20 +141,48 @@ export default function MarketPage() {
 
   // Filtered farmers
   const filteredFarmers = useMemo(() => {
-    if (!searchQuery.trim()) return farmers;
-    const q = searchQuery.toLowerCase().trim();
-    return farmers.filter((f) =>
-      f.full_name?.toLowerCase().includes(q) ||
-      f.farming_method?.toLowerCase().includes(q) ||
-      f.projects?.some((p: any) => p.plant_name?.toLowerCase().includes(q))
-    );
-  }, [farmers, searchQuery]);
+    let filtered = [...farmers];
+    
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((f) =>
+        f.full_name?.toLowerCase().includes(q) ||
+        f.farming_method?.toLowerCase().includes(q) ||
+        f.district?.toLowerCase().includes(q) ||
+        f.projects?.some((p: any) => 
+          p.plant_name?.toLowerCase().includes(q) ||
+          p.variety_name?.toLowerCase().includes(q)
+        )
+      );
+    }
 
-  const activeFiltersCount = (selectedCategory ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 100000 ? 1 : 0);
+    if (farmerPlantType) {
+      filtered = filtered.filter((f) =>
+        f.projects?.some((p: any) => 
+          p.plant_name === farmerPlantType || p.plant_category === farmerPlantType
+        )
+      );
+    }
+
+    if (farmerDistrict) {
+      filtered = filtered.filter((f) =>
+        f.district === farmerDistrict ||
+        f.projects?.some((p: any) => p.location_district === farmerDistrict)
+      );
+    }
+
+    return filtered;
+  }, [farmers, searchQuery, farmerPlantType, farmerDistrict]);
+
+  const activeFiltersCount = activeTab === "products"
+    ? (selectedCategory ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 100000 ? 1 : 0)
+    : (farmerPlantType ? 1 : 0) + (farmerDistrict ? 1 : 0);
 
   const clearFilters = () => {
     setSelectedCategory("");
     setPriceRange([0, 100000]);
+    setFarmerPlantType("");
+    setFarmerDistrict("");
     setSearchQuery("");
   };
 
@@ -150,7 +203,6 @@ export default function MarketPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          {/* Tab Navigation */}
           <div className="flex p-1 rounded-xl bg-surface-tertiary">
             <button
               onClick={() => setActiveTab("products")}
@@ -195,7 +247,7 @@ export default function MarketPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={activeTab === "products" ? "Search by name, description, category..." : "Search farmers by name, method, crops..."}
+              placeholder={activeTab === "products" ? "Search by name, description, category..." : "Search farmers by name, crops, district..."}
               className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-neon-gold/50"
             />
             {searchQuery && (
@@ -204,23 +256,21 @@ export default function MarketPage() {
               </button>
             )}
           </div>
-          {activeTab === "products" && (
-            <button 
-              onClick={() => setShowFilters(!showFilters)} 
-              className={`h-11 px-4 btn-secondary flex items-center gap-2 text-sm whitespace-nowrap relative ${showFilters ? "ring-2 ring-neon-gold/50" : ""}`}
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-              {activeFiltersCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-neon-gold text-black text-[10px] font-bold flex items-center justify-center">
-                  {activeFiltersCount}
-                </span>
-              )}
-            </button>
-          )}
+          <button 
+            onClick={() => setShowFilters(!showFilters)} 
+            className={`h-11 px-4 btn-secondary flex items-center gap-2 text-sm whitespace-nowrap relative ${showFilters ? "ring-2 ring-neon-gold/50" : ""}`}
+          >
+            <Filter className="w-4 h-4" />
+            Filters
+            {activeFiltersCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-neon-gold text-black text-[10px] font-bold flex items-center justify-center">
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Filter Panel */}
+        {/* Product Filter Panel */}
         {showFilters && activeTab === "products" && (
           <div className="glass-card p-5 space-y-4 animate-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between">
@@ -236,7 +286,6 @@ export default function MarketPage() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Category Filter */}
               <div className="space-y-1.5">
                 <label className="text-xs text-text-muted font-medium flex items-center gap-1">
                   <Tag className="w-3 h-3" /> Category
@@ -256,7 +305,6 @@ export default function MarketPage() {
                 </div>
               </div>
 
-              {/* Min Price */}
               <div className="space-y-1.5">
                 <label className="text-xs text-text-muted font-medium flex items-center gap-1">
                   <DollarSign className="w-3 h-3" /> Min Price
@@ -271,7 +319,6 @@ export default function MarketPage() {
                 />
               </div>
 
-              {/* Max Price */}
               <div className="space-y-1.5">
                 <label className="text-xs text-text-muted font-medium flex items-center gap-1">
                   <DollarSign className="w-3 h-3" /> Max Price
@@ -288,12 +335,71 @@ export default function MarketPage() {
             </div>
           </div>
         )}
+
+        {/* Farmer Filter Panel */}
+        {showFilters && activeTab === "farmers" && (
+          <div className="glass-card p-5 space-y-4 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <Filter className="w-4 h-4 text-neon-gold" />
+                Filter Farmers
+              </h3>
+              {activeFiltersCount > 0 && (
+                <button onClick={clearFilters} className="text-xs text-neon-gold hover:underline">
+                  Clear all
+                </button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs text-text-muted font-medium flex items-center gap-1">
+                  <Leaf className="w-3 h-3" /> Plant Type / Category
+                </label>
+                <div className="relative">
+                  <select
+                    value={farmerPlantType}
+                    onChange={(e) => setFarmerPlantType(e.target.value)}
+                    className="w-full h-10 px-3 pr-8 rounded-lg bg-surface-tertiary border border-border text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-neon-gold/50 appearance-none cursor-pointer"
+                  >
+                    <option value="">All Plant Types</option>
+                    {farmerFilterOptions.plantTypes.map((pt) => (
+                      <option key={pt} value={pt}>{pt}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs text-text-muted font-medium flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> District / Location
+                </label>
+                <div className="relative">
+                  <select
+                    value={farmerDistrict}
+                    onChange={(e) => setFarmerDistrict(e.target.value)}
+                    className="w-full h-10 px-3 pr-8 rounded-lg bg-surface-tertiary border border-border text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-neon-gold/50 appearance-none cursor-pointer"
+                  >
+                    <option value="">All Locations</option>
+                    {farmerFilterOptions.districts.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Results count */}
-      {!isLoading && activeTab === "products" && (searchQuery || activeFiltersCount > 0) && (
+      {!isLoading && (searchQuery || activeFiltersCount > 0) && (
         <div className="text-sm text-text-muted">
-          Showing <span className="text-white font-semibold">{filteredProducts.length}</span> of {products.length} products
+          Showing <span className="text-white font-semibold">
+            {activeTab === "products" ? filteredProducts.length : filteredFarmers.length}
+          </span> of {activeTab === "products" ? products.length : farmers.length} {activeTab}
           {searchQuery && <span> matching &quot;<span className="text-neon-gold">{searchQuery}</span>&quot;</span>}
         </div>
       )}
@@ -366,55 +472,115 @@ export default function MarketPage() {
           )}
         </div>
       ) : (
+        /* Farmer Directory */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredFarmers.length === 0 ? (
             <div className="col-span-full py-12 text-center text-text-muted">
               <Sprout className="w-12 h-12 mx-auto mb-3 opacity-20" />
-              <p>No farmers available in the directory.</p>
+              <p>{searchQuery || activeFiltersCount > 0 ? "No farmers match your filters." : "No farmers available in the directory."}</p>
+              {(searchQuery || activeFiltersCount > 0) && (
+                <button onClick={clearFilters} className="mt-2 text-neon-gold hover:underline text-sm">
+                  Clear filters
+                </button>
+              )}
             </div>
           ) : (
             filteredFarmers.map((farmer) => (
-              <div key={farmer.farmer_profile_id} className="glass-card p-5 space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 text-primary flex items-center justify-center text-lg font-bold">
-                    {farmer.full_name.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white truncate">{farmer.full_name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="px-2 py-0.5 rounded-full bg-surface-tertiary text-[10px] text-text-secondary capitalize">
-                        {farmer.farming_method}
-                      </span>
-                      <span className="text-xs text-text-muted flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3" />
-                        {farmer.experience_years} yrs exp
-                      </span>
+              <div key={farmer.farmer_profile_id} className="glass-card overflow-hidden group hover:-translate-y-1 hover:shadow-2xl hover:shadow-neon-blue/10 transition-all duration-300">
+                {/* Farmer Header */}
+                <div className="p-5 space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 rounded-full bg-neon-blue/20 text-neon-blue flex items-center justify-center text-xl font-bold flex-shrink-0">
+                      {farmer.full_name?.charAt(0) || "F"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-white text-lg truncate group-hover:text-neon-blue transition-colors">{farmer.full_name}</h3>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <span className="px-2 py-0.5 rounded-full bg-surface-tertiary text-[10px] text-text-secondary capitalize">
+                          {farmer.farming_method}
+                        </span>
+                        <span className="text-xs text-text-muted flex items-center gap-1">
+                          <TrendingUp className="w-3 h-3" />
+                          {farmer.experience_years} yrs
+                        </span>
+                        {farmer.district && (
+                          <span className="text-xs text-text-muted flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {farmer.district}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
+
+                  {farmer.bio && (
+                    <p className="text-xs text-text-secondary line-clamp-2">{farmer.bio}</p>
+                  )}
                 </div>
                 
+                {/* Projects */}
                 {farmer.projects && farmer.projects.length > 0 ? (
-                  <div className="pt-4 border-t border-border">
-                    <h4 className="text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wider">
-                      Active Crops
+                  <div className="border-t border-border px-5 py-4">
+                    <h4 className="text-xs font-semibold text-text-secondary mb-3 uppercase tracking-wider flex items-center gap-1">
+                      <Leaf className="w-3 h-3" />
+                      Active Projects ({farmer.projects.length})
                     </h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {farmer.projects.map((p: any) => (
-                        <span key={p.id} className="px-2 py-1 rounded bg-primary/10 text-primary text-xs">
-                          {p.plant_name}
-                        </span>
+                    <div className="space-y-2">
+                      {farmer.projects.slice(0, 3).map((p: any) => (
+                        <Link
+                          key={p.id}
+                          href={`/market/farmers/${farmer.farmer_profile_id}/projects/${p.id}`}
+                          className="flex items-center justify-between p-2.5 rounded-lg bg-surface-tertiary/50 hover:bg-surface-tertiary transition-colors group/item"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-neon-green/10 flex items-center justify-center flex-shrink-0">
+                              <Sprout className="w-4 h-4 text-neon-green" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-white truncate">
+                                {p.plant_name}
+                                {p.variety_name && <span className="text-text-muted font-normal"> • {p.variety_name}</span>}
+                              </div>
+                              <div className="text-[10px] text-text-muted flex items-center gap-2">
+                                <span className="flex items-center gap-0.5">
+                                  <Calendar className="w-2.5 h-2.5" />
+                                  {p.planting_date}
+                                </span>
+                                {p.location_district && (
+                                  <span className="flex items-center gap-0.5">
+                                    <MapPin className="w-2.5 h-2.5" />
+                                    {p.location_district}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-text-muted group-hover/item:text-neon-gold transition-colors flex-shrink-0" />
+                        </Link>
                       ))}
+                      {farmer.projects.length > 3 && (
+                        <p className="text-xs text-text-muted text-center pt-1">
+                          +{farmer.projects.length - 3} more projects
+                        </p>
+                      )}
                     </div>
                   </div>
                 ) : (
-                  <div className="pt-4 border-t border-border">
-                    <p className="text-xs text-text-muted italic">No active crops listed.</p>
+                  <div className="border-t border-border px-5 py-4">
+                    <p className="text-xs text-text-muted italic">No active projects listed.</p>
                   </div>
                 )}
                 
-                <button className="w-full mt-2 h-10 btn-secondary text-sm">
-                  View Profile & Connect
-                </button>
+                {/* Footer */}
+                <div className="border-t border-border px-5 py-3">
+                  <Link 
+                    href={`/market/farmers/${farmer.farmer_profile_id}`}
+                    className="w-full h-9 btn-secondary text-sm flex items-center justify-center gap-2"
+                  >
+                    View Full Profile
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
             ))
           )}

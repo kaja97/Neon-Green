@@ -9,7 +9,7 @@ from database import get_db
 from models.account import Account
 from dependencies import get_current_user, get_marketplace_service
 
-from .schemas import ProductCreate, ProductResponse, FarmerDirectoryResponse, CategoryResponse, ProductDetailResponse
+from .schemas import ProductCreate, ProductResponse, FarmerDirectoryResponse, CategoryResponse, ProductDetailResponse, FarmerDetailResponse
 from .service import MarketplaceService
 
 router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
@@ -94,3 +94,12 @@ async def list_farmers_directory(
 ):
     """List active farmers and their current projects for vendors to browse."""
     return await service.get_farmer_directory(db)
+
+@router.get("/farmers/{farmer_profile_id}", response_model=FarmerDetailResponse)
+async def get_farmer_detail(
+    farmer_profile_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    service: MarketplaceService = Depends(get_marketplace_service)
+):
+    """Get detailed information about a specific farmer and all their projects."""
+    return await service.get_farmer_detail(db, farmer_profile_id)
