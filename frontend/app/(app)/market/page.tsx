@@ -21,12 +21,17 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8000";
+function getApiBase() {
+  if (typeof window !== 'undefined') {
+    return `http://${window.location.hostname}:8000`;
+  }
+  return "http://localhost:8000";
+}
 
 function getImageUrl(path: string) {
   if (!path) return "";
   if (path.startsWith("http")) return path;
-  return `${API_BASE}${path}`;
+  return `${getApiBase()}${path}`;
 }
 
 export default function MarketPage() {

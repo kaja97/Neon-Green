@@ -42,7 +42,8 @@ app.add_exception_handler(Exception, unhandled_exception_handler)
 # ── CORS ─────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://[IP_ADDRESS]", "*"],  # TODO: configure for production
+    allow_origins=["http://localhost:3000"],
+    allow_origin_regex=r"^https?://.*$",  # Allow any origin (dev only — restrict in production)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
