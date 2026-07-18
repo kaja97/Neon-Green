@@ -12,8 +12,8 @@ interface FarmingCircleProps {
 
 export default function FarmingCircle({ stages }: FarmingCircleProps) {
   return (
-    <div className="flex flex-col items-center py-8 w-full overflow-x-auto hide-scrollbar">
-      <div className="flex items-center min-w-max px-6 relative">
+    <div className="py-8 w-full overflow-x-auto hide-scrollbar">
+      <div className="flex items-center min-w-max px-6 relative md:justify-center">
         {stages.map((stage, index) => {
           const isLast = index === stages.length - 1;
           
