@@ -7,10 +7,18 @@ from database import get_db
 from models.account import Account
 from dependencies import get_current_user, get_marketplace_service
 
-from .schemas import ProductCreate, ProductResponse, FarmerDirectoryResponse
+from .schemas import ProductCreate, ProductResponse, FarmerDirectoryResponse, CategoryResponse
 from .service import MarketplaceService
 
 router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
+
+@router.get("/categories", response_model=List[CategoryResponse])
+async def list_categories(
+    db: AsyncSession = Depends(get_db),
+    service: MarketplaceService = Depends(get_marketplace_service)
+):
+    """List all product categories and their subcategories."""
+    return await service.get_categories(db)
 
 @router.post("/products", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 async def create_product(

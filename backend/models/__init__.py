@@ -12,7 +12,7 @@ from .issue import ProjectIssue
 from .market import MarketPrice, MarketTrend
 from .notification import Notification
 from .ai import AIProjectSummary, AIConversation, AIQueryLog
-from .marketplace import Product
+from .marketplace import Product, ProductCategory, ProductSubCategory
 
 __all__ = [
     "Base",
@@ -29,5 +29,5 @@ __all__ = [
     "MarketPrice", "MarketTrend",
     "Notification",
     "AIProjectSummary", "AIConversation", "AIQueryLog",
-    "Product"
+    "ProductCategory", "ProductSubCategory", "Product"
 ]

@@ -7,7 +7,7 @@ from core.base_service import BaseService
 from core.errors.exceptions import AppException
 from core.errors.error_codes import ErrorCode
 
-from models.marketplace import Product
+from models.marketplace import Product, ProductCategory, ProductSubCategory
 from models.account import Account, FarmerProfile
 from models.project import Project
 from models.plant import Plant
@@ -15,12 +15,32 @@ from models.plant import Plant
 from .repository import ProductRepository
 from .schemas import ProductCreate, ProductUpdate, FarmerDirectoryResponse
 
+from sqlalchemy.orm import selectinload
+
 class MarketplaceService(BaseService):
     def __init__(self, product_repo: ProductRepository):
         super().__init__()
         self.product_repo = product_repo
         
+    async def get_categories(self, db: AsyncSession) -> List[ProductCategory]:
+        # Fetch categories with their active subcategories eagerly loaded
+        query = select(ProductCategory).where(ProductCategory.is_active == True).options(
+            selectinload(ProductCategory.subcategories)
+        )
+        result = await db.execute(query)
+        return list(result.scalars().all())
+        
     async def create_product(self, db: AsyncSession, seller_id: uuid.UUID, data: ProductCreate) -> Product:
+        # Verify category exists
+        category = await db.get(ProductCategory, data.category_id)
+        if not category:
+            raise AppException(ErrorCode.VALIDATION_ERROR, "Category not found.")
+            
+        # Verify subcategory exists and belongs to the category
+        subcategory = await db.get(ProductSubCategory, data.sub_category_id)
+        if not subcategory or subcategory.category_id != data.category_id:
+            raise AppException(ErrorCode.VALIDATION_ERROR, "Invalid subcategory.")
+
         # Verify plant exists if provided
         if data.plant_id:
             plant = await db.get(Plant, data.plant_id)

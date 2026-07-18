@@ -2,6 +2,21 @@ from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 import uuid
 
+# ── Category Models ──────────────────────────────────────
+
+class SubCategoryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    name: str
+    description: Optional[str] = None
+
+class CategoryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    name: str
+    description: Optional[str] = None
+    subcategories: List[SubCategoryResponse] = []
+
 # ── Product Models ───────────────────────────────────────
 
 class ProductBase(BaseModel):
@@ -12,6 +27,8 @@ class ProductBase(BaseModel):
     price_per_unit: float
     currency: str = "LKR"
     condition: Optional[str] = None
+    category_id: uuid.UUID
+    sub_category_id: uuid.UUID
     plant_id: Optional[uuid.UUID] = None
     images: Optional[List[str]] = None
 
@@ -33,6 +50,8 @@ class ProductResponse(ProductBase):
     id: uuid.UUID
     seller_id: uuid.UUID
     status: str
+    category: Optional[CategoryResponse] = None
+    sub_category: Optional[SubCategoryResponse] = None
     
 # ── Farmer Directory (for Vendors) ────────────────────────
 
