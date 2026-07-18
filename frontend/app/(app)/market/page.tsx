@@ -41,7 +41,7 @@ function getImageUrl(path: string) {
 
 export default function MarketPage() {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<"products" | "farmers">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "my_products" | "farmers">("products");
   
   const [products, setProducts] = useState<any[]>([]);
   const [farmers, setFarmers] = useState<any[]>([]);
@@ -50,7 +50,6 @@ export default function MarketPage() {
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [showMyProducts, setShowMyProducts] = useState(false);
   
   // Product Edit
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -83,8 +82,8 @@ export default function MarketPage() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        if (activeTab === "products") {
-          const endpoint = showMyProducts ? "/marketplace/products/me" : "/marketplace/products";
+        if (activeTab === "products" || activeTab === "my_products") {
+          const endpoint = activeTab === "my_products" ? "/marketplace/products/me" : "/marketplace/products";
           const res = await api.get(endpoint);
           const data = res.data?.data ?? res.data;
           setProducts(Array.isArray(data) ? data : []);
@@ -101,7 +100,7 @@ export default function MarketPage() {
     };
 
     fetchData();
-  }, [activeTab, showMyProducts]);
+  }, [activeTab]);
 
   // Get unique plant types and districts from farmer data for filter dropdowns
   const farmerFilterOptions = useMemo(() => {
@@ -146,12 +145,12 @@ export default function MarketPage() {
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
-    if (showMyProducts && user) {
+    if (activeTab === "my_products" && user) {
       filtered = filtered.filter((p) => p.seller_id === user.id);
     }
 
     return filtered;
-  }, [products, searchQuery, selectedCategory, priceRange, showMyProducts, user]);
+  }, [products, searchQuery, selectedCategory, priceRange, activeTab, user]);
 
   // Filtered farmers
   const filteredFarmers = useMemo(() => {
@@ -188,14 +187,13 @@ export default function MarketPage() {
     return filtered;
   }, [farmers, searchQuery, farmerPlantType, farmerDistrict]);
 
-  const activeFiltersCount = activeTab === "products"
-    ? (selectedCategory ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 100000 ? 1 : 0) + (showMyProducts ? 1 : 0)
+  const activeFiltersCount = (activeTab === "products" || activeTab === "my_products")
+    ? (selectedCategory ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 100000 ? 1 : 0)
     : (farmerPlantType ? 1 : 0) + (farmerDistrict ? 1 : 0);
 
   const clearFilters = () => {
     setSelectedCategory("");
     setPriceRange([0, 100000]);
-    setShowMyProducts(false);
     setFarmerPlantType("");
     setFarmerDistrict("");
     setSearchQuery("");
@@ -217,29 +215,42 @@ export default function MarketPage() {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="flex p-1 rounded-xl bg-surface-tertiary">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto overflow-hidden">
+          <div className="flex p-1 rounded-xl bg-surface-tertiary overflow-x-auto whitespace-nowrap w-full sm:w-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <button
               onClick={() => setActiveTab("products")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all flex-1 sm:flex-none ${
                 activeTab === "products"
                   ? "bg-surface-elevated text-neon-gold shadow-sm"
                   : "text-text-muted hover:text-text-secondary"
               }`}
             >
-              <ShoppingBag className="w-4 h-4" />
+              <ShoppingBag className="w-4 h-4 shrink-0" />
               Products
             </button>
+            {user && (
+              <button
+                onClick={() => setActiveTab("my_products")}
+                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all flex-1 sm:flex-none ${
+                  activeTab === "my_products"
+                    ? "bg-surface-elevated text-neon-gold shadow-sm"
+                    : "text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                <Store className="w-4 h-4 shrink-0" />
+                My Products
+              </button>
+            )}
             <button
               onClick={() => setActiveTab("farmers")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all flex-1 sm:flex-none ${
                 activeTab === "farmers"
                   ? "bg-surface-elevated text-neon-gold shadow-sm"
                   : "text-text-muted hover:text-text-secondary"
               }`}
             >
-              <Sprout className="w-4 h-4" />
-              Farmer Directory
+              <Sprout className="w-4 h-4 shrink-0" />
+              Directory
             </button>
           </div>
           
@@ -262,7 +273,7 @@ export default function MarketPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={activeTab === "products" ? "Search by name, description, category..." : "Search farmers by name, crops, district..."}
+              placeholder={(activeTab === "products" || activeTab === "my_products") ? "Search by name, description, category..." : "Search farmers by name, crops, district..."}
               className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-neon-gold/50"
             />
             {searchQuery && (
@@ -283,19 +294,10 @@ export default function MarketPage() {
               </span>
             )}
           </button>
-          {activeTab === "products" && user && (
-            <button 
-              onClick={() => setShowMyProducts(!showMyProducts)} 
-              className={`h-11 px-4 btn-secondary flex items-center gap-2 text-sm whitespace-nowrap relative ${showMyProducts ? "bg-neon-gold text-black hover:bg-neon-gold/90 border-transparent" : ""}`}
-            >
-              <Store className="w-4 h-4" />
-              My Products
-            </button>
-          )}
         </div>
 
         {/* Product Filter Panel */}
-        {showFilters && activeTab === "products" && (
+        {showFilters && (activeTab === "products" || activeTab === "my_products") && (
           <div className="glass-card p-5 space-y-4 animate-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
@@ -422,8 +424,8 @@ export default function MarketPage() {
       {!isLoading && (searchQuery || activeFiltersCount > 0) && (
         <div className="text-sm text-text-muted">
           Showing <span className="text-white font-semibold">
-            {activeTab === "products" ? filteredProducts.length : filteredFarmers.length}
-          </span> of {activeTab === "products" ? products.length : farmers.length} {activeTab}
+            {(activeTab === "products" || activeTab === "my_products") ? filteredProducts.length : filteredFarmers.length}
+          </span> of {(activeTab === "products" || activeTab === "my_products") ? products.length : farmers.length} items
           {searchQuery && <span> matching &quot;<span className="text-neon-gold">{searchQuery}</span>&quot;</span>}
         </div>
       )}
@@ -441,7 +443,7 @@ export default function MarketPage() {
             </div>
           ))}
         </div>
-      ) : activeTab === "products" ? (
+      ) : (activeTab === "products" || activeTab === "my_products") ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.length === 0 ? (
             <div className="col-span-full py-12 text-center text-text-muted">
