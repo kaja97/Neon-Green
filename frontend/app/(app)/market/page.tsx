@@ -137,12 +137,15 @@ export default function MarketPage() {
             </div>
           ) : (
             products.map((product) => (
-              <div key={product.id} className="glass-card overflow-hidden group flex flex-col">
-                <div className="h-48 bg-surface-tertiary relative">
-                  {/* Placeholder for image */}
-                  <div className="absolute inset-0 flex items-center justify-center text-text-muted">
-                    <Store className="w-8 h-8 opacity-20" />
-                  </div>
+              <Link href={`/market/products/${product.id}`} key={product.id} className="glass-card overflow-hidden group flex flex-col hover:-translate-y-1 hover:shadow-2xl hover:shadow-neon-gold/20 transition-all duration-300">
+                <div className="h-48 bg-surface-tertiary relative overflow-hidden">
+                  {product.images && product.images.length > 0 ? (
+                    <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-text-muted">
+                      <Store className="w-8 h-8 opacity-20 group-hover:scale-110 transition-transform" />
+                    </div>
+                  )}
                   <div className="absolute top-3 right-3 px-2 py-1 bg-surface-elevated/80 backdrop-blur-md rounded-md text-xs font-semibold text-neon-gold">
                     {product.currency} {product.price_per_unit} / {product.unit}
                   </div>
@@ -165,7 +168,7 @@ export default function MarketPage() {
                     </button>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>

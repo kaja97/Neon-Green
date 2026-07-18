@@ -9,7 +9,7 @@ from database import get_db
 from models.account import Account
 from dependencies import get_current_user, get_marketplace_service
 
-from .schemas import ProductCreate, ProductResponse, FarmerDirectoryResponse, CategoryResponse
+from .schemas import ProductCreate, ProductResponse, FarmerDirectoryResponse, CategoryResponse, ProductDetailResponse
 from .service import MarketplaceService
 
 router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
@@ -68,6 +68,15 @@ async def list_products(
 ):
     """List all available products in the marketplace."""
     return await service.get_products(db, plant_id)
+
+@router.get("/products/{product_id}", response_model=ProductDetailResponse)
+async def get_product_details(
+    product_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    service: MarketplaceService = Depends(get_marketplace_service)
+):
+    """Get details of a specific product."""
+    return await service.get_product(db, product_id)
 
 @router.get("/products/me", response_model=List[ProductResponse])
 async def list_my_products(

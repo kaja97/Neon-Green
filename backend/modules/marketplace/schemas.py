@@ -55,6 +55,15 @@ class ProductResponse(ProductBase):
     category: Optional[CategoryShortResponse] = None
     sub_category: Optional[SubCategoryResponse] = None
     
+class SellerInfo(BaseModel):
+    id: uuid.UUID
+    name: str
+    phone: Optional[str] = None
+    email: str
+
+class ProductDetailResponse(ProductResponse):
+    seller_info: Optional[SellerInfo] = None
+    
 # ── Farmer Directory (for Vendors) ────────────────────────
 
 class FarmerProjectShort(BaseModel):

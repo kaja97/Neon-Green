@@ -65,6 +65,31 @@ class MarketplaceService(BaseService):
         
     async def get_products(self, db: AsyncSession, plant_id: Optional[uuid.UUID] = None) -> List[Product]:
         return await self.product_repo.get_multi_available(db, plant_id=plant_id)
+
+    async def get_product(self, db: AsyncSession, product_id: uuid.UUID) -> dict:
+        product = await self.product_repo.get_product_with_details(db, product_id)
+        if not product:
+            raise AppException(ErrorCode.NOT_FOUND, "Product not found")
+        
+        # Build seller info
+        seller_name = "Unknown Seller"
+        if product.seller.farmer_profile:
+            seller_name = product.seller.farmer_profile.full_name
+        elif product.seller.vendor_profile:
+            seller_name = product.seller.vendor_profile.business_name
+            
+        seller_info = {
+            "id": product.seller.id,
+            "name": seller_name,
+            "phone": product.seller.phone,
+            "email": product.seller.email
+        }
+        
+        # We need to return a dict or something compatible with ProductDetailResponse
+        # Since Product is a SQLAlchemy model, we can just attach seller_info to it dynamically 
+        # before Pydantic serializes it.
+        setattr(product, "seller_info", seller_info)
+        return product
         
     async def get_my_products(self, db: AsyncSession, seller_id: uuid.UUID) -> List[Product]:
         return await self.product_repo.get_multi_by_seller(db, seller_id=seller_id)
