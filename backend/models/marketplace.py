@@ -1,3 +1,4 @@
+from models.plant import Plant
 import uuid
 from sqlalchemy import String, Text, ForeignKey, Numeric, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship

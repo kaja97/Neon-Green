@@ -1,7 +1,11 @@
 # ============================
 # AgriFarm AI — .gitignore
 # ============================
-
+# --media files --
+*.png
+*.jpg
+*.jpeg
+*.webp
 # ── Environment variables ──
 .env
 .env.local

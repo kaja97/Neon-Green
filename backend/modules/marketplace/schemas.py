@@ -10,11 +10,13 @@ class SubCategoryResponse(BaseModel):
     name: str
     description: Optional[str] = None
 
-class CategoryResponse(BaseModel):
+class CategoryShortResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     name: str
     description: Optional[str] = None
+
+class CategoryResponse(CategoryShortResponse):
     subcategories: List[SubCategoryResponse] = []
 
 # ── Product Models ───────────────────────────────────────
@@ -50,7 +52,7 @@ class ProductResponse(ProductBase):
     id: uuid.UUID
     seller_id: uuid.UUID
     status: str
-    category: Optional[CategoryResponse] = None
+    category: Optional[CategoryShortResponse] = None
     sub_category: Optional[SubCategoryResponse] = None
     
 # ── Farmer Directory (for Vendors) ────────────────────────

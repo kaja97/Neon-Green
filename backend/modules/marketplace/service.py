@@ -51,7 +51,17 @@ class MarketplaceService(BaseService):
         obj_in["seller_id"] = seller_id
         
         product = await self.product_repo.create(db, obj_in=obj_in)
-        return product
+        
+        # Eager load relationships for the response
+        res = await db.execute(
+            select(Product)
+            .where(Product.id == product.id)
+            .options(
+                selectinload(Product.category),
+                selectinload(Product.sub_category)
+            )
+        )
+        return res.scalars().first()
         
     async def get_products(self, db: AsyncSession, plant_id: Optional[uuid.UUID] = None) -> List[Product]:
         return await self.product_repo.get_multi_available(db, plant_id=plant_id)

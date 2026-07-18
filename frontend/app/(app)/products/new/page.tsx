@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Store, Loader2, Upload, X, ImageIcon } from "lucide-react";
+import { ArrowLeft, Store, Loader2, Upload, X, ImageIcon, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { useCategories, useCreateProduct } from "@/lib/hooks/useMarketplace";
@@ -130,42 +130,48 @@ export default function NewProductPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-300">Category</label>
-              <select
-                required
-                value={formData.category_id}
-                onChange={(e) => {
-                  setFormData({ ...formData, category_id: e.target.value, sub_category_id: "" });
-                }}
-                className="w-full h-12 px-4 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all disabled:opacity-50"
-                disabled={isCategoriesLoading}
-              >
-                <option value="" disabled>
-                  {isCategoriesLoading ? "Loading categories..." : "Select Category"}
-                </option>
-                {categories?.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
+              <div className="relative">
+                <select
+                  required
+                  value={formData.category_id}
+                  onChange={(e) => {
+                    setFormData({ ...formData, category_id: e.target.value, sub_category_id: "" });
+                  }}
+                  className="w-full h-12 px-4 appearance-none rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all disabled:opacity-50"
+                  disabled={isCategoriesLoading}
+                >
+                  <option value="" disabled>
+                    {isCategoriesLoading ? "Loading categories..." : "Select Category"}
                   </option>
-                ))}
-              </select>
+                  {categories?.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
+              </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-300">Sub-Category</label>
-              <select
-                required
-                value={formData.sub_category_id}
-                onChange={(e) => updateField("sub_category_id", e.target.value)}
-                disabled={!selectedCategory}
-                className="w-full h-12 px-4 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all disabled:opacity-50"
-              >
-                <option value="" disabled>Select Sub-Category</option>
-                {selectedCategory?.subcategories.map((sub) => (
-                  <option key={sub.id} value={sub.id}>
-                    {sub.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  required
+                  value={formData.sub_category_id}
+                  onChange={(e) => updateField("sub_category_id", e.target.value)}
+                  disabled={!selectedCategory}
+                  className="w-full h-12 px-4 appearance-none rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all disabled:opacity-50"
+                >
+                  <option value="" disabled>Select Sub-Category</option>
+                  {selectedCategory?.subcategories.map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
+              </div>
             </div>
           </div>
 
@@ -185,18 +191,21 @@ export default function NewProductPage() {
             </div>
             <div className="space-y-2 col-span-2">
               <label className="text-sm font-medium text-slate-300">Unit</label>
-              <select
-                required
-                value={formData.unit}
-                onChange={(e) => updateField("unit", e.target.value)}
-                className="w-full h-12 px-4 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all"
-              >
-                <option value="kg">Kilograms (kg)</option>
-                <option value="tons">Tons</option>
-                <option value="liters">Liters</option>
-                <option value="units">Units / Pieces</option>
-                <option value="packs">Packs</option>
-              </select>
+              <div className="relative">
+                <select
+                  required
+                  value={formData.unit}
+                  onChange={(e) => updateField("unit", e.target.value)}
+                  className="w-full h-12 px-4 appearance-none rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all"
+                >
+                  <option value="kg">Kilograms (kg)</option>
+                  <option value="tons">Tons</option>
+                  <option value="liters">Liters</option>
+                  <option value="units">Units / Pieces</option>
+                  <option value="packs">Packs</option>
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
+              </div>
             </div>
           </div>
 
@@ -219,19 +228,22 @@ export default function NewProductPage() {
             </div>
             <div className="space-y-2 col-span-2">
               <label className="text-sm font-medium text-slate-300">Condition</label>
-              <select
-                required
-                value={formData.condition}
-                onChange={(e) => updateField("condition", e.target.value)}
-                className="w-full h-12 px-4 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all"
-              >
-                <option value="Fresh Harvest">Fresh Harvest</option>
-                <option value="Dried">Dried</option>
-                <option value="Processed">Processed</option>
-                <option value="New">New (Tools/Supplies)</option>
-                <option value="Used">Used (Tools/Supplies)</option>
-                <option value="Live">Live (Livestock)</option>
-              </select>
+              <div className="relative">
+                <select
+                  required
+                  value={formData.condition}
+                  onChange={(e) => updateField("condition", e.target.value)}
+                  className="w-full h-12 px-4 appearance-none rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all"
+                >
+                  <option value="Fresh Harvest">Fresh Harvest</option>
+                  <option value="Dried">Dried</option>
+                  <option value="Processed">Processed</option>
+                  <option value="New">New (Tools/Supplies)</option>
+                  <option value="Used">Used (Tools/Supplies)</option>
+                  <option value="Live">Live (Livestock)</option>
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
+              </div>
             </div>
           </div>
 

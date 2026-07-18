@@ -12,34 +12,34 @@ async def seed_categories():
     categories_data = {
         "Food & Crops": [
             "Vegetables", "Fruits", "Grains & Cereals", "Spices & Herbs", 
-            "Pulses & Legumes", "Nuts & Oilseeds", "Root Crops", "Plantation Crops"
+            "Pulses & Legumes", "Nuts & Oilseeds", "Root Crops", "Plantation Crops", "Other"
         ],
         "Livestock & Animals": [
             "Cattle", "Goats & Sheep", "Poultry (Chicken/Ducks)", 
-            "Pigs", "Fish & Aquaculture", "Pets", "Bees & Honey"
+            "Pigs", "Fish & Aquaculture", "Pets", "Bees & Honey", "Other"
         ],
         "Animal Products": [
-            "Milk & Dairy", "Eggs", "Meat", "Wool & Hides", "Manure"
+            "Milk & Dairy", "Eggs", "Meat", "Wool & Hides", "Manure", "Other"
         ],
         "Seeds & Plants": [
             "Vegetable Seeds", "Fruit Saplings", "Grain Seeds", 
-            "Flower Seeds", "Ornamental Plants", "Forestry Seedlings"
+            "Flower Seeds", "Ornamental Plants", "Forestry Seedlings", "Other"
         ],
         "Fertilizers & Soil": [
             "Organic Compost", "Chemical Fertilizers (Urea, NPK)", 
-            "Liquid Fertilizers", "Peat Moss", "Soil Conditioners", "Mulch"
+            "Liquid Fertilizers", "Peat Moss", "Soil Conditioners", "Mulch", "Other"
         ],
         "Farming Tools & Equipment": [
             "Hand Tools (Shovels, Hoes)", "Irrigation Systems & Pipes", 
-            "Sprayers", "Greenhouse Equipment", "Protective Gear", "Harvesting Tools"
+            "Sprayers", "Greenhouse Equipment", "Protective Gear", "Harvesting Tools", "Other"
         ],
         "Vehicles & Machinery": [
             "Tractors", "Harvesters", "Tillers & Cultivators", 
-            "Trailers", "Water Pumps", "Generators"
+            "Trailers", "Water Pumps", "Generators", "Other"
         ],
         "Services & Other": [
             "Farming Consulting", "Labor Services", "Packaging Materials", 
-            "Transport Services", "Storage Services"
+            "Transport Services", "Storage Services", "Other"
         ]
     }
     
