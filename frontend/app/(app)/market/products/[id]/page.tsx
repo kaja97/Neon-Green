@@ -17,6 +17,14 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8000";
+
+function getImageUrl(path: string) {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  return `${API_BASE}${path}`;
+}
+
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -71,7 +79,7 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-6xl mx-auto space-y-8 pb-12">
       <button 
         onClick={() => router.back()} 
         className="flex items-center gap-2 text-text-muted hover:text-white transition-colors"
@@ -87,7 +95,7 @@ export default function ProductDetailPage() {
             {product.images && product.images.length > 0 ? (
               <>
                 <img 
-                  src={product.images[activeImage]} 
+                  src={getImageUrl(product.images[activeImage])} 
                   alt={product.title} 
                   className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                 />
@@ -108,6 +116,13 @@ export default function ProductDetailPage() {
                     </button>
                   </>
                 )}
+
+                {/* Image counter */}
+                {product.images.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 backdrop-blur-sm text-xs text-white font-medium">
+                    {activeImage + 1} / {product.images.length}
+                  </div>
+                )}
               </>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-text-muted">
@@ -122,7 +137,7 @@ export default function ProductDetailPage() {
 
           {/* Thumbnail Slider */}
           {product.images && product.images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+            <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
               {product.images.map((img: string, idx: number) => (
                 <button
                   key={idx}
@@ -131,7 +146,7 @@ export default function ProductDetailPage() {
                     activeImage === idx ? "border-neon-gold scale-105" : "border-transparent opacity-60 hover:opacity-100"
                   }`}
                 >
-                  <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
+                  <img src={getImageUrl(img)} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

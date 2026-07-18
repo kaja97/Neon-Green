@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { 
   Store, 
   ShoppingBag, 
@@ -10,12 +10,24 @@ import {
   Package, 
   TrendingUp,
   ChevronRight,
+  ChevronDown,
   Sprout,
-  Plus
+  Plus,
+  X,
+  DollarSign,
+  Tag
 } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") || "http://localhost:8000";
+
+function getImageUrl(path: string) {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  return `${API_BASE}${path}`;
+}
 
 export default function MarketPage() {
   const { user } = useAuthStore();
@@ -24,6 +36,26 @@ export default function MarketPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [farmers, setFarmers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get("/marketplace/categories");
+        const data = res.data?.data ?? res.data;
+        setCategories(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,8 +80,56 @@ export default function MarketPage() {
     fetchData();
   }, [activeTab]);
 
+  // Filtered products
+  const filteredProducts = useMemo(() => {
+    let filtered = [...products];
+    
+    // Search by name, description, category
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((p) => 
+        p.title?.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q) ||
+        p.category?.name?.toLowerCase().includes(q) ||
+        p.sub_category?.name?.toLowerCase().includes(q)
+      );
+    }
+
+    // Filter by category
+    if (selectedCategory) {
+      filtered = filtered.filter((p) => p.category_id === selectedCategory);
+    }
+
+    // Filter by price range
+    filtered = filtered.filter((p) => {
+      const price = p.price_per_unit || 0;
+      return price >= priceRange[0] && price <= priceRange[1];
+    });
+
+    return filtered;
+  }, [products, searchQuery, selectedCategory, priceRange]);
+
+  // Filtered farmers
+  const filteredFarmers = useMemo(() => {
+    if (!searchQuery.trim()) return farmers;
+    const q = searchQuery.toLowerCase().trim();
+    return farmers.filter((f) =>
+      f.full_name?.toLowerCase().includes(q) ||
+      f.farming_method?.toLowerCase().includes(q) ||
+      f.projects?.some((p: any) => p.plant_name?.toLowerCase().includes(q))
+    );
+  }, [farmers, searchQuery]);
+
+  const activeFiltersCount = (selectedCategory ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 100000 ? 1 : 0);
+
+  const clearFilters = () => {
+    setSelectedCategory("");
+    setPriceRange([0, 100000]);
+    setSearchQuery("");
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-[1600px] mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end justify-between">
         <div className="space-y-1">
@@ -101,21 +181,117 @@ export default function MarketPage() {
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-          <input
-            type="text"
-            placeholder={`Search ${activeTab}...`}
-            className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-neon-gold/50"
-          />
+      {/* Search & Filters */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={activeTab === "products" ? "Search by name, description, category..." : "Search farmers by name, method, crops..."}
+              className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-neon-gold/50"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {activeTab === "products" && (
+            <button 
+              onClick={() => setShowFilters(!showFilters)} 
+              className={`h-11 px-4 btn-secondary flex items-center gap-2 text-sm whitespace-nowrap relative ${showFilters ? "ring-2 ring-neon-gold/50" : ""}`}
+            >
+              <Filter className="w-4 h-4" />
+              Filters
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-neon-gold text-black text-[10px] font-bold flex items-center justify-center">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
-        <button className="h-11 px-4 btn-secondary flex items-center gap-2 text-sm whitespace-nowrap">
-          <Filter className="w-4 h-4" />
-          Filters
-        </button>
+
+        {/* Filter Panel */}
+        {showFilters && activeTab === "products" && (
+          <div className="glass-card p-5 space-y-4 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <Filter className="w-4 h-4 text-neon-gold" />
+                Filter Products
+              </h3>
+              {activeFiltersCount > 0 && (
+                <button onClick={clearFilters} className="text-xs text-neon-gold hover:underline">
+                  Clear all
+                </button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Category Filter */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-text-muted font-medium flex items-center gap-1">
+                  <Tag className="w-3 h-3" /> Category
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full h-10 px-3 pr-8 rounded-lg bg-surface-tertiary border border-border text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-neon-gold/50 appearance-none cursor-pointer"
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map((cat: any) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Min Price */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-text-muted font-medium flex items-center gap-1">
+                  <DollarSign className="w-3 h-3" /> Min Price
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={priceRange[0] || ""}
+                  onChange={(e) => setPriceRange([Number(e.target.value) || 0, priceRange[1]])}
+                  placeholder="0"
+                  className="w-full h-10 px-3 rounded-lg bg-surface-tertiary border border-border text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-neon-gold/50"
+                />
+              </div>
+
+              {/* Max Price */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-text-muted font-medium flex items-center gap-1">
+                  <DollarSign className="w-3 h-3" /> Max Price
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={priceRange[1] >= 100000 ? "" : priceRange[1]}
+                  onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) || 100000])}
+                  placeholder="No max"
+                  className="w-full h-10 px-3 rounded-lg bg-surface-tertiary border border-border text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-neon-gold/50"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Results count */}
+      {!isLoading && activeTab === "products" && (searchQuery || activeFiltersCount > 0) && (
+        <div className="text-sm text-text-muted">
+          Showing <span className="text-white font-semibold">{filteredProducts.length}</span> of {products.length} products
+          {searchQuery && <span> matching &quot;<span className="text-neon-gold">{searchQuery}</span>&quot;</span>}
+        </div>
+      )}
 
       {/* Content */}
       {isLoading ? (
@@ -132,17 +308,22 @@ export default function MarketPage() {
         </div>
       ) : activeTab === "products" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {products.length === 0 ? (
+          {filteredProducts.length === 0 ? (
             <div className="col-span-full py-12 text-center text-text-muted">
               <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
-              <p>No products available right now.</p>
+              <p>{searchQuery || activeFiltersCount > 0 ? "No products match your filters." : "No products available right now."}</p>
+              {(searchQuery || activeFiltersCount > 0) && (
+                <button onClick={clearFilters} className="mt-2 text-neon-gold hover:underline text-sm">
+                  Clear filters
+                </button>
+              )}
             </div>
           ) : (
-            products.map((product) => (
+            filteredProducts.map((product) => (
               <Link href={`/market/products/${product.id}`} key={product.id} className="glass-card overflow-hidden group flex flex-col hover:-translate-y-1 hover:shadow-2xl hover:shadow-neon-gold/20 transition-all duration-300">
                 <div className="h-48 bg-surface-tertiary relative overflow-hidden">
                   {product.images && product.images.length > 0 ? (
-                    <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={getImageUrl(product.images[0])} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-text-muted">
                       <Store className="w-8 h-8 opacity-20 group-hover:scale-110 transition-transform" />
@@ -151,6 +332,11 @@ export default function MarketPage() {
                   <div className="absolute top-3 right-3 px-2 py-1 bg-surface-elevated/80 backdrop-blur-md rounded-md text-xs font-semibold text-neon-gold">
                     {product.currency} {product.price_per_unit} / {product.unit}
                   </div>
+                  {product.category?.name && (
+                    <div className="absolute bottom-3 left-3 px-2 py-0.5 bg-black/60 backdrop-blur-sm rounded-md text-[10px] font-medium text-text-secondary">
+                      {product.category.name}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="p-4 flex flex-col flex-1">
@@ -165,9 +351,9 @@ export default function MarketPage() {
                     <div className="text-sm text-text-muted">
                       Qty: {product.quantity_available} {product.unit}
                     </div>
-                    <button className="text-neon-gold hover:text-neon-gold/80 transition-colors p-2">
+                    <span className="text-neon-gold hover:text-neon-gold/80 transition-colors p-2">
                       <ChevronRight className="w-5 h-5" />
-                    </button>
+                    </span>
                   </div>
                 </div>
               </Link>
@@ -176,13 +362,13 @@ export default function MarketPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {farmers.length === 0 ? (
+          {filteredFarmers.length === 0 ? (
             <div className="col-span-full py-12 text-center text-text-muted">
               <Sprout className="w-12 h-12 mx-auto mb-3 opacity-20" />
               <p>No farmers available in the directory.</p>
             </div>
           ) : (
-            farmers.map((farmer) => (
+            filteredFarmers.map((farmer) => (
               <div key={farmer.farmer_profile_id} className="glass-card p-5 space-y-4">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-primary/20 text-primary flex items-center justify-center text-lg font-bold">
