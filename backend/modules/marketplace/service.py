@@ -51,6 +51,7 @@ class MarketplaceService(BaseService):
         obj_in["seller_id"] = seller_id
         
         product = await self.product_repo.create(db, obj_in=obj_in)
+        await db.commit()
         
         # Eager load relationships for the response
         res = await db.execute(
