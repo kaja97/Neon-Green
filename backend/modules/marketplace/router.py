@@ -9,7 +9,7 @@ from database import get_db
 from models.account import Account
 from dependencies import get_current_user, get_marketplace_service
 
-from .schemas import ProductCreate, ProductResponse, FarmerDirectoryResponse, CategoryResponse, ProductDetailResponse, FarmerDetailResponse
+from .schemas import ProductCreate, ProductUpdate, ProductResponse, FarmerDirectoryResponse, CategoryResponse, ProductDetailResponse, FarmerDetailResponse
 from .service import MarketplaceService
 
 router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
@@ -86,6 +86,27 @@ async def get_product_details(
 ):
     """Get details of a specific product."""
     return await service.get_product(db, product_id)
+
+@router.put("/products/{product_id}", response_model=ProductResponse)
+async def update_product(
+    product_id: uuid.UUID,
+    data: ProductUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Account = Depends(get_current_user),
+    service: MarketplaceService = Depends(get_marketplace_service)
+):
+    """Update a product listing. Only the seller can update their product."""
+    return await service.update_product(db, product_id, current_user.id, data)
+
+@router.patch("/products/{product_id}/sold-out", response_model=ProductResponse)
+async def mark_product_sold_out(
+    product_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: Account = Depends(get_current_user),
+    service: MarketplaceService = Depends(get_marketplace_service)
+):
+    """Mark a product as sold out. Only the seller can do this."""
+    return await service.mark_sold_out(db, product_id, current_user.id)
 
 @router.get("/farmers", response_model=List[FarmerDirectoryResponse])
 async def list_farmers_directory(

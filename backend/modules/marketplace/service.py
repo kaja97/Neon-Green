@@ -95,6 +95,54 @@ class MarketplaceService(BaseService):
         
     async def get_my_products(self, db: AsyncSession, seller_id: uuid.UUID) -> List[Product]:
         return await self.product_repo.get_multi_by_seller(db, seller_id=seller_id)
+
+    async def update_product(self, db: AsyncSession, product_id: uuid.UUID, seller_id: uuid.UUID, data: ProductUpdate) -> Product:
+        """Update a product listing. Only the seller can update."""
+        product = await db.get(Product, product_id)
+        if not product:
+            raise AppException(ErrorCode.NOT_FOUND, "Product not found")
+        if product.seller_id != seller_id:
+            raise AppException(ErrorCode.FORBIDDEN, "You can only edit your own products")
+        
+        update_data = data.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(product, key, value)
+        
+        await db.commit()
+        await db.refresh(product)
+        
+        # Re-fetch with relationships
+        res = await db.execute(
+            select(Product)
+            .where(Product.id == product.id)
+            .options(
+                selectinload(Product.category),
+                selectinload(Product.sub_category)
+            )
+        )
+        return res.scalars().first()
+
+    async def mark_sold_out(self, db: AsyncSession, product_id: uuid.UUID, seller_id: uuid.UUID) -> Product:
+        """Mark a product as sold out."""
+        product = await db.get(Product, product_id)
+        if not product:
+            raise AppException(ErrorCode.NOT_FOUND, "Product not found")
+        if product.seller_id != seller_id:
+            raise AppException(ErrorCode.FORBIDDEN, "You can only update your own products")
+        
+        product.status = "sold_out"
+        await db.commit()
+        await db.refresh(product)
+        
+        res = await db.execute(
+            select(Product)
+            .where(Product.id == product.id)
+            .options(
+                selectinload(Product.category),
+                selectinload(Product.sub_category)
+            )
+        )
+        return res.scalars().first()
         
     async def get_farmer_directory(self, db: AsyncSession) -> List[dict]:
         """Fetch all farmers and their active projects for vendors to browse."""
