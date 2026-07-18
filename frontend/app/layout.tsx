@@ -43,6 +43,8 @@ export const viewport: Viewport = {
 // and stamp the correct class on <html>. Falls back to dark.
 const themeBootstrap = `(function(){try{var s=localStorage.getItem('ui-storage');var t=s?JSON.parse(s).state?.theme:null;var c=(t==='light')?'light':'dark';var d=document.documentElement;d.classList.remove('dark','light');d.classList.add(c);}catch(e){document.documentElement.classList.add('dark');}})();`;
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -57,7 +59,10 @@ export default function RootLayout({
         className={`${inter.variable} font-sans antialiased bg-surface-primary text-text-primary`}
       >
         <ThemeProvider>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            {children}
+            <Toaster position="top-right" theme="system" richColors />
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
