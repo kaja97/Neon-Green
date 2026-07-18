@@ -51,10 +51,10 @@
      LIGHT THEME — soft, matte, buttery
      ──────────────────────────────────────────────── */
   .light {
-    --color-surface-primary: 210 40% 98%;
-    --color-surface-secondary: 0 0% 100%;
-    --color-surface-tertiary: 210 40% 94%;
-    --color-surface-elevated: 210 30% 90%;
+    --color-surface-primary: 210 20% 96%;
+    --color-surface-secondary: 210 20% 98%;
+    --color-surface-tertiary: 210 20% 92%;
+    --color-surface-elevated: 210 20% 88%;
 
     --color-text-primary: 222 47% 11%;
     --color-text-secondary: 215 25% 35%;

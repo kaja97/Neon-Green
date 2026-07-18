@@ -50,12 +50,12 @@ export default function SettingsPage() {
       <header className="flex items-center gap-4 animate-fade-in">
         <Link
           href="/dashboard"
-          className="p-2.5 glass-card-hover rounded-xl text-text-secondary hover:text-white transition-all duration-300"
+          className="p-2.5 glass-card-hover rounded-xl text-text-secondary hover:text-text-primary transition-all duration-300"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-white">
+          <h1 className="text-3xl font-black tracking-tight text-text-primary">
             Account Hub<span className="text-green-400 text-glow-green">.</span>
           </h1>
           <p className="text-text-muted font-medium mt-1">Manage your profile, farm data, and settings.</p>
@@ -106,7 +106,7 @@ export default function SettingsPage() {
         {activeTab === "preferences" && (
           <div className="space-y-6 animate-fade-in">
             <div className="glass-card rounded-3xl p-6">
-              <h2 className="text-xl font-bold text-white mb-6">App Preferences</h2>
+              <h2 className="text-xl font-bold text-text-primary mb-6">App Preferences</h2>
 
               {/* Appearance */}
               <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-border gap-4 mb-6">
@@ -115,7 +115,7 @@ export default function SettingsPage() {
                     {theme === "dark" ? <Moon className="w-6 h-6 text-indigo-400" /> : <Sun className="w-6 h-6 text-amber-400" />}
                   </div>
                   <div>
-                    <p className="font-bold text-white text-lg">Appearance</p>
+                    <p className="font-bold text-text-primary text-lg">Appearance</p>
                     <p className="text-sm text-text-muted">Switch between dark and light theme</p>
                   </div>
                 </div>
@@ -132,7 +132,7 @@ export default function SettingsPage() {
                         className={clsx(
                           "flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-colors",
                           theme === opt.code
-                            ? "bg-surface-elevated shadow-sm text-white"
+                            ? "bg-surface-elevated shadow-sm text-text-primary"
                             : "text-text-muted hover:text-text-secondary"
                         )}
                       >
@@ -151,7 +151,7 @@ export default function SettingsPage() {
                     <Globe className="w-6 h-6 text-violet-400" />
                   </div>
                   <div>
-                    <p className="font-bold text-white text-lg">{t.settings.language}</p>
+                    <p className="font-bold text-text-primary text-lg">{t.settings.language}</p>
                     <p className="text-sm text-text-muted">{t.settings.language_desc}</p>
                   </div>
                 </div>
@@ -162,7 +162,7 @@ export default function SettingsPage() {
                       onClick={() => setLanguage(lang as any)}
                       className={clsx(
                         "px-4 py-2 rounded-xl text-sm font-bold transition-colors",
-                        language === lang ? "bg-surface-elevated shadow-sm text-white" : "text-text-muted hover:text-text-secondary"
+                        language === lang ? "bg-surface-elevated shadow-sm text-text-primary" : "text-text-muted hover:text-text-secondary"
                       )}
                     >
                       {lang === 'en' ? 'English' : lang === 'si' ? 'සිංහල' : 'தமிழ்'}
@@ -178,7 +178,7 @@ export default function SettingsPage() {
                     <Bell className="w-6 h-6 text-blue-400" />
                   </div>
                   <div>
-                    <p className="font-bold text-white text-lg">{t.settings.push_notifications}</p>
+                    <p className="font-bold text-text-primary text-lg">{t.settings.push_notifications}</p>
                     <p className="text-sm text-text-muted">{t.settings.push_desc}</p>
                   </div>
                 </div>
