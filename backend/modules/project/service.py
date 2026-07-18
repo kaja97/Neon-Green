@@ -76,6 +76,11 @@ class ProjectService(BaseService):
         if not plant:
             raise AppException(ErrorCode.PROJECT_INVALID_PLANT)
 
+        # Validate variety
+        variety = await db.get(PlantVariety, data.variety_id)
+        if not variety or variety.plant_id != data.plant_id:
+            raise AppException(ErrorCode.PROJECT_INVALID_PLANT)
+
         # Validate location belongs to farmer
         location = await db.get(FarmerLocation, data.location_id)
         if not location or location.farmer_id != profile.id:
@@ -95,11 +100,12 @@ class ProjectService(BaseService):
         )
         first_stage = result.scalars().first()
 
-        expected_harvest_date = data.planting_date + timedelta(days=plant.growth_duration_days)
+        expected_harvest_date = data.planting_date + timedelta(days=variety.growth_duration_days)
 
         project = Project(
             farmer_id=profile.id,
             plant_id=data.plant_id,
+            variety_id=data.variety_id,
             location_id=data.location_id,
             land_detail_id=data.land_detail_id,
             name=data.name,

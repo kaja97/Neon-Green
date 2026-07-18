@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/stores/authStore";
 import TopBar from "@/components/layout/TopBar";
@@ -13,16 +13,21 @@ export default function AppLayout({
 }) {
   const router = useRouter();
   const { user } = useAuthStore();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Auth guard: redirect to login if not authenticated
   useEffect(() => {
-    if (!user) {
+    if (isHydrated && !user) {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, router, isHydrated]);
 
   // Don't render app shell until auth is confirmed
-  if (!user) {
+  if (!isHydrated || !user) {
     return (
       <div className="flex h-screen items-center justify-center bg-surface-primary">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />

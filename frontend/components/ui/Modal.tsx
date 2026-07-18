@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -12,6 +13,12 @@ interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -23,7 +30,9 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
     };
   }, [isOpen]);
 
-  return (
+  if (!mounted) return null;
+
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <>
@@ -31,14 +40,14 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm"
             onClick={onClose}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-0 z-50 overflow-y-auto flex items-start md:items-center justify-center p-4"
+            className="fixed inset-0 z-[100] overflow-y-auto flex items-start md:items-center justify-center p-4"
             onClick={onClose}
           >
             {/* Stop click-through so only the backdrop closes the modal */}
@@ -64,4 +73,6 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
       )}
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 }

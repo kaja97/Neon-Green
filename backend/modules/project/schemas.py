@@ -61,6 +61,7 @@ class ProjectResponse(BaseModel):
     id: uuid.UUID
     farmer_id: uuid.UUID
     plant_id: uuid.UUID
+    variety_id: uuid.UUID
     location_id: uuid.UUID
     land_detail_id: Optional[uuid.UUID] = None
     name: str

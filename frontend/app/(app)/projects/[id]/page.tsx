@@ -25,6 +25,7 @@ import {
   RefreshCw,
   Sparkles,
   Trash2,
+  Sprout,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
