@@ -1,13 +1,78 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Sprout, MapPin, Calendar, LayoutTemplate, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowLeft, CheckCircle2, Sprout, MapPin, Calendar, LayoutTemplate, Loader2, Search, ChevronDown, Check } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
+
+function SearchableSelect({ options, value, onChange, placeholder, disabled = false }: any) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const selected = options.find((o: any) => o.value === value);
+  const filteredOptions = options.filter((o: any) => o.label.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="relative">
+      <div 
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={clsx(
+          "w-full bg-surface-tertiary border border-border rounded-xl py-3 px-4 flex justify-between items-center transition-all",
+          disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-text-muted focus:ring-2 focus:ring-primary",
+          value ? "text-text-primary" : "text-text-muted"
+        )}
+      >
+        <span className="truncate">{selected ? selected.label : placeholder}</span>
+        <ChevronDown className="w-5 h-5 text-text-muted shrink-0" />
+      </div>
+      
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div className="absolute z-20 w-full mt-2 bg-surface-elevated border border-border rounded-xl shadow-xl overflow-hidden animate-fade-in">
+            <div className="p-2 border-b border-border flex items-center gap-2 bg-surface-primary/50">
+              <Search className="w-4 h-4 text-text-muted ml-1 shrink-0" />
+              <input 
+                type="text"
+                autoFocus
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-transparent border-none outline-none text-sm text-text-primary py-1 placeholder:text-text-muted"
+                placeholder="Search..."
+              />
+            </div>
+            <div className="max-h-60 overflow-y-auto">
+              {filteredOptions.length === 0 ? (
+                <div className="p-4 text-sm text-text-muted text-center">No results found</div>
+              ) : (
+                filteredOptions.map((opt: any) => (
+                  <div 
+                    key={opt.value}
+                    onClick={() => {
+                      onChange(opt.value);
+                      setIsOpen(false);
+                      setSearch("");
+                    }}
+                    className={clsx(
+                      "px-4 py-3 text-sm cursor-pointer hover:bg-surface-tertiary flex justify-between items-center transition-colors",
+                      value === opt.value ? "text-green-400 font-medium bg-green-500/5" : "text-text-primary"
+                    )}
+                  >
+                    <span>{opt.label}</span>
+                    {value === opt.value && <Check className="w-4 h-4 shrink-0" />}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function NewProjectWizard() {
   const router = useRouter();
@@ -142,36 +207,30 @@ export default function NewProjectWizard() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-2">Select Crop</label>
-                  <select
+                  <SearchableSelect
+                    options={plants?.map((p: any) => ({
+                      value: p.id,
+                      label: `${p.common_name} ${p.local_name ? `(${p.local_name})` : ""}`
+                    })) || []}
                     value={formData.plant_id}
-                    onChange={(e) => setFormData({ ...formData, plant_id: e.target.value, variety_id: "" })}
-                    className={inputClass}
-                  >
-                    <option value="">-- Choose a crop --</option>
-                    {plants?.map((plant: any) => (
-                      <option key={plant.id} value={plant.id}>
-                        {plant.common_name} {plant.local_name ? `(${plant.local_name})` : ""}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val: string) => setFormData({ ...formData, plant_id: val, variety_id: "" })}
+                    placeholder="-- Choose a crop --"
+                  />
                 </div>
 
                 {formData.plant_id && (
                   <div className="animate-fade-in">
                     <label className="block text-sm font-medium text-text-secondary mb-2">Select Variety</label>
-                    <select
+                    <SearchableSelect
+                      options={varieties?.map((v: any) => ({
+                        value: v.id,
+                        label: v.variety_name
+                      })) || []}
                       value={formData.variety_id}
-                      onChange={(e) => setFormData({ ...formData, variety_id: e.target.value })}
-                      className={inputClass}
+                      onChange={(val: string) => setFormData({ ...formData, variety_id: val })}
+                      placeholder="-- Choose a variety --"
                       disabled={varietiesLoading}
-                    >
-                      <option value="">-- Choose a variety --</option>
-                      {varieties?.map((v: any) => (
-                        <option key={v.id} value={v.id}>
-                          {v.variety_name}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
                 )}
 
