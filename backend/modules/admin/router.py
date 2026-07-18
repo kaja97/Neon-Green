@@ -107,27 +107,14 @@ async def get_admin_stats(
 
 @router.get("/projects", status_code=200)
 async def list_all_projects(
-    status: Optional[str] = Query(None, description="Filter by project status"),
+    status: Optional[str] = None,
     pagination: PaginationParams = Depends(get_pagination),
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
-    # Note: Using generic project service logic or inline logic
+    admin_service: AdminService = Depends(get_admin_service),
 ):
     """List all projects across all farmers. Admin overview."""
-    from sqlalchemy.future import select
-    from sqlalchemy import func
-    from models.project import Project
-
-    query = select(Project)
-    if status:
-        query = query.where(Project.status == status)
-
-    count_query = select(func.count()).select_from(query.subquery())
-    total = (await db.execute(count_query)).scalar() or 0
-
-    query = query.order_by(Project.created_at.desc()).offset(pagination.offset).limit(pagination.per_page)
-    result = await db.execute(query)
-    projects = result.scalars().all()
+    projects, total = await admin_service.list_projects(db, pagination, status)
 
     items = []
     for p in projects:
@@ -151,17 +138,10 @@ async def get_project_detail(
     project_id: str,
     admin: Account = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
+    admin_service: AdminService = Depends(get_admin_service),
 ):
     """View any project detail (admin override, no ownership check)."""
-    from sqlalchemy.future import select
-    from models.project import Project
-    from core.errors.exceptions import AppException
-    from core.errors.error_codes import ErrorCode
-
-    result = await db.execute(select(Project).where(Project.id == project_id))
-    project = result.scalars().first()
-    if not project:
-        raise AppException(ErrorCode.PROJECT_NOT_FOUND)
+    project = await admin_service.get_project_detail(db, project_id)
 
     return success_response({
         "id": str(project.id),

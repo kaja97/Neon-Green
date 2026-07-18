@@ -6,6 +6,7 @@ import { ArrowLeft, Store, Loader2, Upload, X, ImageIcon, ChevronDown } from "lu
 import Link from "next/link";
 import api from "@/lib/api";
 import { useCategories, useCreateProduct } from "@/lib/hooks/useMarketplace";
+import { ImageUploadSection } from "@/components/forms/ImageUploadSection";
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -244,44 +245,11 @@ export default function NewProductPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-              Product Images <span className="text-slate-500 text-xs font-normal">(Max 5 images)</span>
-            </label>
-            
-            <div className="flex flex-wrap gap-4">
-              {selectedImages.map((file, idx) => (
-                <div key={idx} className="relative w-24 h-24 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden group">
-                  {file.type.startsWith('image/') ? (
-                    <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <ImageIcon className="w-8 h-8 text-slate-500" />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeImage(idx)}
-                    className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-              
-              {selectedImages.length < 5 && (
-                <label className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center gap-1 text-slate-400 hover:border-neon-gold hover:text-neon-gold transition-colors cursor-pointer bg-slate-900/50">
-                  <Upload className="w-5 h-5" />
-                  <span className="text-xs font-medium">Add</span>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
-          </div>
+          <ImageUploadSection 
+            selectedImages={selectedImages}
+            onImageChange={handleImageChange}
+            onRemoveImage={removeImage}
+          />
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">Description (Optional)</label>

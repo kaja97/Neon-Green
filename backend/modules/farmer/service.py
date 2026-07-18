@@ -42,13 +42,28 @@ class FarmerService(BaseService):
         self.livestock_repo = livestock_repo
 
     async def _get_profile_or_raise(self, db: AsyncSession, account_id: uuid.UUID) -> FarmerProfile:
-        """Get farmer profile or raise FARMER_PROFILE_NOT_FOUND."""
+        """Get farmer profile or auto-create for legacy accounts."""
         result = await db.execute(
             select(FarmerProfile).where(FarmerProfile.account_id == account_id)
         )
         profile = result.scalars().first()
         if not profile:
-            raise AppException(ErrorCode.FARMER_PROFILE_NOT_FOUND)
+            # Auto-create FarmerProfile for legacy accounts
+            from models.account import Account
+            result = await db.execute(select(Account).where(Account.id == account_id))
+            account = result.scalars().first()
+            if not account:
+                raise AppException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND)
+            
+            profile = FarmerProfile(
+                account_id=account.id,
+                full_name=account.email.split("@")[0].replace(".", " ").title(),
+                farming_method="integrated"
+            )
+            db.add(profile)
+            await db.commit()
+            await db.refresh(profile)
+            
         return profile
 
     # ── Profile ──────────────────────────────────────────────

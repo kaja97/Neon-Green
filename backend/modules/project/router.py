@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 import uuid
 from database import get_db
-from dependencies import get_current_user, get_project_service, get_dashboard_service
+from dependencies import get_current_user, get_project_service
 from models.account import Account
 from core.response import success_response, created_response
 from .schemas import (
@@ -12,7 +12,6 @@ from .schemas import (
     FarmingMethodResponse
 )
 from .service import ProjectService
-from .dashboard import DashboardService
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 master_router = APIRouter(tags=["master-data"])
@@ -118,7 +117,7 @@ async def get_project_dashboard(
     project_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     current_user: Account = Depends(get_current_user),
-    dashboard_service: DashboardService = Depends(get_dashboard_service)
+    project_service: ProjectService = Depends(get_project_service)
 ):
-    data = await dashboard_service.get_dashboard(db, project_id, current_user.id)
+    data = await project_service.get_dashboard(db, project_id, current_user.id)
     return success_response(data.model_dump(mode='json'))
