@@ -74,7 +74,7 @@ function SearchableSelect({ options, value, onChange, placeholder, disabled = fa
   );
 }
 
-function InlineAddLocation({ onLocationAdded }: { onLocationAdded: (id: string) => void }) {
+function InlineAddLocation({ onLocationAdded, forceOpen = false }: { onLocationAdded: (id: string) => void, forceOpen?: boolean }) {
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locData, setLocData] = useState({
@@ -102,7 +102,7 @@ function InlineAddLocation({ onLocationAdded }: { onLocationAdded: (id: string) 
     }
   };
 
-  if (!showForm) {
+  if (!showForm && !forceOpen) {
     return (
       <button
         type="button"
@@ -187,13 +187,15 @@ function InlineAddLocation({ onLocationAdded }: { onLocationAdded: (id: string) 
           {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
           {isSubmitting ? "Saving..." : "Save & Select"}
         </button>
-        <button
-          type="button"
-          onClick={() => setShowForm(false)}
-          className="px-4 py-2.5 text-text-muted hover:text-white text-sm transition-colors"
-        >
-          Cancel
-        </button>
+        {!forceOpen && (
+          <button
+            type="button"
+            onClick={() => setShowForm(false)}
+            className="px-4 py-2.5 text-text-muted hover:text-white text-sm transition-colors"
+          >
+            Cancel
+          </button>
+        )}
       </div>
     </div>
   );
@@ -425,10 +427,12 @@ export default function NewProjectWizard() {
 
                 {/* Inline Add Location Form */}
                 <InlineAddLocation
+                  forceOpen={locations?.length === 0}
                   onLocationAdded={(newLocId: string) => {
                     setFormData({ ...formData, location_id: newLocId });
                     // Refetch locations
                     queryClient.invalidateQueries({ queryKey: ["locations"] });
+                    nextStep();
                   }}
                 />
               </div>

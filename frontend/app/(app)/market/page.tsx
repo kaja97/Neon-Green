@@ -22,6 +22,9 @@ import {
 import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { useMarkSoldOut, useUpdateProduct } from "@/lib/hooks/useMarketplace";
+import { EditProductModal } from "@/components/EditProductModal";
+import { Edit2, ShieldAlert, ShieldCheck } from "lucide-react";
 
 function getApiBase() {
   if (typeof window !== 'undefined') {
@@ -47,6 +50,12 @@ export default function MarketPage() {
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [showMyProducts, setShowMyProducts] = useState(false);
+  
+  // Product Edit
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const markSoldOut = useMarkSoldOut();
+  const updateProduct = useUpdateProduct();
   
   // Product filters
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -75,7 +84,8 @@ export default function MarketPage() {
       setIsLoading(true);
       try {
         if (activeTab === "products") {
-          const res = await api.get("/marketplace/products");
+          const endpoint = showMyProducts ? "/marketplace/products/me" : "/marketplace/products";
+          const res = await api.get(endpoint);
           const data = res.data?.data ?? res.data;
           setProducts(Array.isArray(data) ? data : []);
         } else {
@@ -91,7 +101,7 @@ export default function MarketPage() {
     };
 
     fetchData();
-  }, [activeTab]);
+  }, [activeTab, showMyProducts]);
 
   // Get unique plant types and districts from farmer data for filter dropdowns
   const farmerFilterOptions = useMemo(() => {
@@ -136,8 +146,12 @@ export default function MarketPage() {
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
+    if (showMyProducts && user) {
+      filtered = filtered.filter((p) => p.seller_id === user.id);
+    }
+
     return filtered;
-  }, [products, searchQuery, selectedCategory, priceRange]);
+  }, [products, searchQuery, selectedCategory, priceRange, showMyProducts, user]);
 
   // Filtered farmers
   const filteredFarmers = useMemo(() => {
@@ -175,12 +189,13 @@ export default function MarketPage() {
   }, [farmers, searchQuery, farmerPlantType, farmerDistrict]);
 
   const activeFiltersCount = activeTab === "products"
-    ? (selectedCategory ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 100000 ? 1 : 0)
+    ? (selectedCategory ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 100000 ? 1 : 0) + (showMyProducts ? 1 : 0)
     : (farmerPlantType ? 1 : 0) + (farmerDistrict ? 1 : 0);
 
   const clearFilters = () => {
     setSelectedCategory("");
     setPriceRange([0, 100000]);
+    setShowMyProducts(false);
     setFarmerPlantType("");
     setFarmerDistrict("");
     setSearchQuery("");
@@ -268,6 +283,15 @@ export default function MarketPage() {
               </span>
             )}
           </button>
+          {activeTab === "products" && user && (
+            <button 
+              onClick={() => setShowMyProducts(!showMyProducts)} 
+              className={`h-11 px-4 btn-secondary flex items-center gap-2 text-sm whitespace-nowrap relative ${showMyProducts ? "bg-neon-gold text-black hover:bg-neon-gold/90 border-transparent" : ""}`}
+            >
+              <Store className="w-4 h-4" />
+              My Products
+            </button>
+          )}
         </div>
 
         {/* Product Filter Panel */}
@@ -448,6 +472,43 @@ export default function MarketPage() {
                       {product.category.name}
                     </div>
                   )}
+                  
+                  {user && product.seller_id === user.id && (
+                    <div className="absolute top-3 left-3 flex flex-col gap-2">
+                      <button 
+                        onClick={(e) => { e.preventDefault(); setEditingProduct(product); }}
+                        className="p-2 bg-surface-elevated/90 backdrop-blur-md rounded-lg text-neon-gold hover:bg-neon-gold hover:text-black transition-colors shadow-lg border border-border"
+                        title="Edit Product"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      
+                      {product.status === "sold_out" ? (
+                        <button 
+                          onClick={(e) => { 
+                            e.preventDefault(); 
+                            if(confirm('List this product again on the marketplace?')) {
+                              updateProduct.mutate({ id: product.id, data: { status: "available" } });
+                            }
+                          }}
+                          className="p-2 bg-surface-elevated/90 backdrop-blur-md rounded-lg text-neon-green hover:bg-neon-green hover:text-black transition-colors shadow-lg border border-border"
+                          title="Mark as Sold In (Available)"
+                          disabled={updateProduct.isPending}
+                        >
+                          <ShieldCheck className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={(e) => { e.preventDefault(); if(confirm('Mark this product as Sold Out?')) markSoldOut.mutate(product.id); }}
+                          className="p-2 bg-surface-elevated/90 backdrop-blur-md rounded-lg text-red-400 hover:bg-red-500 hover:text-white transition-colors shadow-lg border border-border"
+                          title="Mark Sold Out"
+                          disabled={markSoldOut.isPending}
+                        >
+                          <ShieldAlert className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="p-4 flex flex-col flex-1">
@@ -585,6 +646,14 @@ export default function MarketPage() {
             ))
           )}
         </div>
+      )}
+      
+      {editingProduct && (
+        <EditProductModal 
+          product={editingProduct} 
+          categories={categories}
+          onClose={() => setEditingProduct(null)} 
+        />
       )}
     </div>
   );

@@ -177,7 +177,7 @@ export default function NewProductPage() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">Quantity Available</label>
-            <div className="flex">
+            <div className="flex w-full">
               <input
                 type="number"
                 step="0.01"
@@ -186,14 +186,14 @@ export default function NewProductPage() {
                 placeholder="e.g. 50"
                 value={formData.quantity_available}
                 onChange={(e) => updateField("quantity_available", e.target.value)}
-                className="flex-1 h-12 px-4 rounded-l-xl bg-slate-900 border border-r-0 border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all"
+                className="flex-1 min-w-0 h-12 px-4 rounded-l-xl bg-slate-900 border border-r-0 border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all"
               />
-              <div className="relative">
+              <div className="relative shrink-0 w-32">
                 <select
                   required
                   value={formData.unit}
                   onChange={(e) => updateField("unit", e.target.value)}
-                  className="h-12 px-4 pr-9 appearance-none rounded-r-xl bg-slate-800 border border-slate-700 text-neon-gold font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all cursor-pointer"
+                  className="w-full h-12 px-4 pr-9 appearance-none rounded-r-xl bg-slate-800 border border-slate-700 text-neon-gold font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all cursor-pointer"
                 >
                   <option value="kg">kg</option>
                   <option value="tons">tons</option>
@@ -201,7 +201,7 @@ export default function NewProductPage() {
                   <option value="units">units</option>
                   <option value="packs">packs</option>
                 </select>
-                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
               </div>
             </div>
           </div>
