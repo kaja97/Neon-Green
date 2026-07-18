@@ -69,6 +69,7 @@ class MarketService(BaseService):
         }
 
     async def estimate_revenue(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID, region: str = "Jaffna"):
+        from models.plant import Plant, PlantVariety
         result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == account_id))
         profile = result.scalars().first()
         if not profile:
@@ -81,11 +82,14 @@ class MarketService(BaseService):
         plant = await db.get(Plant, project.plant_id)
         if not plant:
             raise HTTPException(status_code=404, detail="Crop not found")
+            
+        variety = await db.get(PlantVariety, project.variety_id)
         
         latest_price = await self.price_repo.get_latest_price(db, plant.id, region)
         
         current_price = float(latest_price.price_per_kg) if latest_price else 0
-        expected_yield = float(plant.expected_yield_per_acre_kg or 0) * float(project.area)
+        yield_per_acre = float(variety.expected_yield_per_acre_kg) if variety and variety.expected_yield_per_acre_kg else 0
+        expected_yield = yield_per_acre * float(project.area)
         estimated_revenue = expected_yield * current_price
         
         return {
