@@ -31,10 +31,12 @@ export default function MarketPage() {
       try {
         if (activeTab === "products") {
           const res = await api.get("/marketplace/products");
-          setProducts(res.data.data || []);
+          const data = res.data?.data ?? res.data;
+          setProducts(Array.isArray(data) ? data : []);
         } else {
           const res = await api.get("/marketplace/farmers");
-          setFarmers(res.data.data || []);
+          const data = res.data?.data ?? res.data;
+          setFarmers(Array.isArray(data) ? data : []);
         }
       } catch (err) {
         console.error("Failed to fetch marketplace data", err);
