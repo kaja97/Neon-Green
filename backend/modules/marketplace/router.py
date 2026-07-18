@@ -69,15 +69,6 @@ async def list_products(
     """List all available products in the marketplace."""
     return await service.get_products(db, plant_id)
 
-@router.get("/products/{product_id}", response_model=ProductDetailResponse)
-async def get_product_details(
-    product_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
-    service: MarketplaceService = Depends(get_marketplace_service)
-):
-    """Get details of a specific product."""
-    return await service.get_product(db, product_id)
-
 @router.get("/products/me", response_model=List[ProductResponse])
 async def list_my_products(
     db: AsyncSession = Depends(get_db),
@@ -86,6 +77,15 @@ async def list_my_products(
 ):
     """List products listed by the current user."""
     return await service.get_my_products(db, current_user.id)
+
+@router.get("/products/{product_id}", response_model=ProductDetailResponse)
+async def get_product_details(
+    product_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    service: MarketplaceService = Depends(get_marketplace_service)
+):
+    """Get details of a specific product."""
+    return await service.get_product(db, product_id)
 
 @router.get("/farmers", response_model=List[FarmerDirectoryResponse])
 async def list_farmers_directory(

@@ -28,7 +28,7 @@ export default function ProductDetailPage() {
     const fetchProduct = async () => {
       try {
         const res = await api.get(`/marketplace/products/${params.id}`);
-        setProduct(res.data);
+        setProduct(res.data?.data ?? res.data);
       } catch (err) {
         console.error("Failed to fetch product", err);
       } finally {
