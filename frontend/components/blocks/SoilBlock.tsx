@@ -27,8 +27,12 @@ export default function SoilBlock({ projectId }: { projectId: string }) {
   const latestTest = tests && tests.length > 0 ? tests[0] : null;
 
   const value = latestTest?.results ? `pH ${latestTest.results.ph_level}` : "pH --";
-  const sub = latestTest?.results ? `N: ${latestTest.results.nitrogen_level}` : "No tests";
-  const isLow = sub.includes("Low");
+  const sub = latestTest?.results
+    ? latestTest.results.nitrogen_n != null
+      ? `N: ${latestTest.results.nitrogen_n} ppm`
+      : "No tests"
+    : "No tests";
+  const isLow = latestTest?.results?.nitrogen_n != null && latestTest.results.nitrogen_n < 250;
 
   return (
     <Link

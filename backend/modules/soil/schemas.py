@@ -4,21 +4,53 @@ from datetime import date, datetime
 import uuid
 
 class SoilNutrientResultCreate(BaseModel):
-    ph_level: float
-    nitrogen_level: str  # Low, Medium, High
-    phosphorus_level: str
-    potassium_level: str
-    organic_matter_perc: Optional[float] = None
-    moisture_level: Optional[str] = None
+    # Physical & Chemical Properties
+    ph_level: float  # Required, range 1-14
+    electrical_conductivity_ec: Optional[float] = None  # ds/m
+    organic_carbon_oc: Optional[float] = None  # %
+    cation_exchange_capacity_cec: Optional[float] = None  # meq/100g
+
+    # Primary Macronutrients (ppm)
+    nitrogen_n: Optional[float] = None
+    phosphorus_p: Optional[float] = None
+    potassium_k: Optional[float] = None
+
+    # Secondary Macronutrients (ppm)
+    calcium_ca: Optional[float] = None
+    magnesium_mg: Optional[float] = None
+    sulfur_s: Optional[float] = None
+
+    # Micronutrients / Trace Elements (ppm)
+    zinc_zn: Optional[float] = None
+    boron_b: Optional[float] = None
+    iron_fe: Optional[float] = None
+    manganese_mn: Optional[float] = None
+    copper_cu: Optional[float] = None
 
 class SoilNutrientResultResponse(BaseModel):
     id: uuid.UUID
+    # Physical & Chemical Properties
     ph_level: float
-    nitrogen_level: str
-    phosphorus_level: str
-    potassium_level: str
-    organic_matter_perc: Optional[float]
-    moisture_level: Optional[str]
+    electrical_conductivity_ec: Optional[float] = None
+    organic_carbon_oc: Optional[float] = None
+    cation_exchange_capacity_cec: Optional[float] = None
+
+    # Primary Macronutrients (ppm)
+    nitrogen_n: Optional[float] = None
+    phosphorus_p: Optional[float] = None
+    potassium_k: Optional[float] = None
+
+    # Secondary Macronutrients (ppm)
+    calcium_ca: Optional[float] = None
+    magnesium_mg: Optional[float] = None
+    sulfur_s: Optional[float] = None
+
+    # Micronutrients / Trace Elements (ppm)
+    zinc_zn: Optional[float] = None
+    boron_b: Optional[float] = None
+    iron_fe: Optional[float] = None
+    manganese_mn: Optional[float] = None
+    copper_cu: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -45,9 +77,6 @@ class SoilTestResponse(BaseModel):
     status: str
     notes: Optional[str]
     created_at: datetime
-    
-    # We'll omit full results in the base list response to keep it light, 
-    # but we can optionally include them.
 
     model_config = ConfigDict(from_attributes=True)
 

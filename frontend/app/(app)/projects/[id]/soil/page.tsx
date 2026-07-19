@@ -3,8 +3,126 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Link from "next/link";
-import { ArrowLeft, Plus, FlaskConical, Beaker, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, FlaskConical, CheckCircle2, Loader2, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { clsx } from "clsx";
+import { useState } from "react";
+
+// Optimal ranges matching backend calculator
+const OPTIMAL: Record<string, { min: number; max: number }> = {
+  nitrogen_n: { min: 250, max: 400 },
+  phosphorus_p: { min: 20, max: 40 },
+  potassium_k: { min: 150, max: 250 },
+  calcium_ca: { min: 800, max: 1600 },
+  magnesium_mg: { min: 100, max: 200 },
+  sulfur_s: { min: 10, max: 30 },
+  zinc_zn: { min: 1, max: 5 },
+  boron_b: { min: 0.5, max: 2 },
+  iron_fe: { min: 10, max: 40 },
+  manganese_mn: { min: 5, max: 30 },
+  copper_cu: { min: 0.5, max: 5 },
+};
+
+interface MetricCard {
+  key: string;
+  label: string;
+  unit?: string;
+}
+
+const PHYSICAL_CARDS: MetricCard[] = [
+  { key: "ph_level", label: "pH Level", unit: "" },
+  { key: "electrical_conductivity_ec", label: "EC", unit: "ds/m" },
+  { key: "organic_carbon_oc", label: "Organic Carbon", unit: "%" },
+  { key: "cation_exchange_capacity_cec", label: "CEC", unit: "meq/100g" },
+];
+
+const PRIMARY_CARDS: MetricCard[] = [
+  { key: "nitrogen_n", label: "Nitrogen (N)", unit: "ppm" },
+  { key: "phosphorus_p", label: "Phosphorus (P)", unit: "ppm" },
+  { key: "potassium_k", label: "Potassium (K)", unit: "ppm" },
+];
+
+const SECONDARY_CARDS: MetricCard[] = [
+  { key: "calcium_ca", label: "Calcium (Ca)", unit: "ppm" },
+  { key: "magnesium_mg", label: "Magnesium (Mg)", unit: "ppm" },
+  { key: "sulfur_s", label: "Sulfur (S)", unit: "ppm" },
+];
+
+const MICRO_CARDS: MetricCard[] = [
+  { key: "zinc_zn", label: "Zinc (Zn)", unit: "ppm" },
+  { key: "boron_b", label: "Boron (B)", unit: "ppm" },
+  { key: "iron_fe", label: "Iron (Fe)", unit: "ppm" },
+  { key: "manganese_mn", label: "Manganese (Mn)", unit: "ppm" },
+  { key: "copper_cu", label: "Copper (Cu)", unit: "ppm" },
+];
+
+function getStatusColor(key: string, value: number | null): string {
+  if (value === null || value === undefined) return "text-text-muted"; // not tested
+
+  if (key === "ph_level") {
+    if (value < 6.0 || value > 7.5) return "text-red-400"; // acidic or alkaline
+    return "text-green-400"; // optimal
+  }
+  if (key === "electrical_conductivity_ec") {
+    if (value > 2.5) return "text-red-400";
+    return "text-green-400";
+  }
+
+  const range = OPTIMAL[key];
+  if (!range) return "text-white";
+  if (value < range.min) return "text-red-400"; // deficient
+  if (value > range.max) return "text-orange-400"; // excess
+  return "text-green-400"; // optimal
+}
+
+function getStatusBadge(key: string, value: number | null): React.ReactNode {
+  if (value === null || value === undefined) return null;
+
+  if (key === "ph_level") {
+    if (value < 6.0) return <span className="text-[10px] font-bold uppercase tracking-wider text-red-400">Acidic</span>;
+    if (value > 7.5) return <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400">Alkaline</span>;
+    return <span className="text-[10px] font-bold uppercase tracking-wider text-green-400">Optimal</span>;
+  }
+  if (key === "electrical_conductivity_ec") {
+    if (value > 2.5) return <span className="text-[10px] font-bold uppercase tracking-wider text-red-400">High</span>;
+    return <span className="text-[10px] font-bold uppercase tracking-wider text-green-400">Normal</span>;
+  }
+
+  const range = OPTIMAL[key];
+  if (!range) return null;
+  if (value < range.min) return <span className="text-[10px] font-bold uppercase tracking-wider text-red-400">Low</span>;
+  if (value > range.max) return <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400">Excess</span>;
+  return <span className="text-[10px] font-bold uppercase tracking-wider text-green-400">Optimal</span>;
+}
+
+function CollapsibleSection({
+  title,
+  defaultOpen,
+  children,
+}: {
+  title: string;
+  defaultOpen: boolean;
+  children: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 mb-3 hover:text-white transition-colors"
+      >
+        {isOpen ? (
+          <ChevronUp className="w-4 h-4 text-text-muted" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-text-muted" />
+        )}
+        <span className="text-sm font-bold text-text-muted uppercase tracking-wider">{title}</span>
+      </button>
+      {isOpen && children}
+    </div>
+  );
+}
 
 export default function SoilPage({ params }: { params: { id: string } }) {
   const { data: tests, isLoading } = useQuery({
@@ -12,8 +130,25 @@ export default function SoilPage({ params }: { params: { id: string } }) {
     queryFn: async () => {
       const res = await api.get(`/soil/tests/${params.id}`);
       return res.data.data;
-    }
+    },
   });
+
+  const renderMetricCard = (card: MetricCard, results: any) => {
+    const value = results?.[card.key];
+    const displayValue = value !== null && value !== undefined ? String(value) : "—";
+    const color = getStatusColor(card.key, value);
+
+    return (
+      <div key={card.key} className="glass-card rounded-2xl p-4">
+        <p className="text-xs text-text-muted mb-1">
+          {card.label}
+          {card.unit && <span className="opacity-60 ml-1">({card.unit})</span>}
+        </p>
+        <p className={clsx("text-xl font-bold", color)}>{displayValue}</p>
+        {getStatusBadge(card.key, value)}
+      </div>
+    );
+  };
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 pb-24">
@@ -66,33 +201,60 @@ export default function SoilPage({ params }: { params: { id: string } }) {
               </div>
 
               {test.results && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  {[
-                    { label: "pH Level", value: test.results.ph_level, color: "text-white" },
-                    { label: "Nitrogen (N)", value: test.results.nitrogen_level, isLow: test.results.nitrogen_level === "Low" },
-                    { label: "Phosphorus (P)", value: test.results.phosphorus_level, isLow: test.results.phosphorus_level === "Low" },
-                    { label: "Potassium (K)", value: test.results.potassium_level, isLow: test.results.potassium_level === "Low" },
-                  ].map((metric) => (
-                    <div key={metric.label} className="glass-card rounded-2xl p-4">
-                      <p className="text-xs text-text-muted mb-1">{metric.label}</p>
-                      <p className={clsx(
-                        "text-xl font-bold",
-                        "isLow" in metric && metric.isLow ? "text-red-400" : metric.color
-                      )}>
-                        {metric.value}
-                      </p>
+                <div className="space-y-4 mb-6">
+                  {/* Physical & Chemical */}
+                  <CollapsibleSection title="Physical & Chemical Properties" defaultOpen={true}>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {PHYSICAL_CARDS.map((card) => renderMetricCard(card, test.results))}
                     </div>
-                  ))}
+                  </CollapsibleSection>
+
+                  {/* Primary Macronutrients */}
+                  <CollapsibleSection title="Primary Macronutrients" defaultOpen={true}>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {PRIMARY_CARDS.map((card) => renderMetricCard(card, test.results))}
+                    </div>
+                  </CollapsibleSection>
+
+                  {/* Secondary Macronutrients */}
+                  <CollapsibleSection title="Secondary Macronutrients" defaultOpen={false}>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {SECONDARY_CARDS.map((card) => renderMetricCard(card, test.results))}
+                    </div>
+                  </CollapsibleSection>
+
+                  {/* Micronutrients */}
+                  <CollapsibleSection title="Micronutrients / Trace Elements" defaultOpen={false}>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      {MICRO_CARDS.map((card) => renderMetricCard(card, test.results))}
+                    </div>
+                  </CollapsibleSection>
                 </div>
               )}
 
               {test.recommendations && test.recommendations.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Recommendations</h4>
+                  <h4 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">
+                    Fertilizer & Amendment Recommendations
+                  </h4>
                   <div className="space-y-3">
                     {test.recommendations.map((rec: any) => (
-                      <div key={rec.id} className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
-                        <CheckCircle2 className="w-5 h-5 shrink-0 text-amber-400" />
+                      <div
+                        key={rec.id}
+                        className={clsx(
+                          "flex items-start gap-3 p-3 rounded-xl border",
+                          rec.recommendation_type === "fertilizer"
+                            ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                            : rec.recommendation_type === "amendment"
+                              ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                              : "bg-orange-500/10 border-orange-500/20 text-orange-400"
+                        )}
+                      >
+                        {rec.recommendation_type === "practice" ? (
+                          <AlertTriangle className="w-5 h-5 shrink-0 text-orange-400" />
+                        ) : (
+                          <CheckCircle2 className="w-5 h-5 shrink-0" />
+                        )}
                         <span className="text-sm font-medium pt-0.5 leading-snug">{rec.description}</span>
                       </div>
                     ))}

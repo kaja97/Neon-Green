@@ -57,8 +57,21 @@ async def build_project_context(db: AsyncSession, project_id: uuid.UUID) -> str:
         nut = nut_res.scalars().first()
         if nut:
             soil_info = {
-                "ph": float(nut.ph_level), "nitrogen": nut.nitrogen_level,
-                "phosphorus": nut.phosphorus_level, "potassium": nut.potassium_level
+                "ph": float(nut.ph_level),
+                "ec": float(nut.electrical_conductivity_ec) if nut.electrical_conductivity_ec else None,
+                "organic_carbon_pct": float(nut.organic_carbon_oc) if nut.organic_carbon_oc else None,
+                "cec": float(nut.cation_exchange_capacity_cec) if nut.cation_exchange_capacity_cec else None,
+                "nitrogen_ppm": float(nut.nitrogen_n) if nut.nitrogen_n else None,
+                "phosphorus_ppm": float(nut.phosphorus_p) if nut.phosphorus_p else None,
+                "potassium_ppm": float(nut.potassium_k) if nut.potassium_k else None,
+                "calcium_ppm": float(nut.calcium_ca) if nut.calcium_ca else None,
+                "magnesium_ppm": float(nut.magnesium_mg) if nut.magnesium_mg else None,
+                "sulfur_ppm": float(nut.sulfur_s) if nut.sulfur_s else None,
+                "zinc_ppm": float(nut.zinc_zn) if nut.zinc_zn else None,
+                "boron_ppm": float(nut.boron_b) if nut.boron_b else None,
+                "iron_ppm": float(nut.iron_fe) if nut.iron_fe else None,
+                "manganese_ppm": float(nut.manganese_mn) if nut.manganese_mn else None,
+                "copper_ppm": float(nut.copper_cu) if nut.copper_cu else None,
             }
     
     context = {

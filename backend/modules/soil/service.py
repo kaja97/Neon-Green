@@ -41,7 +41,7 @@ class SoilService(BaseService):
         project = await self.project_repo.get(db, project_id)
         if not project or project.farmer_id != farmer_id:
             raise HTTPException(status_code=404, detail="Project not found")
-            
+
         soil_test = SoilTest(
             project_id=project_id,
             test_date=data.test_date,
@@ -51,21 +51,34 @@ class SoilService(BaseService):
         )
         db.add(soil_test)
         await db.flush()
-        
+
         soil_res = SoilNutrientResult(
             soil_test_id=soil_test.id,
+            # Physical & Chemical
             ph_level=data.results.ph_level,
-            nitrogen_level=data.results.nitrogen_level,
-            phosphorus_level=data.results.phosphorus_level,
-            potassium_level=data.results.potassium_level,
-            organic_matter_perc=data.results.organic_matter_perc,
-            moisture_level=data.results.moisture_level
+            electrical_conductivity_ec=data.results.electrical_conductivity_ec,
+            organic_carbon_oc=data.results.organic_carbon_oc,
+            cation_exchange_capacity_cec=data.results.cation_exchange_capacity_cec,
+            # Primary Macronutrients
+            nitrogen_n=data.results.nitrogen_n,
+            phosphorus_p=data.results.phosphorus_p,
+            potassium_k=data.results.potassium_k,
+            # Secondary Macronutrients
+            calcium_ca=data.results.calcium_ca,
+            magnesium_mg=data.results.magnesium_mg,
+            sulfur_s=data.results.sulfur_s,
+            # Micronutrients
+            zinc_zn=data.results.zinc_zn,
+            boron_b=data.results.boron_b,
+            iron_fe=data.results.iron_fe,
+            manganese_mn=data.results.manganese_mn,
+            copper_cu=data.results.copper_cu,
         )
         db.add(soil_res)
-        
+
         recs = calculate_nutrient_gaps(soil_test, soil_res, project.farming_method)
         db.add_all(recs)
-        
+
         await db.commit()
         await db.refresh(soil_test)
 
@@ -79,16 +92,16 @@ class SoilService(BaseService):
         project = await self.project_repo.get(db, project_id)
         if not project or project.farmer_id != farmer_id:
             raise HTTPException(status_code=404, detail="Project not found")
-            
+
         tests = await self.test_repo.get_by_project(db, project_id)
-        
+
         if not tests:
             return []
-            
+
         latest = tests[0]
         latest.results = await self.result_repo.get_by_test(db, latest.id)
         latest.recommendations = await self.rec_repo.get_by_test(db, latest.id)
-        
+
         return tests
 
     async def get_soil_recommendations(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
@@ -96,10 +109,10 @@ class SoilService(BaseService):
         project = await self.project_repo.get(db, project_id)
         if not project or project.farmer_id != farmer_id:
             raise HTTPException(status_code=404, detail="Project not found")
-            
+
         tests = await self.test_repo.get_by_project(db, project_id)
         if not tests:
             return []
-            
+
         latest = tests[0]
         return await self.rec_repo.get_by_test(db, latest.id)
