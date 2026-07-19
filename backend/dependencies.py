@@ -207,3 +207,35 @@ def get_marketplace_service() -> "MarketplaceService":
         product_repo=ProductRepository(),
     )
 
+def get_agronomy_service() -> "AgronomyService":
+    from modules.agronomy.service import AgronomyService
+    from modules.auth.repository import FarmerProfileRepository
+    from modules.project.repository import ProjectRepository
+    from modules.agronomy.repository import ProductCatalogRepository, ProductNutrientContentRepository
+    return AgronomyService(
+        profile_repo=FarmerProfileRepository(),
+        project_repo=ProjectRepository(),
+        catalog_repo=ProductCatalogRepository(),
+        content_repo=ProductNutrientContentRepository(),
+    )
+
+
+def get_ai_backend() -> "object":
+    """Factory that returns whichever AiBackend the config selects.
+
+    Today only "gemini" is supported. A future "local" backend
+    (Ollama / Llama / vector-RAG) is selected by setting::
+
+        AI_BACKEND=local
+    """
+    from modules.agronomy.interfaces import AiBackend
+    backend = settings.AI_BACKEND.lower()
+
+    if backend == "gemini":
+        from modules.ai.gemini_backend import GeminiBackend
+        instance: AiBackend = GeminiBackend()
+    else:
+        raise ValueError(f"Unknown AI_BACKEND '{backend}'. Supported: gemini")
+
+    return instance
+

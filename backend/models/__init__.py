@@ -13,6 +13,7 @@ from .market import MarketPrice, MarketTrend
 from .notification import Notification
 from .ai import AIProjectSummary, AIConversation, AIQueryLog
 from .marketplace import Product, ProductCategory, ProductSubCategory
+from .product import ProductCatalog, ProductNutrientContent
 
 __all__ = [
     "Base",
@@ -29,5 +30,6 @@ __all__ = [
     "MarketPrice", "MarketTrend",
     "Notification",
     "AIProjectSummary", "AIConversation", "AIQueryLog",
-    "ProductCategory", "ProductSubCategory", "Product"
+    "ProductCategory", "ProductSubCategory", "Product",
+    "ProductCatalog", "ProductNutrientContent",
 ]

@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # APIs
     GOOGLE_AI_STUDIO_API_KEY: Optional[str] = None
     OPENWEATHER_API_KEY: Optional[str] = None
+
+    # AI Backend — "gemini" (default) | "local" (future: Ollama/Llama)
+    AI_BACKEND: str = "gemini"
     
     # Push Notifications (VAPID)
     VAPID_PUBLIC_KEY: Optional[str] = None

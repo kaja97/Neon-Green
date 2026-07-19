@@ -23,6 +23,7 @@ from modules.market import router as market_router
 from modules.notification import router as notification_router
 from modules.admin import router as admin_router
 from modules.marketplace import router as marketplace_router
+from modules.agronomy import router as agronomy_router
 
 app = FastAPI(
     title="AgriFarm AI API",
@@ -71,3 +72,4 @@ app.include_router(market_router, prefix="/api/v1")
 app.include_router(notification_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(marketplace_router, prefix="/api/v1")
+app.include_router(agronomy_router, prefix="/api/v1")
