@@ -81,5 +81,5 @@ class SoilTestResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class SoilTestDetailResponse(SoilTestResponse):
-    results: Optional[SoilNutrientResultResponse]
-    recommendations: List[SoilRecommendationResponse]
+    results: Optional[SoilNutrientResultResponse] = None
+    recommendations: List[SoilRecommendationResponse] = []

@@ -30,32 +30,34 @@ interface NutrientField {
   label: string;
   placeholder: string;
   step: string;
+  min: number;
+  max: number;
 }
 
 const PHYSICAL_FIELDS: NutrientField[] = [
-  { key: "electrical_conductivity_ec", label: "EC (Electrical Conductivity)", placeholder: "e.g. 1.2", step: "0.01" },
-  { key: "organic_carbon_oc", label: "Organic Carbon OC (%)", placeholder: "e.g. 2.5", step: "0.01" },
-  { key: "cation_exchange_capacity_cec", label: "CEC (meq/100g)", placeholder: "e.g. 15.0", step: "0.1" },
+  { key: "electrical_conductivity_ec", label: "EC (Electrical Conductivity)", placeholder: "0 - 10", step: "0.01", min: 0, max: 10 },
+  { key: "organic_carbon_oc", label: "Organic Carbon OC (%)", placeholder: "0 - 10", step: "0.01", min: 0, max: 10 },
+  { key: "cation_exchange_capacity_cec", label: "CEC (meq/100g)", placeholder: "0 - 50", step: "0.1", min: 0, max: 50 },
 ];
 
 const PRIMARY_FIELDS: NutrientField[] = [
-  { key: "nitrogen_n", label: "Nitrogen (N)", placeholder: "e.g. 280", step: "1" },
-  { key: "phosphorus_p", label: "Phosphorus (P)", placeholder: "e.g. 25", step: "1" },
-  { key: "potassium_k", label: "Potassium (K)", placeholder: "e.g. 180", step: "1" },
+  { key: "nitrogen_n", label: "Nitrogen (N)", placeholder: "0 - 1000", step: "1", min: 0, max: 1000 },
+  { key: "phosphorus_p", label: "Phosphorus (P)", placeholder: "0 - 200", step: "1", min: 0, max: 200 },
+  { key: "potassium_k", label: "Potassium (K)", placeholder: "0 - 1000", step: "1", min: 0, max: 1000 },
 ];
 
 const SECONDARY_FIELDS: NutrientField[] = [
-  { key: "calcium_ca", label: "Calcium (Ca)", placeholder: "e.g. 1200", step: "1" },
-  { key: "magnesium_mg", label: "Magnesium (Mg)", placeholder: "e.g. 150", step: "1" },
-  { key: "sulfur_s", label: "Sulfur (S)", placeholder: "e.g. 15", step: "1" },
+  { key: "calcium_ca", label: "Calcium (Ca)", placeholder: "0 - 5000", step: "1", min: 0, max: 5000 },
+  { key: "magnesium_mg", label: "Magnesium (Mg)", placeholder: "0 - 1000", step: "1", min: 0, max: 1000 },
+  { key: "sulfur_s", label: "Sulfur (S)", placeholder: "0 - 100", step: "1", min: 0, max: 100 },
 ];
 
 const MICRO_FIELDS: NutrientField[] = [
-  { key: "zinc_zn", label: "Zinc (Zn)", placeholder: "e.g. 2.5", step: "0.01" },
-  { key: "boron_b", label: "Boron (B)", placeholder: "e.g. 1.0", step: "0.01" },
-  { key: "iron_fe", label: "Iron (Fe)", placeholder: "e.g. 25", step: "0.1" },
-  { key: "manganese_mn", label: "Manganese (Mn)", placeholder: "e.g. 12", step: "0.1" },
-  { key: "copper_cu", label: "Copper (Cu)", placeholder: "e.g. 1.5", step: "0.01" },
+  { key: "zinc_zn", label: "Zinc (Zn)", placeholder: "0 - 50", step: "0.01", min: 0, max: 50 },
+  { key: "boron_b", label: "Boron (B)", placeholder: "0 - 10", step: "0.01", min: 0, max: 10 },
+  { key: "iron_fe", label: "Iron (Fe)", placeholder: "0 - 200", step: "0.1", min: 0, max: 200 },
+  { key: "manganese_mn", label: "Manganese (Mn)", placeholder: "0 - 200", step: "0.1", min: 0, max: 200 },
+  { key: "copper_cu", label: "Copper (Cu)", placeholder: "0 - 20", step: "0.01", min: 0, max: 20 },
 ];
 
 function CollapsibleSection({
@@ -165,6 +167,16 @@ export default function NewSoilTestPage({ params }: { params: { id: string } }) 
     });
   };
 
+  const handleBlur = (key: string, value: string, step: string) => {
+    if (!value) return;
+    if (step.includes(".")) {
+      const num = Number(value);
+      if (!isNaN(num)) {
+        updateResult(key, num.toFixed(step.split(".")[1].length));
+      }
+    }
+  };
+
   const renderNutrientGrid = (fields: NutrientField[]) => (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
       {fields.map((f) => (
@@ -175,9 +187,13 @@ export default function NewSoilTestPage({ params }: { params: { id: string } }) 
           <input
             type="number"
             step={f.step}
+            min={f.min}
+            max={f.max}
+            title={`Valid range: ${f.min} to ${f.max}`}
             placeholder={f.placeholder}
             value={formData.results[f.key as keyof typeof INITIAL_RESULTS]}
             onChange={(e) => updateResult(f.key, e.target.value)}
+            onBlur={(e) => handleBlur(f.key, e.target.value, f.step)}
             className={inputClass}
           />
         </div>
@@ -256,8 +272,10 @@ export default function NewSoilTestPage({ params }: { params: { id: string } }) 
                 step="0.1"
                 min="0"
                 max="14"
+                title="Valid range: 0 to 14"
                 value={formData.results.ph_level}
                 onChange={(e) => updateResult("ph_level", e.target.value)}
+                onBlur={(e) => handleBlur("ph_level", e.target.value, "0.1")}
                 className={inputClass}
                 required
               />
