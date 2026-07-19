@@ -1,8 +1,9 @@
 import asyncio
 import uuid
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from sqlalchemy.future import select
 from celery.utils.log import get_task_logger
+from geoalchemy2.shape import to_shape
 
 from .celery_app import celery_app
 from database import async_session
@@ -14,41 +15,47 @@ from modules.weather.client import WeatherClient
 
 logger = get_task_logger(__name__)
 
+def _centroid_lat_lon(loc: FarmerLocation) -> tuple[float, float]:
+    """Extract (lat, lon) from a FarmerLocation's PostGIS centroid."""
+    point = to_shape(loc.centroid)
+    return float(point.y), float(point.x)
+
 async def _refresh_weather_cache():
     async with async_session() as db:
         # Get all active projects
         result = await db.execute(select(Project).where(Project.status == "active"))
         projects = result.scalars().all()
-        
+
         location_ids = set([p.location_id for p in projects])
-        
+
         for loc_id in location_ids:
             loc = await db.get(FarmerLocation, loc_id)
             if not loc:
                 continue
-                
+
             client = WeatherClient()
-            raw_data = await client.fetch_weather_data(float(loc.latitude), float(loc.longitude))
-            
+            lat, lon = _centroid_lat_lon(loc)
+            raw_data = await client.fetch_weather_data(lat, lon)
+
             # Check cache
             today = date.today()
             cache_result = await db.execute(
                 select(WeatherCache).where(WeatherCache.location_id == loc_id, WeatherCache.forecast_date == today)
             )
             cache = cache_result.scalars().first()
-            
+
             if cache:
                 cache.data = raw_data
-                cache.expires_at = datetime.utcnow() + timedelta(hours=3)
+                cache.expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
             else:
                 new_cache = WeatherCache(
                     location_id=loc_id,
                     forecast_date=today,
                     data=raw_data,
-                    expires_at=datetime.utcnow() + timedelta(hours=3)
+                    expires_at=datetime.now(timezone.utc) + timedelta(hours=1)
                 )
                 db.add(new_cache)
-                
+
         await db.commit()
         logger.info(f"Refreshed weather for {len(location_ids)} locations.")
 

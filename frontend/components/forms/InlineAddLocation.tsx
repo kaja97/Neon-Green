@@ -1,8 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Plus, CheckCircle2, Loader2 } from "lucide-react";
 import api from "@/lib/api";
+
+// Leaflet must be loaded client-side only (Next.js SSR incompatible)
+const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[260px] rounded-xl border border-border bg-surface-tertiary animate-pulse" />
+  ),
+});
 
 export function InlineAddLocation({ 
   onLocationAdded, 
@@ -91,27 +100,12 @@ export function InlineAddLocation({
           className={inputClass}
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">Latitude</label>
-          <input
-            type="number"
-            step="0.0001"
-            value={locData.latitude}
-            onChange={(e) => setLocData({ ...locData, latitude: parseFloat(e.target.value) || 0 })}
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">Longitude</label>
-          <input
-            type="number"
-            step="0.0001"
-            value={locData.longitude}
-            onChange={(e) => setLocData({ ...locData, longitude: parseFloat(e.target.value) || 0 })}
-            className={inputClass}
-          />
-        </div>
+      <div>
+        <label className="block text-xs font-medium text-text-muted mb-1.5">Pin your location on the map</label>
+        <LocationPicker
+          value={{ lat: locData.latitude, lng: locData.longitude }}
+          onChange={(lat, lng) => setLocData({ ...locData, latitude: lat, longitude: lng })}
+        />
       </div>
       <div className="flex gap-3 pt-1">
         <button

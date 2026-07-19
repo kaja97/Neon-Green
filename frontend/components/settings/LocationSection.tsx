@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Loader2, MapPin, Plus, Edit2, Trash2 } from "lucide-react";
@@ -8,6 +9,14 @@ import Modal from "../ui/Modal";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+
+// Leaflet must be loaded client-side only (Next.js SSR incompatible)
+const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[260px] rounded-xl border border-border bg-surface-tertiary animate-pulse" />
+  ),
+});
 
 const locationSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -185,15 +194,15 @@ export default function LocationSection() {
             <label className="text-sm font-medium text-text-secondary">Address (Optional)</label>
             <input {...form.register("address")} className={inputClass} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Latitude</label>
-              <input type="number" step="any" {...form.register("latitude", { valueAsNumber: true })} className={inputClass} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-text-secondary">Longitude</label>
-              <input type="number" step="any" {...form.register("longitude", { valueAsNumber: true })} className={inputClass} />
-            </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-text-secondary">Pin your location</label>
+            <LocationPicker
+              value={{ lat: form.watch("latitude"), lng: form.watch("longitude") }}
+              onChange={(lat, lng) => {
+                form.setValue("latitude", lat, { shouldValidate: true, shouldDirty: true });
+                form.setValue("longitude", lng, { shouldValidate: true, shouldDirty: true });
+              }}
+            />
           </div>
           <div className="flex items-center gap-2 pt-2">
             <input type="checkbox" id="is_primary" {...form.register("is_primary")} className="w-4 h-4 text-primary rounded border-border bg-surface-tertiary" />

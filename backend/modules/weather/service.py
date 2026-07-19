@@ -68,13 +68,13 @@ class WeatherService(BaseService):
         
         if cache:
             cache.data = raw_data
-            cache.expires_at = datetime.now(timezone.utc) + timedelta(hours=3)
+            cache.expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
         else:
             new_cache = WeatherCache(
                 location_id=location.id,
                 forecast_date=today,
                 data=raw_data,
-                expires_at=datetime.now(timezone.utc) + timedelta(hours=3)
+                expires_at=datetime.now(timezone.utc) + timedelta(hours=1)
             )
             db.add(new_cache)
             
