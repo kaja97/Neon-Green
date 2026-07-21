@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, User, WifiOff, ShieldAlert, Sprout, FolderOpen, Store } from "lucide-react";
+import { Bell, User, WifiOff, ShieldAlert, Sprout, FolderOpen, Store, MessagesSquare } from "lucide-react";
 import Link from "next/link";
 import { useOffline } from "@/lib/hooks/useOffline";
 import { useQuery } from "@tanstack/react-query";
@@ -71,6 +71,13 @@ export default function TopBar() {
           >
             <FolderOpen className="w-3.5 h-3.5" />
             Projects
+          </Link>
+          <Link
+            href="/community"
+            className="px-3 py-1.5 text-sm font-semibold text-text-secondary hover:text-white transition-colors rounded-lg hover:bg-surface-tertiary flex items-center gap-1.5"
+          >
+            <MessagesSquare className="w-3.5 h-3.5" />
+            Community
           </Link>
         </nav>
 
