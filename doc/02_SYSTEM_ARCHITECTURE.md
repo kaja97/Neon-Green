@@ -8,31 +8,31 @@ The backend starts as a **FastAPI modular monolith** (single deployable, logical
 
 ## High-Level Architecture Diagram
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────┐
 │              FRONTEND (Current: Next.js 14 PWA)                  │
 │         Future: Flutter (Android, iOS, Desktop)                  │
 │         Mobile-first · TypeScript · Tailwind CSS                 │
 └─────────────────────────────┬────────────────────────────────────┘
-                              │ HTTPS / REST API
+                              │ HTTPS / REST API / WebSockets
 ┌─────────────────────────────▼────────────────────────────────────┐
 │              API GATEWAY  (FastAPI + Nginx)                       │
 │         Rate Limiting · JWT Auth Middleware · Routing             │
-└──┬───────┬──────┬──────┬──────┬──────┬──────┬──────┬─────────────┘
-   │       │      │      │      │      │      │      │
-   ▼       ▼      ▼      ▼      ▼      ▼      ▼      ▼
-[Auth] [Farmer] [Project] [Weather] [Soil] [Planner] [Disease] [Market]
-  │      │        │          │        │       │         │         │
-  │      │        │      [Redis]    [NumPy] [Celery]    │         │
-  │      │        │          │               │           │         │
-  └──────┴────────┴──────────┴───────────────┴───────────┴─────────┘
-                              │
-                    ┌─────────▼──────────┐
-                    │    PostgreSQL 16    │
-                    │  + pgvector ext    │
-                    │  + PostGIS ext     │
-                    │  Primary database  │
-                    └─────────┬──────────┘
+└──┬───────┬──────┬──────┬──────┬──────┬──────┬──────┬─────────┬───┘
+   │       │      │      │      │      │      │      │         │
+   ▼       ▼      ▼      ▼      ▼      ▼      ▼      ▼         ▼
+[Auth] [Farmer] [Project] [Weather] [Soil] [Planner] [Disease] [Chat]
+  │      │        │          │        │       │         │        │
+  │      │        │      [Redis]    [NumPy] [Celery]    │      [Redis] (PubSub)
+  │      │        │          │               │          │        │
+  └──────┴────────┴──────────┴───────────────┴──────────┴────────│
+                              │                                  │
+                    ┌─────────▼──────────┐              ┌────────▼─────────┐
+                    │    PostgreSQL 16   │              │   PostgreSQL 16  │
+                    │  + pgvector ext    │              │  (chat_db)       │
+                    │  + PostGIS ext     │              │                  │
+                    │  Primary database  │              │  Standalone DB   │
+                    └─────────┬──────────┘              └──────────────────┘
                               │
               ┌───────────────┼───────────────┐
               │               │               │
@@ -61,6 +61,7 @@ All services live as Python modules within a single FastAPI application. Each mo
 | 8 | Market | `/market` | Crop price data, trends, alerts |
 | 9 | AI Summary | `/ai` | Flattened context → Google Gemini → summary |
 | 10 | Notification | `/notifications` | Push notifications, Celery Beat jobs |
+| 11 | Chat (Standalone) | `/chat`, `/ws/chat` | Real-time messaging, WebSocket, Voice uploads |
 | **Future** | RAG Service | `/rag` | Knowledge base ingestion and retrieval |
 | **Future** | MCP Server | `/mcp` | Per-farmer tool routing for AI Agent |
 | **Future** | Marketplace | `/marketplace` | B2B/B2C vendor products, harvest listings |

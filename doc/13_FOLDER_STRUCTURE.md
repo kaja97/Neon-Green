@@ -10,12 +10,13 @@ This document defines the exact folder structure for the entire AgriFarm AI code
 ```
 agrifarm-ai/
 ├── backend/                          ← FastAPI Python backend
+├── chat-service/                     ← FastAPI standalone chat backend
 ├── frontend/                         ← Next.js 14 web app
 ├── docker/                           ← Docker configs
 ├── doc/                              ← Documentation files
 ├── scripts/                          ← Dev utility scripts
 ├── .github/                          ← CI/CD workflows
-├── docker-compose.yml                ← Local dev: PostgreSQL + Redis + Backend + Frontend
+├── docker-compose.yml                ← Local dev: PostgreSQL + Redis + Backend + Chat + Frontend
 ├── docker-compose.prod.yml           ← Production compose
 ├── .env.example                      ← Template for environment variables
 ├── .gitignore
@@ -200,6 +201,61 @@ backend/
 ├── requirements.txt                  ← Python dependencies
 ├── pyproject.toml                    ← Modern Python project config
 └── Dockerfile                        ← Backend Docker image
+```
+
+---
+
+## Chat Service Structure (Standalone)
+
+```
+chat-service/
+├── main.py                           ← FastAPI app entry, mounts REST routers and WebSockets
+├── config.py                         ← Pydantic BaseSettings (env vars, MAIN_BACKEND_URL)
+├── database.py                       ← SQLAlchemy async engine for chat_db
+├── Dockerfile                        ← Standalone container build
+├── requirements.txt                  ← Dependencies
+├── alembic.ini                       ← Alembic config for chat_db
+├── migrations/                       ← Alembic migration scripts
+│
+├── core/                             ← Infrastructure
+│   ├── security.py                   ← JWT validation (reads from same secret as backend)
+│   ├── redis.py                      ← Presence status and typing indicators
+│   ├── response.py                   ← Standard response format
+│   └── errors/                       ← Exception handlers
+│
+├── models/                           ← SQLAlchemy ORM
+│   ├── base.py                       
+│   ├── user.py                       ← ChatUser (synced from main backend)
+│   ├── conversation.py               ← Conversation 1-on-1 pairs
+│   ├── message.py                    ← Message (text, voice, image, reply_to)
+│   └── receipt.py                    ← MessageReceipt (delivered/read tracking)
+│
+├── repositories/                     ← Data access layer
+│   ├── user_repo.py
+│   ├── conversation_repo.py
+│   └── message_repo.py
+│
+├── schemas/                          ← Pydantic validation schemas
+│   ├── user.py
+│   ├── conversation.py
+│   ├── message.py
+│   └── websocket.py                  ← WSIncoming, WSOutgoing envelopes
+│
+├── services/                         ← Business logic
+│   ├── user_service.py               ← Syncs profiles from main backend via HTTP
+│   ├── conversation_service.py
+│   ├── message_service.py
+│   └── voice_service.py              ← Voice blob upload and duration extraction
+│
+├── routers/                          ← REST API endpoints
+│   ├── users.py                      
+│   ├── conversations.py
+│   ├── messages.py
+│   └── voice.py
+│
+└── websocket/                        ← Real-time communication
+    ├── manager.py                    ← ConnectionManager
+    └── handler.py                    ← Message router (ping, typing, read, message)
 ```
 
 ---

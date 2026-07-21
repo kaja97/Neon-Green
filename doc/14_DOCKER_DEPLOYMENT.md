@@ -14,9 +14,16 @@ We use a specialized `postgis/postgis:16-3.4` image to support our geospatial fa
 - **Healthcheck:** Ensures FastAPI and Celery wait for the DB to be ready before starting.
 
 ### Redis
-Used for caching AI context (Context Hashing) and as the Celery message broker.
+Used for caching AI context (Context Hashing), Celery message broker, and Chat WebSocket presence.
 - **Port:** `6379`
 - **Volume:** `redisdata` for persistence.
+
+### PostgreSQL (Chat Database)
+Standalone DB for the chat service.
+- **Container:** `postgres-chat`
+- **Port:** `5433`
+- **Volume:** `chat_pgdata`
+
 
 ## 3. Application Services
 
@@ -32,6 +39,11 @@ Handles heavy background tasks (AI Plan generation, external weather API fetchin
 
 ### Celery Beat
 Cron scheduler for triggering periodic background tasks (e.g., daily weather updates, midnight activity status sweeps).
+
+### Chat Service (FastAPI)
+Standalone real-time chat API and WebSocket server.
+- **Port:** `8001`
+- **Volume:** `./chat-service:/app` for HMR and `chat_uploads` for audio files.
 
 ### Frontend (Next.js PWA)
 - **Port:** `3000`

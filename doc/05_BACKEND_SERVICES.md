@@ -591,7 +591,27 @@ See [07_AI_RAG_MCP.md](07_AI_RAG_MCP.md) for complete implementation.
 
 ---
 
-## SERVICE 11: Admin Module
+## SERVICE 11: Chat Module (Standalone Service)
+
+**Path:** `/chat` and `/ws/chat`
+
+### Endpoints
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/chat/users/me` | Get/sync own chat profile | Bearer |
+| GET | `/chat/users/search` | Search users by name/phone/email | Bearer |
+| GET | `/chat/conversations` | Inbox listing (paginated) | Bearer |
+| POST | `/chat/conversations` | Start or get 1-on-1 chat | Bearer |
+| GET | `/chat/conversations/{id}/messages` | Paginated message history | Bearer |
+| POST | `/chat/voice/upload` | Upload audio blob, returns URL | Bearer |
+| WS | `/ws/chat` | Native WebSockets for real-time messages | Token |
+
+### Logic
+The Chat Service runs as a standalone FastAPI backend (`:8001`) with its own PostgreSQL database (`chat_db`). It relies on the main backend's `JWT_SECRET_KEY` for authentication. User profiles are lazily synced from the main API. It uses Redis for real-time online presence and WebSockets.
+
+---
+
+## SERVICE 12: Admin Module
 
 **Path:** `/admin`
 
