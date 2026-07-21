@@ -119,12 +119,13 @@ def get_disease_service() -> "DiseaseService":
     from modules.disease.service import DiseaseService
     from modules.auth.repository import FarmerProfileRepository
     from modules.project.repository import ProjectRepository
-    from modules.disease.repository import ProjectIssueRepository, DiseaseSolutionRepository
+    from modules.disease.repository import ProjectIssueRepository, IssueCommentRepository, DiseaseSolutionRepository
     return DiseaseService(
         profile_repo=FarmerProfileRepository(),
         project_repo=ProjectRepository(),
         issue_repo=ProjectIssueRepository(),
         solution_repo=DiseaseSolutionRepository(),
+        comment_repo=IssueCommentRepository(),
     )
 
 def get_soil_service() -> "SoilService":

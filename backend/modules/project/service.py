@@ -347,11 +347,19 @@ class ProjectService(BaseService):
             latest = tests[0]
             if not latest.results:
                 return None
+                
+            def get_level(val, min_opt, max_opt):
+                if val is None: return "Unknown"
+                v = float(val)
+                if v < min_opt: return "Low"
+                if v > max_opt: return "High"
+                return "Optimal"
+
             return {
-                "ph": latest.results.ph_level,
-                "nitrogen_status": latest.results.nitrogen_level,
-                "phosphorus_status": latest.results.phosphorus_level,
-                "potassium_status": latest.results.potassium_level,
+                "ph": float(latest.results.ph_level) if latest.results.ph_level else None,
+                "nitrogen_status": get_level(latest.results.nitrogen_n, 250, 400),
+                "phosphorus_status": get_level(latest.results.phosphorus_p, 20, 40),
+                "potassium_status": get_level(latest.results.potassium_k, 150, 250),
                 "last_test": latest.test_date.isoformat(),
             }
         except Exception as e:

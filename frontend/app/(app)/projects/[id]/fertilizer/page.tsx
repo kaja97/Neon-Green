@@ -131,27 +131,72 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
         </div>
       </div>
 
-      {/* Current Stage Recommendation */}
-      {dashboard?.current_stage && (
-        <section className="glass-card border-green-500/20 p-5 bg-slate-950/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 blur-[80px] rounded-full pointer-events-none -mr-20 -mt-20" />
-          <div className="flex items-center gap-2 text-green-400 mb-3 relative z-10">
-            <Sparkles className="w-5 h-5 text-glow-green" />
-            <h3 className="font-bold text-base">Stage Nutrition Recommendation</h3>
-          </div>
-          <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl relative z-10">
-            <h4 className="font-bold text-white text-sm">Stage: {dashboard.current_stage.stage_name}</h4>
-            <p className="text-sm text-slate-355 mt-1 leading-relaxed">
+      {/* Current Stage Recommendation & Soil Status */}
+      <section className="glass-card border-green-500/20 p-5 bg-slate-950/20 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 blur-[80px] rounded-full pointer-events-none -mr-20 -mt-20" />
+        <div className="flex items-center gap-2 text-green-400 mb-3 relative z-10">
+          <Sparkles className="w-5 h-5 text-glow-green" />
+          <h3 className="font-bold text-base">Stage Nutrition & Soil Profile</h3>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+          {/* Stage Rec */}
+          <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+            <h4 className="font-bold text-white text-sm">Stage: {dashboard?.current_stage?.stage_name || "Active"}</h4>
+            <p className="text-sm text-slate-300 mt-1 leading-relaxed">
               For conventional crops, apply split NPK doses. For organic projects, integrate high-quality compost or fish emulsion around the root zone.
             </p>
-            {dashboard.current_stage.watch_for && (
+            {dashboard?.current_stage?.watch_for && (
               <p className="text-xs text-amber-300 font-medium mt-2">
                 ⚠️ Watch out for: {dashboard.current_stage.watch_for}
               </p>
             )}
           </div>
-        </section>
-      )}
+
+          {/* Soil Status & Required Amount */}
+          <div className="p-4 bg-slate-900/50 border border-slate-700/50 rounded-xl">
+            <h4 className="font-bold text-white text-sm mb-3">Soil Deficiencies & Required Application</h4>
+            {dashboard?.soil_status ? (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-400">Nitrogen (N):</span>
+                  <span className={clsx("font-semibold capitalize", dashboard.soil_status.nitrogen_status?.includes("low") ? "text-red-400" : "text-green-400")}>
+                    {dashboard.soil_status.nitrogen_status?.replace("level_", "") || "Optimal"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-400">Phosphorus (P):</span>
+                  <span className={clsx("font-semibold capitalize", dashboard.soil_status.phosphorus_status?.includes("low") ? "text-red-400" : "text-green-400")}>
+                    {dashboard.soil_status.phosphorus_status?.replace("level_", "") || "Optimal"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-400">Potassium (K):</span>
+                  <span className={clsx("font-semibold capitalize", dashboard.soil_status.potassium_status?.includes("low") ? "text-red-400" : "text-green-400")}>
+                    {dashboard.soil_status.potassium_status?.replace("level_", "") || "Optimal"}
+                  </span>
+                </div>
+                
+                {pendingTasks.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-slate-700/50">
+                    <p className="text-xs text-amber-300 font-semibold mb-1">Target Application Amounts:</p>
+                    <ul className="space-y-1">
+                      {pendingTasks.map((pt: any) => (
+                        <li key={pt.id} className="text-sm text-slate-300 flex justify-between">
+                           <span className="truncate max-w-[150px]">{pt.title}</span>
+                           <span className="font-bold text-white">{pt.required_fertilizer_kg ? `${pt.required_fertilizer_kg} kg` : "Variable"}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400 italic">No recent soil tests found. Add a soil test to view NPK gaps.</p>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* Pending logs section */}
       <section className="space-y-4">

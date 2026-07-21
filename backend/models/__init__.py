@@ -9,6 +9,7 @@ from .activity import ActivityPlan, FarmingActivity, ActivityDetail
 from .soil import SoilTest, SoilNutrientResult, SoilRecommendation
 from .weather import WeatherCache, WeatherAlert
 from .issue import ProjectIssue
+from .comment import IssueComment
 from .market import MarketPrice, MarketTrend
 from .notification import Notification
 from .ai import AIProjectSummary, AIConversation, AIQueryLog
@@ -32,4 +33,5 @@ __all__ = [
     "AIProjectSummary", "AIConversation", "AIQueryLog",
     "ProductCategory", "ProductSubCategory", "Product",
     "ProductCatalog", "ProductNutrientContent",
+    "IssueComment",
 ]

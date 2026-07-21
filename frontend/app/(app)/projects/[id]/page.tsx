@@ -10,6 +10,7 @@ import AlertBanner from "@/components/blocks/AlertBanner";
 import QuickAskBlock from "@/components/blocks/QuickAskBlock";
 import WeatherCardBlock from "@/components/blocks/WeatherCardBlock";
 import FertilizerLogBlock from "@/components/blocks/FertilizerLogBlock";
+import NutrientGuideBlock from "@/components/blocks/NutrientGuideBlock";
 import Modal from "@/components/ui/Modal";
 import { formatCurrency, formatFarmingMethod } from "@/lib/utils/formatters";
 import ParallaxBackground from "@/components/dashboard/ParallaxBackground";
@@ -271,9 +272,10 @@ export default function ProjectDashboard({
         />
       </section>
 
-      {/* Weather + Fertilizer Log */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slide-up" style={{ animationDelay: "225ms" }}>
+      {/* Weather, Nutrient Guide, Fertilizer Log */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-up" style={{ animationDelay: "225ms" }}>
         <WeatherCardBlock projectId={params.id} />
+        <NutrientGuideBlock projectId={params.id} />
         <FertilizerLogBlock projectId={params.id} />
       </section>
 
