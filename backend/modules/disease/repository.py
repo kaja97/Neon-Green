@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select, func
+from sqlalchemy.future import select
+from sqlalchemy import func
 from core.base_repository import BaseRepository
 from models.issue import ProjectIssue
 from models.comment import IssueComment

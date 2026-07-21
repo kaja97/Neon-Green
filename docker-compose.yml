@@ -29,9 +29,6 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
     environment:
       DATABASE_URL: postgresql+asyncpg://agrifarm:dev_password@postgres:5432/agrifarm_db
       REDIS_URL: redis://redis:6379/0
@@ -59,9 +56,6 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: celery -A tasks.celery_app worker --loglevel=info -P solo
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
     environment:
       DATABASE_URL: postgresql+asyncpg://agrifarm:dev_password@postgres:5432/agrifarm_db
       REDIS_URL: redis://redis:6379/0
@@ -91,9 +85,6 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: celery -A tasks.celery_app beat --loglevel=info
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
     environment:
       DATABASE_URL: postgresql+asyncpg://agrifarm:dev_password@postgres:5432/agrifarm_db
       REDIS_URL: redis://redis:6379/0
