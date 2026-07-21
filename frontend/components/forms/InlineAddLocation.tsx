@@ -6,7 +6,7 @@ import { Plus, CheckCircle2, Loader2 } from "lucide-react";
 import api from "@/lib/api";
 
 // Leaflet must be loaded client-side only (Next.js SSR incompatible)
-const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
+const LocationPicker = dynamic(() => import("@/components/LocationPicker").then((mod) => mod.default), {
   ssr: false,
   loading: () => (
     <div className="h-[260px] rounded-xl border border-border bg-surface-tertiary animate-pulse" />

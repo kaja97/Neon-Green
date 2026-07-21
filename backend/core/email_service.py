@@ -193,18 +193,28 @@ async def _send_via_google_api(
 
         credentials = Credentials.from_authorized_user_file(token_file, SCOPES)
 
+        from google.auth.exceptions import RefreshError
+
         if not credentials.valid:
             if credentials.expired and credentials.refresh_token:
                 logger.info("Refreshing expired Google OAuth token...")
-                credentials.refresh(Request())
-                # Save refreshed token back
                 try:
-                    with open(token_file, "w") as f:
-                        f.write(credentials.to_json())
-                    logger.info("Refreshed token saved to %s", token_file)
-                except OSError as e:
-                    # In Docker, the volume may be read-only in some setups
-                    logger.warning("Could not save refreshed token: %s", e)
+                    credentials.refresh(Request())
+                    # Save refreshed token back
+                    try:
+                        with open(token_file, "w") as f:
+                            f.write(credentials.to_json())
+                        logger.info("Refreshed token saved to %s", token_file)
+                    except OSError as e:
+                        # In Docker, the volume may be read-only in some setups
+                        logger.warning("Could not save refreshed token: %s", e)
+                except RefreshError as re:
+                    logger.error(
+                        "Google OAuth refresh token expired or revoked (%s). "
+                        "Re-authentication required (run 'python scripts/generate_token.py').",
+                        re,
+                    )
+                    return False
             else:
                 logger.error(
                     "OAuth token is invalid and cannot be refreshed. "
