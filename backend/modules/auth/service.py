@@ -121,7 +121,7 @@ class AuthService(BaseService):
                     full_name=data.full_name,
                     farming_method=data.farming_method.value if data.farming_method else "integrated",
                     primary_language=data.primary_language,
-                    experience_years=0
+                    experience_years=data.experience_years or 0
                 )
                 new_profile = await self.profile_repo.create(db, obj_in=profile_in)
                 profile_id = new_profile.id

@@ -155,6 +155,7 @@ export default function RegisterPage() {
       if (role === "farmer") {
         payload.farming_method = farmingMethod;
         payload.primary_language = primaryLanguage;
+        payload.experience_years = Number(experienceYears) || 0;
       } else if (role === "vendor") {
         payload.business_name = businessName || fullName;
         payload.tax_id = taxId;

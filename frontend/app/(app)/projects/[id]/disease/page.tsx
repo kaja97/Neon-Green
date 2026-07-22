@@ -24,6 +24,7 @@ export default function DiseasePage({ params }: { params: { id: string } }) {
     issue_type: "disease",
     severity: "medium",
     description: "",
+    is_shared_to_community: true,
   });
 
   const { data: dashboard } = useQuery({
@@ -75,6 +76,7 @@ export default function DiseasePage({ params }: { params: { id: string } }) {
           title: report.title,
           description: report.description,
           severity: report.severity,
+          is_shared_to_community: report.is_shared_to_community,
         });
       }
       const disease = payload.disease!;
@@ -83,6 +85,7 @@ export default function DiseasePage({ params }: { params: { id: string } }) {
         title: `Suspected: ${disease.name}`,
         description: `Matched symptoms: ${disease.symptoms?.join(", ")}`,
         severity: disease.severity,
+        is_shared_to_community: true,
       });
     },
     onSuccess: () => {
@@ -90,7 +93,7 @@ export default function DiseasePage({ params }: { params: { id: string } }) {
       setSearchQuery("");
       setSearchResults([]);
       setShowReportForm(false);
-      setReport({ title: "", issue_type: "disease", severity: "medium", description: "" });
+      setReport({ title: "", issue_type: "disease", severity: "medium", description: "", is_shared_to_community: true });
     },
   });
 
@@ -185,6 +188,18 @@ export default function DiseasePage({ params }: { params: { id: string } }) {
                 placeholder="Describe what you're seeing..."
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 resize-none h-20"
               />
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="share_community"
+                checked={report.is_shared_to_community}
+                onChange={(e) => setReport({ ...report, is_shared_to_community: e.target.checked })}
+                className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-green-500 focus:ring-green-500"
+              />
+              <label htmlFor="share_community" className="text-sm text-slate-300 cursor-pointer">
+                Share issue with Community (visible on Community feed for advice)
+              </label>
             </div>
             <button
               type="submit"

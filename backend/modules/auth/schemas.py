@@ -35,6 +35,7 @@ class RegisterVerifyRequest(BaseModel):
     # Farmer specific fields
     farming_method: Optional[FarmingMethod] = None
     primary_language: Optional[str] = Field(default="en", max_length=10)
+    experience_years: Optional[int] = Field(default=0, ge=0)
     location: Optional[LocationData] = None
     
     # Vendor specific fields

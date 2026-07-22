@@ -16,14 +16,26 @@ class Settings(BaseSettings):
     # ── Main Backend API (for user profile sync) ──
     MAIN_BACKEND_URL: str = "http://backend:8000/api/v1"
 
-    # ── Voice uploads ──
+    # ── Uploads ──
     UPLOAD_DIR: str = "uploads"
-    MAX_VOICE_SIZE_MB: int = 10
+    MAX_VOICE_SIZE_MB: int = 25
     ALLOWED_VOICE_TYPES: list[str] = [
         "audio/webm",
         "audio/ogg",
         "audio/mp4",
         "audio/mpeg",
+        "audio/wav",
+        "audio/x-wav",
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "text/plain",
+        "video/mp4",
+        "video/webm",
     ]
     MAX_VOICE_DURATION_SECONDS: int = 300  # 5 minutes
 

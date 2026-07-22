@@ -78,6 +78,18 @@ class VoiceService:
             "audio/ogg": "ogg",
             "audio/mp4": "m4a",
             "audio/mpeg": "mp3",
+            "audio/wav": "wav",
+            "audio/x-wav": "wav",
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+            "image/gif": "gif",
+            "application/pdf": "pdf",
+            "application/msword": "doc",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+            "text/plain": "txt",
+            "video/mp4": "mp4",
+            "video/webm": "webm",
         }
         return mapping.get(content_type, "bin")
 

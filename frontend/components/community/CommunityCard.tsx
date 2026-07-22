@@ -1,11 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import AuthorAvatar from "./AuthorAvatar";
 import { getImageUrl } from "@/lib/utils/image";
 import type { CommunityFeedItem } from "@/lib/types";
+import { useCommunityComments } from "@/lib/hooks/useCommunity";
+import CommentThread from "./CommentThread";
+import CommentComposer from "./CommentComposer";
 
 const TYPE_COLORS: Record<string, string> = {
   disease: "bg-red-500/10 text-red-400 border-red-500/20",
@@ -31,33 +35,40 @@ interface CommunityCardProps {
 }
 
 export default function CommunityCard({ item, index = 0 }: CommunityCardProps) {
+  const [showComments, setShowComments] = useState(false);
+  
+  const { data: comments, isLoading: commentsLoading } = useCommunityComments(
+    showComments ? item.id : undefined
+  );
+
   const timeAgo = item.created_at
     ? formatDistanceToNow(new Date(item.created_at), { addSuffix: true })
     : "";
 
   return (
-    <Link
-      href={`/community/${item.id}`}
-      className="block glass-card p-4 rounded-2xl hover:bg-surface-secondary/60 transition-all duration-300 group animate-slide-up"
+    <div
+      className="glass-card p-4 rounded-2xl hover:bg-surface-secondary/60 transition-all duration-300 group animate-slide-up"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="flex gap-3">
         {/* Thumbnail */}
         {item.images && item.images.length > 0 && (
-          <div className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-surface-tertiary">
+          <Link href={`/community/${item.id}`} className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-surface-tertiary">
             <img
               src={getImageUrl(item.images[0])}
               alt=""
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-          </div>
+          </Link>
         )}
 
         <div className="flex-1 min-w-0">
-          {/* Title */}
-          <h3 className="text-sm font-bold text-white truncate group-hover:text-primary transition-colors">
-            {item.title}
-          </h3>
+          {/* Title Link */}
+          <Link href={`/community/${item.id}`} className="block">
+            <h3 className="text-sm font-bold text-white truncate group-hover:text-primary transition-colors">
+              {item.title}
+            </h3>
+          </Link>
 
           {/* Chips */}
           <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
@@ -82,7 +93,7 @@ export default function CommunityCard({ item, index = 0 }: CommunityCardProps) {
             )}
           </div>
 
-          {/* Author + comment count */}
+          {/* Author + comment toggle */}
           <div className="flex items-center justify-between mt-2.5">
             <div className="flex items-center gap-2">
               <AuthorAvatar
@@ -96,15 +107,38 @@ export default function CommunityCard({ item, index = 0 }: CommunityCardProps) {
               <span className="text-[10px] text-text-muted">{timeAgo}</span>
             </div>
 
-            <div className="flex items-center gap-1 text-text-muted">
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span className="text-xs font-semibold">
-                {item.comment_count}
-              </span>
-            </div>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setShowComments((prev) => !prev);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-surface-tertiary/70 hover:bg-surface-tertiary text-text-muted hover:text-white transition-colors text-xs font-semibold"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-primary" />
+              <span>{item.comment_count}</span>
+              {showComments ? (
+                <ChevronUp className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5" />
+              )}
+            </button>
           </div>
         </div>
       </div>
-    </Link>
+
+      {/* Inline Comments Drawer */}
+      {showComments && (
+        <div className="mt-4 pt-4 border-t border-border/50 space-y-3">
+          {commentsLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="w-4 h-4 text-primary animate-spin" />
+            </div>
+          ) : (
+            <CommentThread comments={comments || []} issueId={item.id} />
+          )}
+          <CommentComposer issueId={item.id} placeholder="Add a comment..." />
+        </div>
+      )}
+    </div>
   );
 }
