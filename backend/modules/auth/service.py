@@ -446,3 +446,55 @@ class AuthService(BaseService):
             }
             
         return data
+
+    # ── 11. Search Users ─────────────────────────────────────
+
+    async def search_users(self, db: AsyncSession, query: str, current_user_id: uuid.UUID) -> list[dict]:
+        from sqlalchemy.future import select
+        from sqlalchemy import or_
+        from models.account import FarmerProfile, VendorProfile, BuyerProfile
+
+        q = query.strip()
+        if len(q) < 2:
+            return []
+
+        stmt = (
+            select(Account, FarmerProfile, VendorProfile, BuyerProfile)
+            .outerjoin(FarmerProfile, Account.id == FarmerProfile.account_id)
+            .outerjoin(VendorProfile, Account.id == VendorProfile.account_id)
+            .outerjoin(BuyerProfile, Account.id == BuyerProfile.account_id)
+            .where(Account.is_active.is_(True))
+            .where(Account.id != current_user_id)
+        )
+        
+        condition = or_(
+            Account.email.ilike(f"%{q}%"),
+            Account.phone.ilike(f"%{q}%"),
+            FarmerProfile.full_name.ilike(f"%{q}%"),
+            VendorProfile.business_name.ilike(f"%{q}%"),
+            BuyerProfile.full_name.ilike(f"%{q}%")
+        )
+        stmt = stmt.where(condition).limit(20)
+
+        result = await db.execute(stmt)
+        users = []
+        for account, farmer, vendor, buyer in result.all():
+            display_name = "User"
+            avatar_url = None
+            if farmer:
+                display_name = farmer.full_name
+                avatar_url = farmer.avatar_url
+            elif vendor:
+                display_name = vendor.business_name
+            elif buyer:
+                display_name = buyer.full_name
+                
+            users.append({
+                "id": str(account.id),
+                "account_id": str(account.id),
+                "email": account.email,
+                "phone": account.phone,
+                "display_name": display_name,
+                "avatar_url": avatar_url,
+            })
+        return users

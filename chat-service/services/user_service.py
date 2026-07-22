@@ -109,11 +109,36 @@ class UserService:
         self,
         db: AsyncSession,
         query: str,
-        current_user_id: uuid.UUID,
+        current_user_id: uuid.UUID | None,
+        jwt_token: str,
         page: int = 1,
         per_page: int = 20,
     ) -> tuple[list[ChatUser], int]:
-        """Search for users by name, email, or phone."""
+        """Search for users by name, email, or phone. Synced from main backend."""
+        # Query main backend for matches
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(
+                    f"{settings.MAIN_BACKEND_URL}/auth/search?q={query}",
+                    headers={"Authorization": f"Bearer {jwt_token}"},
+                )
+                if resp.status_code == 200:
+                    data = resp.json().get("data", [])
+                    # Upsert each matching user into chat database
+                    for u in data:
+                        await self.user_repo.upsert(
+                            db,
+                            account_id=uuid.UUID(u["account_id"]),
+                            display_name=u.get("display_name", "User"),
+                            email=u.get("email"),
+                            phone=u.get("phone"),
+                            avatar_url=u.get("avatar_url")
+                        )
+                    await db.commit()
+        except Exception as e:
+            print(f"Error fetching users from main backend: {e}")
+
+        # Return local search results (now containing the synced users)
         return await self.user_repo.search(
             db, query, exclude_user_id=current_user_id, page=page, per_page=per_page
         )

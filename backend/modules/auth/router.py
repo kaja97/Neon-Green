@@ -281,3 +281,17 @@ async def docs_login(
     if tokens.refresh_token:
         _set_refresh_cookie(response, tokens.refresh_token)
     return {"access_token": tokens.access_token, "token_type": "bearer"}
+
+
+# ─── 1.16 Search Users ──────────────────────────────────
+
+@router.get("/search", status_code=200)
+async def search_users(
+    q: str,
+    current_user: Account = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """Search all active users by email, phone, or name."""
+    data = await auth_service.search_users(db, q, current_user.id)
+    return success_response(data)

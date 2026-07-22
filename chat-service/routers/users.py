@@ -36,6 +36,7 @@ async def get_current_user_profile(
 
 @router.get("/search", response_model=dict)
 async def search_users(
+    request: Request,
     q: str = Query(..., min_length=2, description="Search term (name, email, phone)"),
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
@@ -44,6 +45,9 @@ async def search_users(
     user_service: UserService = Depends(get_user_service),
 ):
     """Search for other users by name, email, or phone."""
+    auth_header = request.headers.get("Authorization")
+    jwt_token = auth_header.split(" ")[1] if auth_header and auth_header.startswith("Bearer ") else ""
+
     # Resolve current user to exclude them from results
     current_user = await user_service.user_repo.get_by_account_id(
         db, uuid.UUID(account_id)
@@ -51,7 +55,7 @@ async def search_users(
     exclude_id = current_user.id if current_user else None
 
     users, total = await user_service.search_users(
-        db, query=q, current_user_id=exclude_id, page=page, per_page=per_page
+        db, query=q, current_user_id=exclude_id, jwt_token=jwt_token, page=page, per_page=per_page
     )
     user_responses = [UserResponse.model_validate(u) for u in users]
     return success_response({"users": [u.model_dump() for u in user_responses], "total": total})

@@ -82,18 +82,13 @@ class ChatUserRepository:
         offset = (page - 1) * per_page
         q = query.strip()
 
-        if "@" in q:
-            # Email prefix search
-            condition = ChatUser.email.ilike(f"{q}%")
-            order = ChatUser.email
-        elif q.startswith("+") or q.isdigit():
-            # Phone prefix search
-            condition = ChatUser.phone.ilike(f"{q}%")
-            order = ChatUser.phone
-        else:
-            # Trigram fuzzy search on display_name
-            condition = text("similarity(display_name, :q) > 0.3").bindparams(q=q)
-            order = text("similarity(display_name, :q) DESC").bindparams(q=q)
+        # Simple ILIKE search on display_name, email, and phone
+        condition = or_(
+            ChatUser.display_name.ilike(f"%{q}%"),
+            ChatUser.email.ilike(f"%{q}%"),
+            ChatUser.phone.ilike(f"%{q}%")
+        )
+        order = ChatUser.display_name
 
         stmt = select(ChatUser).where(condition)
         if exclude_user_id:
