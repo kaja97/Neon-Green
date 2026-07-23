@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CloudRain, Droplets, Wind, Sun, CloudSun, Cloud, CloudLightning, Loader2 } from "lucide-react";
+import { ArrowLeft, CloudRain, Droplets, Wind, Sun, CloudSun, Cloud, CloudLightning, Loader2, MapPin } from "lucide-react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { useQuery } from "@tanstack/react-query";
@@ -39,7 +39,7 @@ export default function WeatherPage({ params }: { params: { id: string } }) {
     );
   }
 
-  const { current, forecast } = weather;
+  const { current, forecast, project_name, location_name, district, latitude, longitude } = weather;
   const { icon: CurrentIcon, color: currentColor, bg: currentBg } = getIconInfo(current.description);
 
   return (
@@ -53,9 +53,12 @@ export default function WeatherPage({ params }: { params: { id: string } }) {
         </Link>
         <div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-            Weather Forecast<span className="text-blue-400">.</span>
+            {project_name ? `${project_name} Weather` : "Weather Forecast"}<span className="text-blue-400">.</span>
           </h1>
-          <p className="text-text-muted text-sm mt-0.5">Farm Location</p>
+          <p className="text-text-muted text-sm mt-0.5 flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5" />
+            {[location_name, district].filter(Boolean).join(", ") || "Farm Location"}
+          </p>
         </div>
       </header>
 

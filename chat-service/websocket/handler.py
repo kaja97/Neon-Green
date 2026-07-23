@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 async def websocket_endpoint(websocket: WebSocket):
     """Main WebSocket endpoint handling the connection lifecycle and routing messages."""
+    # Accept the connection first
+    await websocket.accept()
+
     # 1. Authenticate
     account_id_str = await ws_authenticate(websocket)
     if not account_id_str:
@@ -39,7 +42,7 @@ async def websocket_endpoint(websocket: WebSocket):
         chat_user_id = user.id
         display_name = user.display_name
 
-    # 3. Connect
+    # 3. Connect (websocket already accepted)
     await manager.connect(account_id_str, websocket)
 
     # Broadcast online status to all conversations (in a real app, query all contacts)

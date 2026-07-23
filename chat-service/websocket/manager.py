@@ -20,7 +20,6 @@ class ConnectionManager:
         self.active_connections: Dict[str, List[WebSocket]] = {}
 
     async def connect(self, account_id: str, ws: WebSocket):
-        await ws.accept()
         if account_id not in self.active_connections:
             self.active_connections[account_id] = []
         self.active_connections[account_id].append(ws)

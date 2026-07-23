@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+
 import Link from "next/link";
 import { ArrowLeft, Loader2, Frown, MessageCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -34,9 +34,9 @@ function formatType(t: string) {
 export default function CommunityIssuePage({
   params,
 }: {
-  params: Promise<{ issueId: string }>;
+  params: { issueId: string };
 }) {
-  const { issueId } = use(params);
+  const { issueId } = params;
   const { data: issue, isLoading, error } = useCommunityIssue(issueId);
   const { data: comments, isLoading: commentsLoading } =
     useCommunityComments(issueId);

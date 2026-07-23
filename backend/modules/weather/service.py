@@ -56,14 +56,21 @@ class WeatherService(BaseService):
             raise HTTPException(status_code=404, detail="Project or location not found")
 
         project, location = row
+        lat, lon = self._centroid_lat_lon(location)
+        location_meta = {
+            "location_name": location.name,
+            "district": location.district,
+            "project_name": project.name,
+            "latitude": lat,
+            "longitude": lon,
+        }
         today = date.today()
         
         cache = await self.cache_repo.get_by_location_and_date(db, location.id, today)
 
         if cache and cache.expires_at > datetime.now(timezone.utc):
-            return self._process_raw_data(location.id, cache.data)
+            return self._process_raw_data(location.id, cache.data, **location_meta)
 
-        lat, lon = self._centroid_lat_lon(location)
         raw_data = await self.weather_client.fetch_weather_data(lat, lon)
         
         if cache:
@@ -80,9 +87,9 @@ class WeatherService(BaseService):
             
         await db.commit()
         
-        return self._process_raw_data(location.id, raw_data)
+        return self._process_raw_data(location.id, raw_data, **location_meta)
 
-    def _process_raw_data(self, location_id: uuid.UUID, raw_data: dict) -> WeatherResponse:
+    def _process_raw_data(self, location_id: uuid.UUID, raw_data: dict, **kwargs) -> WeatherResponse:
         daily_summaries = {}
         
         for item in raw_data.get("list", []):
@@ -133,14 +140,23 @@ class WeatherService(BaseService):
             
             forecasts.append(ForecastDay(forecast_date=d, condition=cond))
             
+        meta = {
+            "location_name": kwargs.get("location_name"),
+            "district": kwargs.get("district"),
+            "project_name": kwargs.get("project_name"),
+            "latitude": kwargs.get("latitude"),
+            "longitude": kwargs.get("longitude"),
+        }
+
         if not forecasts:
             cond = WeatherCondition(temp_celsius=0, humidity=0, rain_mm=0, wind_kph=0, description="Unknown", icon_code="01d")
-            return WeatherResponse(location_id=str(location_id), current=cond, forecast=[])
+            return WeatherResponse(location_id=str(location_id), current=cond, forecast=[], **meta)
 
         return WeatherResponse(
             location_id=str(location_id),
             current=forecasts[0].condition,
-            forecast=forecasts
+            forecast=forecasts,
+            **meta,
         )
 
     async def get_alerts_for_project(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):

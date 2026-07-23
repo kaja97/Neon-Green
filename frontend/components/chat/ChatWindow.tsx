@@ -15,6 +15,7 @@ export default function ChatWindow() {
 
   const authUser = useAuthStore((state) => state.user);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const loadedConversationsRef = useRef<Set<string>>(new Set());
 
   const activeConv = conversations.find((c) => c.id === activeConversationId);
   const messages = activeConversationId ? messagesMap[activeConversationId] || [] : [];
@@ -23,16 +24,20 @@ export default function ChatWindow() {
   useEffect(() => {
     if (!activeConversationId) return;
 
-    if (!messagesMap[activeConversationId] || messagesMap[activeConversationId].length === 0) {
+    if (!loadedConversationsRef.current.has(activeConversationId)) {
+      loadedConversationsRef.current.add(activeConversationId);
       chatApi
         .get(`/conversations/${activeConversationId}/messages?limit=50`)
         .then((res) => {
           const chronological = (res.data.data || []).reverse();
           setMessages(activeConversationId, chronological);
         })
-        .catch((e) => console.error("Failed to load history", e));
+        .catch((e) => {
+          console.error("Failed to load history", e);
+          loadedConversationsRef.current.delete(activeConversationId);
+        });
     }
-  }, [activeConversationId, messagesMap, setMessages]);
+  }, [activeConversationId, setMessages]);
 
   // Auto-scroll and mark read
   useEffect(() => {

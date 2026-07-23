@@ -16,6 +16,11 @@ class ForecastDay(BaseModel):
 
 class WeatherResponse(BaseModel):
     location_id: str
+    location_name: Optional[str] = None
+    district: Optional[str] = None
+    project_name: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     current: WeatherCondition
     forecast: List[ForecastDay]
 
