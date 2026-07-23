@@ -5,6 +5,7 @@ password management, email/phone change, and account operations.
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timezone
+import uuid
 
 from models.account import Account, FarmerProfile
 from core.security import (

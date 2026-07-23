@@ -1,6 +1,12 @@
 from celery import Celery
 from celery.schedules import crontab
+from celery.signals import worker_process_init
 from config import settings
+from database import engine
+
+@worker_process_init.connect
+def dispose_database_engine(**kwargs):
+    engine.sync_engine.dispose()
 
 celery_app = Celery(
     "agrifarm_tasks",
