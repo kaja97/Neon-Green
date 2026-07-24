@@ -522,12 +522,25 @@ export default function MarketPage() {
                   </p>
                   
                   <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
-                    <div className="text-sm text-text-muted">
-                      Qty: {product.quantity_available} {product.unit}
+                    <div className="text-sm text-text-muted flex flex-col">
+                      <span>Qty: {product.quantity_available} {product.unit}</span>
                     </div>
-                    <span className="text-neon-gold hover:text-neon-gold/80 transition-colors p-2">
-                      <ChevronRight className="w-5 h-5" />
-                    </span>
+                    {user && product.seller_id !== user.id ? (
+                      <button 
+                        onClick={(e) => { 
+                          e.preventDefault(); 
+                          alert(`Creating transaction to buy ${product.title}... (API Call pending)`);
+                          // TODO: Create transaction API call here
+                        }}
+                        className="px-3 py-1.5 bg-neon-gold text-black text-sm font-bold rounded-lg hover:bg-neon-gold/80 transition-colors shadow-lg"
+                      >
+                        Buy Now
+                      </button>
+                    ) : (
+                      <span className="text-neon-gold hover:text-neon-gold/80 transition-colors p-2">
+                        <ChevronRight className="w-5 h-5" />
+                      </span>
+                    )}
                   </div>
                 </div>
               </Link>

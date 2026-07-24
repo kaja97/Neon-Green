@@ -33,6 +33,7 @@ class Project(BaseModel):
     
     plant: Mapped["Plant"] = relationship()
     location: Mapped["FarmerLocation"] = relationship()
+    products: Mapped[list["Product"]] = relationship("Product", back_populates="project", cascade="all, delete-orphan")
 
 class ProjectService(BaseModel):
     __tablename__ = "project_services"

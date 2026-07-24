@@ -42,6 +42,18 @@ class Account(BaseModel):
     products: Mapped[list["Product"]] = relationship(
         "Product", back_populates="seller", cascade="all, delete-orphan"
     )
+    sales: Mapped[list["Transaction"]] = relationship(
+        "Transaction", foreign_keys="[Transaction.seller_id]", back_populates="seller", cascade="all, delete-orphan"
+    )
+    purchases: Mapped[list["Transaction"]] = relationship(
+        "Transaction", foreign_keys="[Transaction.buyer_id]", back_populates="buyer", cascade="all, delete-orphan"
+    )
+    reviews_given: Mapped[list["Review"]] = relationship(
+        "Review", foreign_keys="[Review.reviewer_id]", back_populates="reviewer", cascade="all, delete-orphan"
+    )
+    reviews_received: Mapped[list["Review"]] = relationship(
+        "Review", foreign_keys="[Review.reviewee_id]", back_populates="reviewee", cascade="all, delete-orphan"
+    )
 
 
 class FarmerProfile(BaseModel):

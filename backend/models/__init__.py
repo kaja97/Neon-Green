@@ -15,6 +15,7 @@ from .notification import Notification
 from .ai import AIProjectSummary, AIConversation, AIQueryLog
 from .marketplace import Product, ProductCategory, ProductSubCategory
 from .product import ProductCatalog, ProductNutrientContent
+from .transaction import Transaction, Review
 
 __all__ = [
     "Base",
@@ -34,4 +35,5 @@ __all__ = [
     "ProductCategory", "ProductSubCategory", "Product",
     "ProductCatalog", "ProductNutrientContent",
     "IssueComment",
+    "Transaction", "Review",
 ]

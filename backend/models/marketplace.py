@@ -33,6 +33,7 @@ class Product(BaseModel):
     category_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("product_categories.id", ondelete="RESTRICT"), index=True)
     sub_category_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("product_subcategories.id", ondelete="RESTRICT"), index=True)
     plant_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("plants.id", ondelete="SET NULL"), nullable=True, index=True)
+    project_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True)
     
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -53,3 +54,5 @@ class Product(BaseModel):
     category: Mapped["ProductCategory"] = relationship("ProductCategory")
     sub_category: Mapped["ProductSubCategory"] = relationship("ProductSubCategory")
     plant: Mapped["Plant"] = relationship("Plant")
+    project: Mapped["Project"] = relationship("Project", back_populates="products")
+    transactions: Mapped[list["Transaction"]] = relationship("Transaction", back_populates="product", cascade="all, delete-orphan")

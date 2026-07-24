@@ -27,6 +27,7 @@ import {
   Sparkles,
   Trash2,
   Sprout,
+  Store,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -49,6 +50,12 @@ export default function ProjectDashboard({
     area: 0,
     area_unit: "acres",
     farming_method: "organic",
+  });
+  const [sellOpen, setSellOpen] = useState(false);
+  const [sellForm, setSellForm] = useState({
+    price_per_unit: 0,
+    quantity_available: 0,
+    unit: "kg",
   });
 
   const openEdit = () => {
@@ -209,6 +216,16 @@ export default function ProjectDashboard({
           >
             <Settings className="w-5 h-5" />
           </button>
+          {project.status === "harvested" && (
+            <button
+              onClick={() => setSellOpen(true)}
+              title="Sell Harvest"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+            >
+              <Store className="w-4 h-4" />
+              Sell Harvest
+            </button>
+          )}
         </div>
       </header>
 
@@ -384,6 +401,71 @@ export default function ProjectDashboard({
           >
             {updateProject.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
             Save Changes
+          </button>
+        </form>
+      </Modal>
+
+      {/* Sell Harvest Modal */}
+      <Modal isOpen={sellOpen} onClose={() => setSellOpen(false)} title="Sell Harvest to Market">
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            // TODO: call API to create listing
+            setSellOpen(false);
+          }}
+          className="space-y-4"
+        >
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-300">Project</label>
+            <input
+              type="text"
+              disabled
+              value={project?.name || ""}
+              className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-400 focus:outline-none"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-300">Quantity Available</label>
+              <input
+                type="number"
+                required
+                min="1"
+                value={sellForm.quantity_available}
+                onChange={(e) => setSellForm({ ...sellForm, quantity_available: parseFloat(e.target.value) || 0 })}
+                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-300">Unit</label>
+              <select
+                value={sellForm.unit}
+                onChange={(e) => setSellForm({ ...sellForm, unit: e.target.value })}
+                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="kg">KG</option>
+                <option value="tons">Tons</option>
+                <option value="units">Units</option>
+              </select>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-300">Price per Unit (LKR)</label>
+            <input
+              type="number"
+              required
+              min="1"
+              value={sellForm.price_per_unit}
+              onChange={(e) => setSellForm({ ...sellForm, price_per_unit: parseFloat(e.target.value) || 0 })}
+              className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-emerald-500 transition-all flex items-center justify-center gap-2 mt-4 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+          >
+            <Store className="w-5 h-5" />
+            Post to Marketplace
           </button>
         </form>
       </Modal>

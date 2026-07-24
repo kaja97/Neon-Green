@@ -791,6 +791,39 @@ Line items for an order.
 
 ---
 
+## Section 12: Transactions & Reviews
+
+### `transactions`
+Records a deal executed in the marketplace (e.g., vendor buying a product from a farmer).
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `product_id` | UUID FK → products | The marketplace listing |
+| `seller_id` | UUID FK → accounts | |
+| `buyer_id` | UUID FK → accounts | |
+| `quantity` | DECIMAL(10,2) | Quantity purchased |
+| `unit_price` | DECIMAL(12,2) | |
+| `total_price` | DECIMAL(12,2) | |
+| `status` | VARCHAR(50) | `pending`, `completed`, `cancelled` |
+| `transaction_date`| TIMESTAMP | |
+
+---
+
+### `reviews`
+Two-way review system linked to a completed transaction.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `transaction_id` | UUID FK → transactions | |
+| `reviewer_id` | UUID FK → accounts | |
+| `reviewee_id` | UUID FK → accounts | |
+| `rating` | INTEGER | 1 to 5 |
+| `comment` | TEXT | |
+
+---
+
 ## Data Integrity Rules
 
 | Rule | Implementation |

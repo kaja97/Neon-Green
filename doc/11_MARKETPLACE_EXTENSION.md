@@ -4,6 +4,8 @@
 > The database schema and identity structure are designed from day one to support this expansion.
 
 ## Overview
+> **UPDATE:** The core components of the marketplace (Products, Transactions, Reviews) have been implemented as of v1.5. Please see `18_TRANSACTIONS_AND_REVIEWS.md` for the finalized schema and workflow for deals and reviews. This document outlines the original expansion vision.
+
 This document outlines the expansion of AgriFarm AI from a Farm Management System into a complete **B2B & B2C Agricultural Marketplace**. A person shouldn't have to create separate accounts to farm, sell fertilizer, and buy groceries.
 
 ---
