@@ -164,3 +164,26 @@ class TrendDirection(str, Enum):
     RISING  = "rising"
     FALLING = "falling"
     STABLE  = "stable"
+
+
+# ── Transaction ──────────────────────────────────────────
+class TransactionStatus(str, Enum):
+    PENDING   = "pending"
+    CONFIRMED = "confirmed"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
+TRANSACTION_STATUS_TRANSITIONS: dict["TransactionStatus", list["TransactionStatus"]] = {
+    TransactionStatus.PENDING:   [TransactionStatus.CONFIRMED, TransactionStatus.CANCELLED],
+    TransactionStatus.CONFIRMED: [TransactionStatus.COMPLETED, TransactionStatus.CANCELLED],
+    TransactionStatus.COMPLETED: [],
+    TransactionStatus.CANCELLED: [],
+}
+
+
+# ── Product Status ───────────────────────────────────────
+class ProductStatus(str, Enum):
+    AVAILABLE = "available"
+    SOLD_OUT  = "sold_out"
+    HIDDEN    = "hidden"

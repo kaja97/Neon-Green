@@ -240,3 +240,11 @@ def get_ai_backend() -> "object":
 
     return instance
 
+
+def get_transaction_service() -> "TransactionService":
+    from modules.transaction.service import TransactionService
+    from modules.transaction.repository import TransactionRepository, ReviewRepository
+    return TransactionService(
+        transaction_repo=TransactionRepository(),
+        review_repo=ReviewRepository(),
+    )
