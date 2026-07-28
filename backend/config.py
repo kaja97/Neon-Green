@@ -20,7 +20,10 @@ class Settings(BaseSettings):
     GOOGLE_AI_STUDIO_API_KEY: Optional[str] = None
     OPENWEATHER_API_KEY: Optional[str] = None
 
-    # AI Backend — "gemini" (default) | "local" (future: Ollama/Llama)
+    # AI — Gemini Model & Backend
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_MAX_OUTPUT_TOKENS: int = 2048
+    GEMINI_TEMPERATURE: float = 0.7
     AI_BACKEND: str = "gemini"
     
     # Push Notifications (VAPID)

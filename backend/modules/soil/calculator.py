@@ -1,14 +1,188 @@
 """
-Deterministic Soil Nutrient Gap Calculator
+Soil Nutrient Gap Calculator + AI-Powered Recommendations
 
-Uses target-value deficit formula to produce real, data-driven
-fertilizer and amendment recommendations based on actual soil
-test ppm values and optimal target ranges.
+Two recommendation paths:
+  1. generate_ai_recommendations()  — sends soil data + project context to Gemini
+                                       for crop-specific, stage-aware recommendations
+  2. calculate_nutrient_gaps()      — deterministic fallback using static conversion
+                                       factors (used when Gemini is unavailable)
 """
+import json
+import logging
+import re
+from typing import Any
+
 from models.soil import SoilTest, SoilNutrientResult, SoilRecommendation
+from .soil_ai_prompt import build_soil_recommendation_prompt
+
+logger = logging.getLogger(__name__)
 
 
-# ── Optimal ranges for each nutrient (ppm) ──
+# ═══════════════════════════════════════════════════════════════════════════════
+# PATH 1: AI-Powered Recommendations via Gemini
+# ═══════════════════════════════════════════════════════════════════════════════
+
+async def generate_ai_recommendations(
+    test: SoilTest,
+    result: SoilNutrientResult,
+    project_context: dict[str, Any],
+) -> list[SoilRecommendation]:
+    """Call Gemini to generate crop-specific soil recommendations.
+
+    Args:
+        test: The saved SoilTest record (for test.id)
+        result: The SoilNutrientResult with all nutrient values
+        project_context: Dict with crop, variety, farming_method, area, growth_stage, etc.
+
+    Returns:
+        List of SoilRecommendation ORM objects ready to db.add_all()
+
+    Raises:
+        Exception if Gemini call fails (caller should fall back to static calculator)
+    """
+    from modules.ai.gemini_client import get_gemini_client
+
+    # Build soil data dict from the ORM model
+    soil_data = _extract_soil_data(result)
+
+    # Build the prompt
+    prompt = build_soil_recommendation_prompt(soil_data, project_context)
+
+    # Call Gemini
+    client = get_gemini_client()
+    if not client._is_configured():
+        raise RuntimeError("Gemini API key not configured")
+
+    raw_client = client._get_client()
+    response = raw_client.models.generate_content(
+        model=client.model_name,
+        contents=[{"role": "user", "parts": [{"text": prompt}]}],
+        config={
+            "temperature": 0.4,  # Lower temp for structured/factual output
+            "max_output_tokens": 3000,
+        },
+    )
+
+    response_text = response.text if response.text else ""
+    logger.info("Gemini soil recommendations received (%d chars)", len(response_text))
+
+    # Parse the JSON response
+    recs_data = _parse_gemini_json(response_text)
+    if not recs_data:
+        raise ValueError("Failed to parse Gemini response as JSON")
+
+    # Convert to SoilRecommendation ORM objects
+    recommendations = []
+    for item in recs_data:
+        rec_type = item.get("recommendation_type", "practice")
+        if rec_type not in ("fertilizer", "amendment", "practice"):
+            rec_type = "practice"
+
+        description = item.get("description", "")
+        if not description:
+            continue
+
+        # Prepend priority badge to description for display
+        priority = item.get("priority", "medium")
+        if priority == "high":
+            description = f"⚠️ [HIGH PRIORITY] {description}"
+
+        recommendations.append(SoilRecommendation(
+            soil_test_id=test.id,
+            recommendation_type=rec_type,
+            description=description,
+        ))
+
+    if not recommendations:
+        raise ValueError("Gemini returned zero valid recommendations")
+
+    logger.info(
+        "Generated %d AI soil recommendations (fertilizer=%d, amendment=%d, practice=%d)",
+        len(recommendations),
+        sum(1 for r in recommendations if r.recommendation_type == "fertilizer"),
+        sum(1 for r in recommendations if r.recommendation_type == "amendment"),
+        sum(1 for r in recommendations if r.recommendation_type == "practice"),
+    )
+    return recommendations
+
+
+def _extract_soil_data(result: SoilNutrientResult) -> dict[str, Any]:
+    """Extract all nutrient values from the ORM model into a clean dict."""
+    data = {}
+    fields = [
+        ("ph_level", "pH Level"),
+        ("electrical_conductivity_ec", "EC (ds/m)"),
+        ("organic_carbon_oc", "Organic Carbon (%)"),
+        ("cation_exchange_capacity_cec", "CEC (meq/100g)"),
+        ("nitrogen_n", "Nitrogen N (ppm)"),
+        ("phosphorus_p", "Phosphorus P (ppm)"),
+        ("potassium_k", "Potassium K (ppm)"),
+        ("calcium_ca", "Calcium Ca (ppm)"),
+        ("magnesium_mg", "Magnesium Mg (ppm)"),
+        ("sulfur_s", "Sulfur S (ppm)"),
+        ("zinc_zn", "Zinc Zn (ppm)"),
+        ("boron_b", "Boron B (ppm)"),
+        ("iron_fe", "Iron Fe (ppm)"),
+        ("manganese_mn", "Manganese Mn (ppm)"),
+        ("copper_cu", "Copper Cu (ppm)"),
+    ]
+    for attr, label in fields:
+        val = getattr(result, attr, None)
+        if val is not None:
+            data[label] = float(val)
+        else:
+            data[label] = None
+    return data
+
+
+def _parse_gemini_json(text: str) -> list[dict] | None:
+    """Extract and parse JSON from Gemini's response text.
+
+    Handles cases where Gemini wraps JSON in ```json ... ``` code blocks
+    or includes extra text before/after.
+    """
+    # Try direct parse first
+    try:
+        parsed = json.loads(text.strip())
+        if isinstance(parsed, dict) and "recommendations" in parsed:
+            return parsed["recommendations"]
+        if isinstance(parsed, list):
+            return parsed
+        return None
+    except json.JSONDecodeError:
+        pass
+
+    # Try extracting from ```json ... ``` code block
+    code_block = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", text, re.DOTALL)
+    if code_block:
+        try:
+            parsed = json.loads(code_block.group(1).strip())
+            if isinstance(parsed, dict) and "recommendations" in parsed:
+                return parsed["recommendations"]
+            if isinstance(parsed, list):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+
+    # Try finding JSON object in text
+    brace_match = re.search(r"\{.*\}", text, re.DOTALL)
+    if brace_match:
+        try:
+            parsed = json.loads(brace_match.group())
+            if isinstance(parsed, dict) and "recommendations" in parsed:
+                return parsed["recommendations"]
+        except json.JSONDecodeError:
+            pass
+
+    logger.error("Failed to parse Gemini soil JSON. Raw text: %s", text[:500])
+    return None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PATH 2: Static Fallback Calculator (deterministic, no API needed)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Optimal ranges for each nutrient (ppm)
 OPTIMAL_RANGES: dict[str, dict[str, float]] = {
     # Primary Macronutrients
     "nitrogen_n":  {"min": 250, "max": 400},
@@ -26,7 +200,7 @@ OPTIMAL_RANGES: dict[str, dict[str, float]] = {
     "copper_cu":    {"min": 0.5, "max": 5.0},
 }
 
-# ── Conversion factors: deficit_ppm × factor = kg/acre of product to apply ──
+# Conversion factors: deficit_ppm × factor = kg/acre of product to apply
 PRIMARY_CONVERSION = {
     "nitrogen_n":  {"product": "Urea (46% N)",       "organic_alt": "compost or blood meal",          "factor": 0.4},
     "phosphorus_p": {"product": "TSP (Triple Super Phosphate)", "organic_alt": "bone meal or rock phosphate", "factor": 2.5},
@@ -59,7 +233,10 @@ def calculate_nutrient_gaps(
     result: SoilNutrientResult,
     farming_method: str,
 ) -> list[SoilRecommendation]:
-    """Calculate fertilizer & amendment recommendations from numeric soil test values."""
+    """Calculate fertilizer & amendment recommendations from numeric soil test values.
+
+    This is the deterministic fallback used when Gemini AI is unavailable.
+    """
     recs = []
 
     # ── pH Recommendations ──

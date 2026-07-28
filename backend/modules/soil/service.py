@@ -2,16 +2,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException
 import uuid
+import logging
+from datetime import date
 
 from models.project import Project
 from models.account import FarmerProfile
+from models.plant import Plant, PlantVariety, PlantStage
 from models.soil import SoilTest, SoilNutrientResult, SoilRecommendation
 from core.base_service import BaseService
 from modules.auth.repository import FarmerProfileRepository
 from modules.project.repository import ProjectRepository
 from .repository import SoilTestRepository, SoilNutrientResultRepository, SoilRecommendationRepository
 from .schemas import SoilTestCreate
-from .calculator import calculate_nutrient_gaps
+from .calculator import calculate_nutrient_gaps, generate_ai_recommendations
+
+logger = logging.getLogger(__name__)
+
 
 class SoilService(BaseService):
     def __init__(
@@ -36,12 +42,46 @@ class SoilService(BaseService):
             raise HTTPException(status_code=404, detail="Farmer profile not found")
         return profile.id
 
+    async def _build_project_context(self, db: AsyncSession, project: Project) -> dict:
+        """Build project context dict for Gemini soil recommendations."""
+        plant = await db.get(Plant, project.plant_id)
+        variety = await db.get(PlantVariety, project.variety_id) if project.variety_id else None
+
+        # Determine current growth stage
+        growth_stage = "Unknown"
+        if project.planting_date:
+            days_since_planting = (date.today() - project.planting_date).days
+            stage_res = await db.execute(
+                select(PlantStage)
+                .where(PlantStage.plant_id == project.plant_id)
+                .order_by(PlantStage.stage_order)
+            )
+            stages = stage_res.scalars().all()
+            for s in stages:
+                if s.start_day <= days_since_planting <= s.end_day:
+                    growth_stage = s.stage_name
+                    break
+        else:
+            days_since_planting = 0
+
+        return {
+            "crop_name": plant.common_name if plant else "Unknown",
+            "crop_category": plant.category if plant else "Unknown",
+            "variety": variety.variety_name if variety else None,
+            "farming_method": project.farming_method,
+            "area": f"{float(project.area)} {project.area_unit}",
+            "growth_stage": growth_stage,
+            "days_since_planting": days_since_planting,
+            "planting_date": project.planting_date.isoformat() if project.planting_date else None,
+        }
+
     async def submit_soil_test(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID, data: SoilTestCreate):
         farmer_id = await self._get_farmer_id(db, account_id)
         project = await self.project_repo.get(db, project_id)
         if not project or project.farmer_id != farmer_id:
             raise HTTPException(status_code=404, detail="Project not found")
 
+        # 1. Save soil test
         soil_test = SoilTest(
             project_id=project_id,
             test_date=data.test_date,
@@ -52,6 +92,7 @@ class SoilService(BaseService):
         db.add(soil_test)
         await db.flush()
 
+        # 2. Save nutrient results
         soil_res = SoilNutrientResult(
             soil_test_id=soil_test.id,
             # Physical & Chemical
@@ -76,7 +117,17 @@ class SoilService(BaseService):
         )
         db.add(soil_res)
 
-        recs = calculate_nutrient_gaps(soil_test, soil_res, project.farming_method)
+        # 3. Generate recommendations — try AI first, fall back to static calculator
+        try:
+            project_context = await self._build_project_context(db, project)
+            recs = await generate_ai_recommendations(soil_test, soil_res, project_context)
+            logger.info("AI-generated %d soil recommendations for project %s", len(recs), project_id)
+        except Exception as e:
+            logger.warning(
+                "AI soil recommendations failed, falling back to static calculator: %s", e
+            )
+            recs = calculate_nutrient_gaps(soil_test, soil_res, project.farming_method)
+
         db.add_all(recs)
 
         await db.commit()

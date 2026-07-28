@@ -16,7 +16,6 @@ from .repository import AIConversationRepository, AIQueryLogRepository, AIProjec
 from .context_builder import build_project_context
 from .intent_classifier import classify_intent
 from .gemini_client import call_gemini
-from .rate_limiter import check_rate_limit
 from .response_parser import parse_ai_response
 
 class AIService(BaseService):
@@ -48,8 +47,6 @@ class AIService(BaseService):
         if not project or project.farmer_id != profile_id:
             raise HTTPException(status_code=404, detail="Project not found")
         
-        if not await check_rate_limit(profile_id, "chat"):
-            raise HTTPException(status_code=429, detail="Daily AI chat limit reached. Try again tomorrow.")
         
         if conversation_id:
             conv = await self.conv_repo.get(db, conversation_id)
@@ -105,9 +102,7 @@ class AIService(BaseService):
         if not project or project.farmer_id != profile_id:
             raise HTTPException(status_code=404, detail="Project not found")
         
-        if not await check_rate_limit(profile_id, "refresh"):
-            raise HTTPException(status_code=429, detail="Daily AI refresh limit reached.")
-            
+        
         context = await build_project_context(db, project_id)
         summary = await self.summary_repo.get_by_project(db, project_id)
         
