@@ -22,6 +22,7 @@ from models.plant import Plant, PlantStage, PlantWaterReq, PlantNutrientReq
 from models.plant_health import PlantDisease, DiseaseSolution
 from models.market import MarketPrice
 from models.plant_fertilizer import PlantFertilizerRecommendation
+from models.plant_pruning import PlantPruningGuide
 
 from seed.plants import plants
 from seed.varieties import varieties
@@ -32,6 +33,7 @@ from seed.diseases import diseases
 from seed.disease_solutions import disease_solutions
 from seed.market_prices import generate_market_prices
 from seed.fertilizers import fertilizers
+from seed.pruning import pruning_guides
 
 # Expected yields per acre in kg (for revenue estimation)
 YIELD_DATA = {
@@ -265,6 +267,29 @@ async def seed_data():
             )
             session.add(fert_rec)
 
+        # ── 9. Pruning Guides ────────────────────────────
+        print("  ✂️  Inserting Pruning Guides...")
+        pruning_count = 0
+        for pg_data in pruning_guides:
+            stage_id = stage_id_map.get(pg_data["stage_id"])
+            if not stage_id:
+                continue
+
+            pruning_rec = PlantPruningGuide(
+                plant_stage_id=stage_id,
+                pruning_type=pg_data["pruning_type"],
+                pruning_method=pg_data["pruning_method"],
+                trigger_day=pg_data.get("trigger_day", 0),
+                frequency_days=pg_data.get("frequency_days", 0),
+                pre_pruning=pg_data.get("pre_pruning"),
+                post_pruning=pg_data.get("post_pruning"),
+                tools_needed=pg_data.get("tools_needed"),
+                season_notes=pg_data.get("season_notes"),
+                importance=pg_data.get("importance", "recommended"),
+            )
+            session.add(pruning_rec)
+            pruning_count += 1
+
         # ── Commit all ───────────────────────────────────
         await session.commit()
 
@@ -279,6 +304,7 @@ async def seed_data():
     print(f"      Disease Solutions:    {len(disease_solutions)}")
     print(f"      Market Prices:       {len(market_prices)}")
     print(f"      Fertilizer Reqs:     {len(fertilizers)}")
+    print(f"      Pruning Guides:      {pruning_count}")
 
 if __name__ == "__main__":
     asyncio.run(seed_data())

@@ -136,7 +136,82 @@ class SoilService(BaseService):
         soil_test.results = soil_res
         soil_test.recommendations = await self.rec_repo.get_by_test(db, soil_test.id)
 
+        # 4. Email the recommendations to the farmer (fire-and-forget, never blocks)
+        await self._send_recommendation_email(
+            db, account_id, project, soil_test, soil_test.recommendations
+        )
+
         return soil_test
+
+    async def _send_recommendation_email(
+        self,
+        db: AsyncSession,
+        account_id: uuid.UUID,
+        project: Project,
+        soil_test: SoilTest,
+        recommendations: list[SoilRecommendation],
+    ) -> None:
+        """Send soil recommendations to the farmer's email. Failures are logged, not raised."""
+        try:
+            from models.account import Account
+            from core.email_service import send_email
+            from core.email_templates import soil_recommendation_email
+
+            # Fetch farmer's account (email) and profile (full_name)
+            account = await db.get(Account, account_id)
+            if not account or not account.email:
+                logger.warning("No email found for account %s — skipping soil email", account_id)
+                return
+
+            profile = account.farmer_profile
+            full_name = profile.full_name if profile else "Farmer"
+
+            # Get crop name for the email
+            plant = await db.get(Plant, project.plant_id)
+            crop_name = plant.common_name if plant else "Unknown Crop"
+            project_area = f"{float(project.area)} {project.area_unit}"
+            test_date = soil_test.test_date.isoformat()
+
+            # Format recommendations as dicts for the template
+            rec_dicts = [
+                {
+                    "recommendation_type": r.recommendation_type,
+                    "description": r.description,
+                }
+                for r in recommendations
+            ]
+
+            if not rec_dicts:
+                logger.info("No recommendations to email for project %s", project.id)
+                return
+
+            html_body, plain_body = soil_recommendation_email(
+                full_name=full_name,
+                crop_name=crop_name,
+                project_area=project_area,
+                test_date=test_date,
+                recommendations=rec_dicts,
+            )
+
+            success = await send_email(
+                to=account.email,
+                subject=f"🌱 Soil Test Results & Recommendations — {crop_name}",
+                html_body=html_body,
+                plain_body=plain_body,
+            )
+
+            if success:
+                logger.info(
+                    "Soil recommendation email sent to %s for project %s",
+                    account.email, project.id,
+                )
+            else:
+                logger.warning(
+                    "Soil recommendation email failed for %s (project %s)",
+                    account.email, project.id,
+                )
+        except Exception as e:
+            logger.error("Failed to send soil recommendation email: %s", e, exc_info=True)
 
     async def get_soil_tests(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
         farmer_id = await self._get_farmer_id(db, account_id)

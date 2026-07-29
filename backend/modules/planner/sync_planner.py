@@ -10,6 +10,7 @@ import logging
 
 from models.project import Project
 from models.plant import Plant, PlantStage, PlantWaterReq, PlantNutrientReq
+from models.plant_pruning import PlantPruningGuide
 from models.activity import ActivityPlan, FarmingActivity
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,12 @@ async def generate_plan_for_project(db: AsyncSession, project_id: uuid.UUID):
         )
         nutrient_req = nutrient_req_res.scalars().first()
 
+        # Fetch pruning guides for this stage
+        prune_res = await db.execute(
+            select(PlantPruningGuide).where(PlantPruningGuide.plant_stage_id == stage.id)
+        )
+        pruning_guides = prune_res.scalars().all()
+
         for day_offset in range(stage.start_day, stage.end_day + 1):
             current_date = planting_date + timedelta(days=day_offset)
 
@@ -95,6 +102,49 @@ async def generate_plan_for_project(db: AsyncSession, project_id: uuid.UUID):
                         planned_date=current_date,
                         due_date=current_date + timedelta(days=3),
                         status="pending"
+                    )
+                    activities.append(act)
+
+            # PRUNING (based on trigger_day offset + frequency)
+            for prune in pruning_guides:
+                prune_start_day = stage.start_day + prune.trigger_day
+                if prune.frequency_days > 0:
+                    if day_offset >= prune_start_day and (day_offset - prune_start_day) % prune.frequency_days == 0:
+                        due_days = 1 if prune.importance == "critical" else 3
+                        desc_parts = [prune.pruning_method]
+                        if prune.pre_pruning:
+                            desc_parts.append(f"Before: {prune.pre_pruning}")
+                        if prune.post_pruning:
+                            desc_parts.append(f"After: {prune.post_pruning}")
+                        if prune.tools_needed:
+                            desc_parts.append(f"Tools: {prune.tools_needed}")
+                        act = FarmingActivity(
+                            plan_id=new_plan.id,
+                            activity_type="pruning",
+                            title=f"Pruning — {prune.pruning_type.replace('_', ' ').title()} ({stage.stage_name})",
+                            description=" | ".join(desc_parts),
+                            planned_date=current_date,
+                            due_date=current_date + timedelta(days=due_days),
+                            status="pending",
+                        )
+                        activities.append(act)
+                elif day_offset == prune_start_day:
+                    due_days = 1 if prune.importance == "critical" else 3
+                    desc_parts = [prune.pruning_method]
+                    if prune.pre_pruning:
+                        desc_parts.append(f"Before: {prune.pre_pruning}")
+                    if prune.post_pruning:
+                        desc_parts.append(f"After: {prune.post_pruning}")
+                    if prune.tools_needed:
+                        desc_parts.append(f"Tools: {prune.tools_needed}")
+                    act = FarmingActivity(
+                        plan_id=new_plan.id,
+                        activity_type="pruning",
+                        title=f"Pruning — {prune.pruning_type.replace('_', ' ').title()} ({stage.stage_name})",
+                        description=" | ".join(desc_parts),
+                        planned_date=current_date,
+                        due_date=current_date + timedelta(days=due_days),
+                        status="pending",
                     )
                     activities.append(act)
 

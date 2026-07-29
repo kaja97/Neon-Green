@@ -5,6 +5,7 @@ from .project import Project, ProjectService
 from .plant import Plant, PlantStage, PlantNutrientReq, PlantWaterReq, PlantVariety
 from .plant_health import PlantDisease, DiseaseSolution, PlantPest, PestSolution
 from .plant_fertilizer import PlantFertilizerRecommendation
+from .plant_pruning import PlantPruningGuide
 from .activity import ActivityPlan, FarmingActivity, ActivityDetail
 from .soil import SoilTest, SoilNutrientResult, SoilRecommendation
 from .weather import WeatherCache, WeatherAlert
@@ -25,6 +26,7 @@ __all__ = [
     "Plant", "PlantStage", "PlantNutrientReq", "PlantWaterReq", "PlantVariety",
     "PlantDisease", "DiseaseSolution", "PlantPest", "PestSolution",
     "PlantFertilizerRecommendation",
+    "PlantPruningGuide",
     "ActivityPlan", "FarmingActivity", "ActivityDetail",
     "SoilTest", "SoilNutrientResult", "SoilRecommendation",
     "WeatherCache", "WeatherAlert",

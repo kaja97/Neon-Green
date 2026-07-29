@@ -43,6 +43,7 @@ class GeminiClient:
         context_json: str,
         message: str,
         intent: str,
+        needs_calculation: bool = False,
     ) -> tuple[str, int]:
         """Send a question + project context to Gemini and get a text response.
 
@@ -60,7 +61,7 @@ class GeminiClient:
 
         try:
             client = self._get_client()
-            system_prompt = get_system_prompt(context_json)
+            system_prompt = get_system_prompt(context_json, intent, needs_calculation)
 
             # Use generate_content with the configured model
             response = client.models.generate_content(
@@ -112,10 +113,15 @@ def get_gemini_client() -> GeminiClient:
     return _gemini_client
 
 
-async def call_gemini(context_json: str, message: str, intent: str) -> tuple[str, int]:
+async def call_gemini(
+    context_json: str,
+    message: str,
+    intent: str,
+    needs_calculation: bool = False,
+) -> tuple[str, int]:
     """Convenience function — keeps backward compatibility with existing code.
 
     Delegates to GeminiClient.generate().
     """
     client = get_gemini_client()
-    return await client.generate(context_json, message, intent)
+    return await client.generate(context_json, message, intent, needs_calculation)

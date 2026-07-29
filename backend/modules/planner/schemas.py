@@ -8,6 +8,7 @@ import uuid
 ACTIVITY_TYPES = [
     "irrigation",
     "fertilizer",
+    "pruning",
     "pest_control",
     "disease_check",
     "harvesting",
@@ -27,6 +28,12 @@ _ACTIVITY_TYPE_ALIASES = {
     "inspection": "monitoring",
     "pest": "pest_control",
     "disease": "disease_check",
+    "prune": "pruning",
+    "trimming": "pruning",
+    "desuckering": "pruning",
+    "topping": "pruning",
+    "thinning": "pruning",
+    "training": "pruning",
 }
 
 

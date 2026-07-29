@@ -25,7 +25,7 @@ from sqlalchemy.orm import selectinload
 from models.project import Project
 from models.plant import Plant, PlantVariety, PlantStage
 from models.activity import ActivityPlan, FarmingActivity
-from models.soil import SoilTest, SoilNutrientResult, SoilRecommendation
+from models.soil import SoilTest, SoilNutrientResult
 from models.weather import WeatherAlert
 from models.issue import ProjectIssue
 from models.farmer import FarmerLocation, FarmerLandDetail
@@ -41,9 +41,16 @@ async def build_project_context(
     project_id: uuid.UUID,
     *,
     mode: str = "full",
+    intent: str = "general",
 ) -> dict[str, Any]:
-    """Top-level builder. Returns a JSON-safe dict."""
+    """Top-level builder. Returns a JSON-safe dict.
+
+    When *intent* is provided (and is not ``"general"``), only the context
+    sections relevant to that intent are gathered — saving DB queries and
+    reducing the token payload sent to Gemini.
+    """
     import asyncio
+    from modules.ai.prompts import INTENT_CONTEXT_SECTIONS
 
     project = await db.get(Project, project_id)
     if not project:
@@ -52,42 +59,53 @@ async def build_project_context(
     plant = await db.get(Plant, project.plant_id)
     variety = await db.get(PlantVariety, project.variety_id) if project.variety_id else None
 
-    # Compute needs once — used by both nutrient section and product section.
-    try:
-        needs = await calculate_stage_needs(db, project, include_all_stages=(mode == "full"))
-        needs_dict = needs_to_dict(needs)
-    except Exception:
-        logger.exception("nutrient_engine failed for project %s", project_id)
-        needs = None
-        needs_dict = None
+    # Determine which sections are needed for this intent.
+    # None means "all sections" (general / unrecognised intent).
+    needed = INTENT_CONTEXT_SECTIONS.get(intent)
 
-    try:
-        products = await recommend_products(db, needs, project.farming_method, stage="current") if needs else None
-    except Exception:
-        logger.exception("product_matcher failed for project %s", project_id)
-        products = None
+    def _want(section_name: str) -> bool:
+        """Return True if this section should be included."""
+        return needed is None or section_name in needed
 
-    # Parallel gather of independent sections (same pattern as ProjectService.get_dashboard).
-    (
-        crop_section,
-        stage_section,
-        soil_section,
-        activities_section,
-        issues_section,
-        weather_section,
-        market_section,
-        land_section,
-    ) = await asyncio.gather(
+    # Compute nutrient needs — only if the intent actually uses them.
+    needs = None
+    needs_dict = None
+    if _want("nutrient_needs") or _want("product_recommendations"):
+        try:
+            needs = await calculate_stage_needs(db, project, include_all_stages=(mode == "full"))
+            needs_dict = needs_to_dict(needs)
+        except Exception:
+            logger.exception("nutrient_engine failed for project %s", project_id)
+
+    products = None
+    if _want("product_recommendations") and needs:
+        try:
+            products = await recommend_products(db, needs, project.farming_method, stage="current")
+        except Exception:
+            logger.exception("product_matcher failed for project %s", project_id)
+
+    # Build only the sections that this intent requires.
+    # crop & stage are always included (tiny and universally useful).
+    coros = [
         _build_crop_section(project, plant, variety),
         _build_stage_section(db, project),
-        _build_soil_section(db, project_id),
-        _build_activities_section(db, project_id),
-        _build_issues_section(db, project_id),
-        _build_weather_section(db, project_id, project),
-        _build_market_section(db, project),
-        _build_land_section(db, project),
-        return_exceptions=True,
-    )
+    ]
+    section_keys = ["crop", "stage"]
+
+    optional_sections = [
+        ("soil",       _build_soil_section(db, project_id)),
+        ("activities", _build_activities_section(db, project_id)),
+        ("issues",     _build_issues_section(db, project_id)),
+        ("weather",    _build_weather_section(db, project_id, project)),
+        ("market",     _build_market_section(db, project)),
+        ("land",       _build_land_section(db, project)),
+    ]
+    for key, coro in optional_sections:
+        if _want(key):
+            coros.append(coro)
+            section_keys.append(key)
+
+    results = await asyncio.gather(*coros, return_exceptions=True)
 
     # Replace any section that errored with a minimal placeholder.
     def _safe(section, name):
@@ -96,21 +114,13 @@ async def build_project_context(
             return {"error": name + "_unavailable"}
         return section
 
-    context: dict[str, Any] = {
-        "project_id": str(project_id),
-        "crop": _safe(crop_section, "crop"),
-        "stage": _safe(stage_section, "stage"),
-        "soil": _safe(soil_section, "soil"),
-        "activities": _safe(activities_section, "activities"),
-        "issues": _safe(issues_section, "issues"),
-        "weather": _safe(weather_section, "weather"),
-        "market": _safe(market_section, "market"),
-        "land": _safe(land_section, "land"),
-    }
+    context: dict[str, Any] = {"project_id": str(project_id)}
+    for key, result in zip(section_keys, results):
+        context[key] = _safe(result, key)
 
-    if needs_dict is not None:
+    if needs_dict is not None and _want("nutrient_needs"):
         context["nutrient_needs"] = needs_dict
-    if products is not None:
+    if products is not None and _want("product_recommendations"):
         context["product_recommendations"] = products
 
     if mode == "compact":
@@ -176,10 +186,6 @@ async def _build_soil_section(db: AsyncSession, project_id: uuid.UUID) -> dict:
         select(SoilNutrientResult).where(SoilNutrientResult.soil_test_id == test.id)
     )
     nut = nut_res.scalars().first()
-    rec_res = await db.execute(
-        select(SoilRecommendation).where(SoilRecommendation.soil_test_id == test.id)
-    )
-    recs = rec_res.scalars().all()
 
     nutrients = {}
     if nut:
@@ -198,10 +204,6 @@ async def _build_soil_section(db: AsyncSession, project_id: uuid.UUID) -> dict:
         "test_date": test.test_date.isoformat(),
         "tested_by": test.tested_by,
         "nutrients": nutrients,
-        "recommendations": [
-            {"type": r.recommendation_type, "description": r.description, "is_applied": r.is_applied}
-            for r in recs
-        ],
     }
 
 

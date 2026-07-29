@@ -7,6 +7,7 @@ import logging
 from models.project import Project
 from models.plant import Plant, PlantVariety, PlantStage, PlantWaterReq, PlantNutrientReq
 from models.plant_fertilizer import PlantFertilizerRecommendation
+from models.plant_pruning import PlantPruningGuide
 from models.activity import ActivityPlan, FarmingActivity
 
 logger = logging.getLogger(__name__)
@@ -123,6 +124,12 @@ async def generate_season_plan(project_id: str | uuid.UUID, db: AsyncSession):
         )
         fertilizers = fert_res.scalars().all()
 
+        # Pruning Guides
+        prune_res = await db.execute(
+            select(PlantPruningGuide).where(PlantPruningGuide.plant_stage_id == stage.id)
+        )
+        pruning_guides = prune_res.scalars().all()
+
         for day_offset in range(start_day_scaled, end_day_scaled + 1):
             current_date = planting_date + timedelta(days=day_offset)
 
@@ -159,6 +166,54 @@ async def generate_season_plan(project_id: str | uuid.UUID, db: AsyncSession):
                         description=f"Apply {qty:.2f} kg of {fert.fertilizer_name}. ({'Organic' if is_organic else 'Conventional'})",
                         planned_date=current_date,
                         due_date=current_date + timedelta(days=3),
+                        status="pending",
+                        is_ai_recommended=True,
+                    )
+                    activities.append(act)
+
+            # PRUNING: based on trigger_day offset + frequency
+            for prune in pruning_guides:
+                prune_start_day = start_day_scaled + int(prune.trigger_day * scale_factor)
+                if prune.frequency_days > 0:
+                    # Recurring pruning — generate every N days after trigger
+                    freq_scaled = max(1, int(prune.frequency_days * scale_factor))
+                    if day_offset >= prune_start_day and (day_offset - prune_start_day) % freq_scaled == 0:
+                        due_days = 1 if prune.importance == "critical" else 3
+                        desc_parts = [prune.pruning_method]
+                        if prune.pre_pruning:
+                            desc_parts.append(f"Before: {prune.pre_pruning}")
+                        if prune.post_pruning:
+                            desc_parts.append(f"After: {prune.post_pruning}")
+                        if prune.tools_needed:
+                            desc_parts.append(f"Tools: {prune.tools_needed}")
+                        act = FarmingActivity(
+                            plan_id=new_plan.id,
+                            activity_type="pruning",
+                            title=f"Pruning — {prune.pruning_type.replace('_', ' ').title()} ({stage.stage_name})",
+                            description=" | ".join(desc_parts),
+                            planned_date=current_date,
+                            due_date=current_date + timedelta(days=due_days),
+                            status="pending",
+                            is_ai_recommended=True,
+                        )
+                        activities.append(act)
+                elif day_offset == prune_start_day:
+                    # One-time pruning — generate only on trigger day
+                    due_days = 1 if prune.importance == "critical" else 3
+                    desc_parts = [prune.pruning_method]
+                    if prune.pre_pruning:
+                        desc_parts.append(f"Before: {prune.pre_pruning}")
+                    if prune.post_pruning:
+                        desc_parts.append(f"After: {prune.post_pruning}")
+                    if prune.tools_needed:
+                        desc_parts.append(f"Tools: {prune.tools_needed}")
+                    act = FarmingActivity(
+                        plan_id=new_plan.id,
+                        activity_type="pruning",
+                        title=f"Pruning — {prune.pruning_type.replace('_', ' ').title()} ({stage.stage_name})",
+                        description=" | ".join(desc_parts),
+                        planned_date=current_date,
+                        due_date=current_date + timedelta(days=due_days),
                         status="pending",
                         is_ai_recommended=True,
                     )

@@ -61,9 +61,9 @@ class AIService(BaseService):
             db.add(conv)
             await db.flush()
         
-        intent = classify_intent(message)
-        context = await build_project_context(db, project_id)
-        ai_response, tokens = await call_gemini(context, message, intent)
+        intent, needs_calculation = classify_intent(message)
+        context = await build_project_context(db, project_id, intent=intent)
+        ai_response, tokens = await call_gemini(context, message, intent, needs_calculation)
         parsed = parse_ai_response(ai_response)
         
         user_log = AIQueryLog(conversation_id=conv.id, role="user", content=message, tokens_used=0)
@@ -78,6 +78,7 @@ class AIService(BaseService):
             "ai_response": parsed["text"],
             "structured": parsed["structured"],
             "intent": intent,
+            "needs_calculation": needs_calculation,
             "tokens_used": tokens
         }
 
