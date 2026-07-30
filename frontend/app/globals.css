@@ -1,0 +1,266 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ════════════════════════════════════════════════════════════════
+   THEME TOKENS
+   ─────────────────────────────────────────────────────────────────
+   Dark is the default (`:root` = dark matte-neon).
+   `.light` overrides produce a buttery soft light surface.
+   Every token is a space-separated HSL triple (no `hsl()` wrapper)
+   so Tailwind utilities can read them via `hsl(var(--token))`.
+   ════════════════════════════════════════════════════════════════ */
+@layer base {
+  :root,
+  .dark {
+    /* ── Brand Colors (static) ──────────────────── */
+    --color-neon-green: 142 71% 45%;
+    --color-neon-gold: 38 92% 50%;
+    --color-neon-red: 0 84% 60%;
+    --color-neon-blue: 217 91% 60%;
+    --color-neon-purple: 270 76% 60%;
+
+    /* ── Surface Palette (Dark Matte) ────────────── */
+    --color-surface-primary: 220 20% 6%;
+    --color-surface-secondary: 220 18% 10%;
+    --color-surface-tertiary: 220 16% 14%;
+    --color-surface-elevated: 220 14% 18%;
+
+    /* ── Foreground ──────────────────────────────── */
+    --color-text-primary: 210 40% 98%;
+    --color-text-secondary: 215 20% 65%;
+    --color-text-muted: 215 15% 45%;
+
+    /* ── Border / Divider ────────────────────────── */
+    --color-border: 215 20% 15%;
+    --color-border-hover: 215 20% 25%;
+
+    /* ── Glass Effect (Dark) ─────────────────────── */
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-hover: rgba(255, 255, 255, 0.06);
+    --glass-ring: rgba(34, 197, 94, 0.3);
+
+    /* ── Scrollbar ───────────────────────────────── */
+    --scrollbar-thumb: 215 15% 45%;
+
+    color-scheme: dark;
+  }
+
+  /* ────────────────────────────────────────────────
+     LIGHT THEME — soft, matte, buttery
+     ──────────────────────────────────────────────── */
+  .light {
+    --color-surface-primary: 210 20% 96%;
+    --color-surface-secondary: 210 20% 98%;
+    --color-surface-tertiary: 210 20% 92%;
+    --color-surface-elevated: 210 20% 88%;
+
+    --color-text-primary: 222 47% 11%;
+    --color-text-secondary: 215 25% 35%;
+    --color-text-muted: 215 16% 47%;
+
+    --color-border: 214 32% 88%;
+    --color-border-hover: 214 32% 78%;
+
+    --glass-bg: rgba(255, 255, 255, 0.72);
+    --glass-border: rgba(15, 23, 42, 0.08);
+    --glass-hover: rgba(255, 255, 255, 0.85);
+    --glass-ring: rgba(16, 185, 129, 0.35);
+
+    --scrollbar-thumb: 215 16% 65%;
+
+    color-scheme: light;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-surface-primary text-text-primary antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    /* Buttery theme transition */
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  /* ── Selection ─────────────────────────────────── */
+  ::selection {
+    background: hsl(var(--color-neon-green) / 0.3);
+    color: hsl(var(--color-text-primary));
+  }
+
+  /* ── Scrollbar Styling ─────────────────────────── */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--scrollbar-thumb) / 0.35);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--scrollbar-thumb) / 0.55);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   COMPONENT UTILITIES (theme-aware — read CSS vars above)
+   ════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* ── Matte Glass Card ───────────────────────────── */
+  .glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    @apply rounded-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.35)];
+  }
+  .glass-card-hover {
+    @apply glass-card transition-all duration-500 ease-out;
+  }
+  .glass-card-hover:hover {
+    background: var(--glass-hover);
+    border-color: var(--glass-ring);
+    box-shadow:
+      0 8px 32px 0 rgba(0, 0, 0, 0.35),
+      0 0 25px rgba(34, 197, 94, 0.15);
+    transform: scale(1.01);
+  }
+
+  /* ── Neon Glow Utilities ────────────────────────── */
+  .glow-green {
+    box-shadow:
+      0 0 25px rgba(34, 197, 94, 0.3),
+      0 0 80px rgba(34, 197, 94, 0.15);
+  }
+  .glow-green-lg {
+    box-shadow:
+      0 0 40px rgba(34, 197, 94, 0.45),
+      0 0 100px rgba(34, 197, 94, 0.2);
+  }
+  .glow-green-sm {
+    box-shadow: 0 0 18px rgba(34, 197, 94, 0.35);
+  }
+  .glow-gold {
+    box-shadow:
+      0 0 25px rgba(245, 158, 11, 0.25),
+      0 0 80px rgba(245, 158, 11, 0.1);
+  }
+  .glow-gold-sm {
+    box-shadow: 0 0 18px rgba(245, 158, 11, 0.3);
+  }
+  .glow-blue {
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.3);
+  }
+  .glow-blue-sm {
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.35);
+  }
+  .glow-red {
+    box-shadow:
+      0 0 25px rgba(239, 68, 68, 0.25),
+      0 0 80px rgba(239, 68, 68, 0.1);
+  }
+
+  /* ── Text Glow ──────────────────────────────────── */
+  .text-glow-green {
+    text-shadow:
+      0 0 12px rgba(34, 197, 94, 0.6),
+      0 0 40px rgba(34, 197, 94, 0.25);
+  }
+  .text-glow-gold {
+    text-shadow:
+      0 0 12px rgba(245, 158, 11, 0.5),
+      0 0 40px rgba(245, 158, 11, 0.2);
+  }
+
+  /* ── Premium Neon Buttons ───────────────────────── */
+  .btn-primary {
+    @apply bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 text-white font-bold rounded-xl
+           shadow-[0_0_15px_rgba(34,197,94,0.3)] transition-all duration-500 ease-out hover:scale-[1.03] active:scale-[0.98];
+  }
+  .btn-primary:hover {
+    box-shadow:
+      0 0 30px rgba(34, 197, 94, 0.6),
+      0 0 10px rgba(34, 197, 94, 0.2);
+  }
+
+  .btn-secondary {
+    @apply glass-card text-text-primary font-semibold rounded-xl
+           transition-all duration-500;
+  }
+  .btn-secondary:hover {
+    background: var(--glass-hover);
+    border-color: var(--glass-ring);
+  }
+
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold rounded-xl
+           shadow-lg transition-all duration-500 hover:scale-[1.03] active:scale-[0.98];
+  }
+  .btn-danger:hover {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+  }
+
+  /* ── Hide scrollbar (for FarmingCircle etc.) ───── */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ── Keyframe Animations ──────────────────────────── */
+@keyframes highlight-flash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  25% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.4); }
+  50% { box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2); }
+  75% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.4); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(34, 197, 94, 0.4); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Reduced motion: keep it calm for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

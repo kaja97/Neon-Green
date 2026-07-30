@@ -7,8 +7,12 @@
 ## Entity Relationship Overview
 
 ```
-accounts (1) ──────────────────── (1) farmer_profiles
-                                          │
+                                  ┌── (1) farmer_profiles ── (many) projects
+                                  │
+accounts (1) ─────────────────────┼── (1) vendor_profiles ── (many) vendor_products
+                                  │
+                                  └── (1) buyer_profiles  ── (many) orders
+
                   ┌───────────────────────┼──────────────────────┐
                   │                       │                      │
          farmer_locations        farmer_land_details      farmer_livestock
@@ -45,12 +49,16 @@ notifications (links to: farmer, project, activity, issue, alert)
 
 farmer_rag_documents ──── farmer_rag_chunks (pgvector)
 ai_conversations ──── ai_query_logs
+ai_project_summaries (cached Gemini AI summaries per project)
 market_prices ──── market_trends
+
+vendor_products (agri-inputs) ──── orders (B2B/B2C)
+harvest_listings (crop sales) ──── order_items
 ```
 
 ---
 
-## Section 1: Account & Identity Tables
+## Section 1: Universal Identity & Account Tables
 
 ### `accounts`
 Core authentication record. One per user.
@@ -71,7 +79,7 @@ Core authentication record. One per user.
 ---
 
 ### `farmer_profiles`
-Personal details for each farmer. **1-to-1 with accounts.**
+Personal details for each farmer. **1-to-1 with accounts.** Used for managing crops and using the RAG AI.
 
 | Column | Type | Notes |
 |--------|------|-------|
@@ -83,8 +91,39 @@ Personal details for each farmer. **1-to-1 with accounts.**
 | `primary_language` | VARCHAR(10) | `en`, `si`, `ta` |
 | `experience_years` | INTEGER | Default 0 |
 | `education_level` | VARCHAR(50) | Optional |
+| `farming_method` | VARCHAR(50) | e.g. `organic`, `conventional` |
 | `avatar_url` | TEXT | S3 URL |
 | `bio` | TEXT | Short farm description |
+
+---
+
+### `vendor_profiles`
+For sellers of agri-inputs (Fertilizer, Equipment, Seeds). **1-to-1 with accounts.**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `account_id` | UUID FK → accounts | CASCADE DELETE |
+| `business_name` | VARCHAR(255) | Required |
+| `tax_id` | VARCHAR(100) | |
+| `warehouse_location` | TEXT | |
+| `contact_phone` | VARCHAR(20) | |
+| `rating` | DECIMAL(3,2) | 0.0 - 5.0 |
+| `is_verified` | BOOLEAN | Verified business |
+
+---
+
+### `buyer_profiles`
+For purchasing harvest outputs (Individuals, Retailers, Wholesalers). **1-to-1 with accounts.**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `account_id` | UUID FK → accounts | CASCADE DELETE |
+| `full_name` | VARCHAR(255) | |
+| `buyer_type` | VARCHAR(50) | `Individual`, `Retailer`, `Wholesaler` |
+| `delivery_address` | TEXT | |
+| `contact_phone` | VARCHAR(20) | |
 
 ---
 
@@ -101,8 +140,8 @@ A farmer can have multiple land locations (home farm, north field, etc.)
 | `district` | VARCHAR(100) | Important for market prices |
 | `province` | VARCHAR(100) | |
 | `country` | VARCHAR(100) | Default: Sri Lanka |
-| `latitude` | DECIMAL(10,8) | GPS coordinate |
-| `longitude` | DECIMAL(11,8) | GPS coordinate |
+| `location_polygon` | GEOMETRY(Polygon, 4326) | PostGIS GeoJSON mapping coordinates |
+| `centroid` | GEOMETRY(Point, 4326) | Focal point for localized weather fetching |
 | `timezone` | VARCHAR(50) | Default: Asia/Colombo |
 | `is_primary` | BOOLEAN | Primary farm location |
 
@@ -230,76 +269,62 @@ Daily water needs per plant per stage. Powers irrigation scheduling.
 ---
 
 ### `plant_fertilizer_recommendations`
-Specific fertilizer products recommended per plant per stage.
+Specific fertilizer products recommended per plant stage and farming method.
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `plant_id` | UUID FK → plants | |
-| `stage_id` | UUID FK → plant_stages | |
-| `fertilizer_type` | VARCHAR(100) | "Urea", "TSP", "MOP", "Compost" |
-| `is_organic` | BOOLEAN | Organic-only flag |
-| `quantity_per_acre` | DECIMAL(10,4) | Amount per acre |
-| `unit` | VARCHAR(20) | `kg`, `L`, `bags` |
-| `application_method` | VARCHAR(100) | `broadcast`, `band`, `foliar`, `drip` |
-| `timing_note` | TEXT | "Apply at planting", "Split 3 ways over the stage" |
+| `plant_stage_id` | UUID FK → plant_stages | On delete cascade |
+| `farming_method` | VARCHAR(50) | `organic`, `conventional`, `integrated` |
+| `fertilizer_name` | VARCHAR(255) | Name of the fertilizer product |
+| `application_rate_per_acre_kg` | DECIMAL(10,2) | Rate of application in kg per acre |
+| `instructions` | TEXT | Specific application instructions |
 
 ---
 
 ## Section 3: Diseases & Pests Tables
 
-### `farming_methods`
-Reference table for organic / conventional / integrated farming.
+### `farming_methods` [NOT IMPLEMENTED AS A DB TABLE]
+Note: Farming methods are defined statically as a service list in the backend code. The `projects.farming_method` column is a simple `VARCHAR(50)` string storing `"organic"`, `"inorganic"`, or `"integrated"`.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID PK | |
-| `code` | VARCHAR(20) UNIQUE | `organic`, `inorganic`, `integrated` |
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | VARCHAR(20) | `organic` / `inorganic` / `integrated` |
 | `name` | VARCHAR(100) | Display name |
 | `description` | TEXT | Brief explanation |
 
 ---
 
 ### `plant_diseases`
-Master disease catalogue. Linked to a plant (or NULL = affects many plants).
+Master disease catalogue. Linked to a plant.
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `plant_id` | UUID FK → plants | NULL = multi-crop disease |
-| `disease_name` | VARCHAR(255) | "Early Blight", "Late Blight" |
-| `local_name` | VARCHAR(255) | Sinhala/Tamil name |
-| `pathogen_type` | VARCHAR(50) | `fungal`, `bacterial`, `viral`, `nutritional`, `physiological` |
-| `symptoms` | TEXT | Keyword-rich symptom text (for matching) |
-| `visual_symptoms` | TEXT | What the farmer sees in plain language |
-| `affected_parts` | TEXT[] | `['leaves', 'stem', 'roots', 'fruit']` |
-| `spread_conditions` | TEXT | Weather/conditions that promote spread |
-| `spread_method` | VARCHAR(100) | `water`, `wind`, `insects`, `soil` |
-| `severity` | VARCHAR(20) | `low`, `medium`, `high`, `critical` |
-| `incubation_period` | VARCHAR(100) | e.g., "5–10 days after infection" |
-| `image_urls` | TEXT[] | Visual reference images |
+| `plant_id` | UUID FK → plants | CASCADE DELETE |
+| `name` | VARCHAR(255) | "Early Blight", "Late Blight" |
+| `scientific_name` | VARCHAR(255) | Optional |
+| `description` | TEXT | Detailed description |
+| `symptoms` | VARCHAR[] | Array of symptom keywords |
+| `conditions` | VARCHAR[] | Array of weather conditions, e.g. `['high humidity', 'temp > 30C']` |
+| `severity` | VARCHAR(50) | `low`, `medium`, `high`, `critical` |
+| `image_url` | TEXT | S3/MinIO visual reference image |
 
 ---
 
-### `plant_pests`
+### `plant_pests` [NOT SEEDED IN v1.0]
 Master pest catalogue.
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `plant_id` | UUID FK → plants | NULL = multi-crop pest |
-| `pest_name` | VARCHAR(255) | "Aphids", "Whitefly" |
-| `local_name` | VARCHAR(255) | |
-| `pest_type` | VARCHAR(50) | `insect`, `mite`, `nematode`, `rodent`, `bird` |
-| `pest_category` | VARCHAR(50) | `sucking`, `chewing`, `boring`, `soil` |
-| `symptoms` | TEXT | Keyword-rich symptom text |
-| `visual_symptoms` | TEXT | Plain-language description |
-| `affected_parts` | TEXT[] | |
-| `infestation_conditions` | TEXT | Conditions that favour pest |
-| `damage_threshold` | TEXT | Economic injury level |
-| `life_cycle` | TEXT | Brief life cycle description |
-| `severity` | VARCHAR(20) | |
-| `image_urls` | TEXT[] | |
+| `plant_id` | UUID FK → plants | CASCADE DELETE |
+| `name` | VARCHAR(255) | "Aphids", "Whitefly" |
+| `scientific_name` | VARCHAR(255) | Optional |
+| `description` | TEXT | Detailed description |
+| `signs` | VARCHAR[] | Array of signs keywords |
+| `affected_parts` | VARCHAR[] | Array of affected parts |
+| `image_url` | TEXT | S3/MinIO visual reference image | |
 
 ---
 
@@ -309,27 +334,26 @@ Treatment solutions per disease, filtered by farming method.
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `disease_id` | UUID FK → plant_diseases | |
-| `method_id` | UUID FK → farming_methods | Organic or conventional |
-| `solution_name` | VARCHAR(255) | "Mancozeb spray", "Neem oil" |
-| `product_name` | VARCHAR(255) | Brand or chemical name |
-| `active_ingredient` | VARCHAR(255) | Active ingredient |
-| `description` | TEXT | Application instructions |
-| `dosage` | TEXT | e.g., "2g per litre" |
-| `dilution_ratio` | TEXT | e.g., "1:500" |
-| `application_method` | TEXT | Spraying, soil drench, etc. |
-| `frequency` | TEXT | e.g., "Every 7 days" |
-| `timing` | TEXT | "Early morning", "Before rain" |
-| `waiting_period_days` | INTEGER | Days before harvest after application |
-| `precautions` | TEXT | Safety warnings |
-| `estimated_cost` | DECIMAL(10,2) | Per acre cost estimate |
-| `effectiveness` | INTEGER | Rating 1–10 |
+| `disease_id` | UUID FK → plant_diseases | CASCADE DELETE |
+| `farming_method` | VARCHAR(50) | `organic` or `conventional` |
+| `solution_type` | VARCHAR(50) | `preventive` or `curative` |
+| `treatment_name` | VARCHAR(255) | Name of treatment |
+| `dosage` | VARCHAR(255) | e.g., "2g per liter" |
+| `instructions` | TEXT | Application instructions |
 
 ---
 
-### `pest_solutions`
-Same structure as disease_solutions but for pests.
-*(Same columns as disease_solutions, referencing pest_id)*
+### `pest_solutions` [NOT SEEDED IN v1.0]
+Treatment solutions per pest, filtered by farming method.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `pest_id` | UUID FK → plant_pests | CASCADE DELETE |
+| `farming_method` | VARCHAR(50) | `organic` or `conventional` |
+| `treatment_name` | VARCHAR(255) | |
+| `dosage` | VARCHAR(255) | |
+| `instructions` | TEXT | |
 
 ---
 
@@ -346,16 +370,19 @@ The central entity. One project = one crop + one farm area + one season.
 | `location_id` | UUID FK → farmer_locations | Where it's being grown |
 | `land_detail_id` | UUID FK → farmer_land_details | Land characteristics |
 | `name` | VARCHAR(255) | "Tomato Farm — 1 Acre — March 2025" |
-| `description` | TEXT | Optional notes |
-| `farming_method_id` | UUID FK → farming_methods | Determines recommendation type |
-| `area` | DECIMAL(10,4) | Area being farmed |
+| `area` | DECIMAL(10,2) | Area being farmed |
 | `area_unit` | VARCHAR(20) | `acres`, `hectares` |
-| `plant_count` | INTEGER | Estimated plant count |
+| `farming_method` | VARCHAR(50) | `organic` / `inorganic` / `integrated` |
 | `planting_date` | DATE | When planting started |
-| `expected_harvest_date` | DATE | Auto-calculated from plant duration |
-| `actual_harvest_date` | DATE | Filled on harvest |
-| `status` | VARCHAR(30) | `planning`, `active`, `harvested`, `failed`, `paused` |
-| `notes` | TEXT | |
+| `status` | VARCHAR(50) | `active`, `harvested`, `failed`, etc. |
+| `current_stage_id` | UUID FK → plant_stages | Current growth stage |
+| `plan_generation_status` | VARCHAR(50) | `pending`, `generating`, `completed`, `failed` |
+| `expected_harvest_date` | DATE | Auto-calculated |
+| `expected_yield_kg` | DECIMAL(10,2) | Yield estimate |
+| `expected_revenue` | DECIMAL(12,2) | Revenue estimate |
+| `actual_yield_kg` | DECIMAL(10,2) | Actual yield at harvest |
+| `actual_revenue` | DECIMAL(12,2) | Actual revenue |
+| `actual_harvest_date` | DATE | Date harvested |
 | `created_at` | TIMESTAMP | |
 | `updated_at` | TIMESTAMP | |
 
@@ -402,25 +429,13 @@ Actual measured values from the soil test.
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `soil_test_id` | UUID FK → soil_tests | |
-| `ph` | DECIMAL(4,2) | Soil pH |
-| `nitrogen_ppm` | DECIMAL(10,4) | |
-| `phosphorus_ppm` | DECIMAL(10,4) | |
-| `potassium_ppm` | DECIMAL(10,4) | |
-| `calcium_ppm` | DECIMAL(10,4) | |
-| `magnesium_ppm` | DECIMAL(10,4) | |
-| `sulfur_ppm` | DECIMAL(10,4) | |
-| `zinc_ppm` | DECIMAL(10,4) | |
-| `boron_ppm` | DECIMAL(10,4) | |
-| `iron_ppm` | DECIMAL(10,4) | |
-| `manganese_ppm` | DECIMAL(10,4) | |
-| `copper_ppm` | DECIMAL(10,4) | |
-| `organic_matter_pct` | DECIMAL(5,2) | |
-| `ec_ds_per_m` | DECIMAL(8,4) | Electrical conductivity |
-| `cec` | DECIMAL(8,4) | Cation exchange capacity |
-| `sand_pct` | DECIMAL(5,2) | Texture analysis |
-| `silt_pct` | DECIMAL(5,2) | |
-| `clay_pct` | DECIMAL(5,2) | |
+| `soil_test_id` | UUID FK → soil_tests | CASCADE DELETE |
+| `ph_level` | DECIMAL(3,1) | Soil pH |
+| `nitrogen_level` | VARCHAR(20) | `Low`, `Medium`, `High` |
+| `phosphorus_level` | VARCHAR(20) | `Low`, `Medium`, `High` |
+| `potassium_level` | VARCHAR(20) | `Low`, `Medium`, `High` |
+| `organic_matter_perc` | DECIMAL(5,2) | Organic matter percentage |
+| `moisture_level` | VARCHAR(20) | Moisture level indicator |
 
 ---
 
@@ -430,20 +445,11 @@ Computed recommendations generated from soil test analysis (deterministic calcul
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `soil_test_id` | UUID FK → soil_tests | |
-| `project_id` | UUID FK → projects | |
-| `recommendation_type` | VARCHAR(50) | `fertilizer`, `amendment`, `pH_correction`, `irrigation` |
-| `nutrient_affected` | VARCHAR(50) | Which nutrient is deficient |
-| `current_level` | DECIMAL(10,4) | Measured value |
-| `optimal_level` | DECIMAL(10,4) | Target value |
-| `deficiency_severity` | VARCHAR(20) | `none`, `mild`, `moderate`, `severe` |
-| `action_required` | TEXT | Plain-language action |
-| `product_name` | VARCHAR(255) | Recommended product |
-| `quantity_per_acre` | DECIMAL(10,4) | How much to apply |
-| `unit` | VARCHAR(20) | kg, L |
-| `timing` | TEXT | When to apply |
-| `priority` | INTEGER | 1=urgent, 2=normal, 3=optional |
-| `is_for_organic` | BOOLEAN | Organic-compatible solution |
+| `soil_test_id` | UUID FK → soil_tests | CASCADE DELETE |
+| `recommendation_type` | VARCHAR(50) | `fertilizer`, `amendment`, `practice` |
+| `description` | TEXT | Recommendation details |
+| `is_applied` | BOOLEAN | Has recommendation been applied |
+| `applied_at` | TIMESTAMP | When applied |
 
 ---
 
@@ -455,14 +461,10 @@ Caches weather API responses to avoid repeated API calls.
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `latitude` | DECIMAL(10,8) | |
-| `longitude` | DECIMAL(11,8) | |
-| `location_key` | VARCHAR(50) GENERATED | `"lat,lng"` rounded to 3 decimals |
+| `location_id` | UUID FK → farmer_locations | CASCADE DELETE |
 | `forecast_date` | DATE | Date the forecast is for |
-| `weather_json` | JSONB | Full API response |
-| `fetched_at` | TIMESTAMP | When it was fetched |
+| `data` | JSONB | Full API response |
 | `expires_at` | TIMESTAMP | Cache expiry (3 hours) |
-| **UNIQUE** | | `(location_key, forecast_date)` |
 
 ---
 
@@ -472,15 +474,12 @@ Alerts generated from weather analysis for a project.
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `project_id` | UUID FK → projects | |
-| `alert_type` | VARCHAR(50) | `rain_expected`, `drought`, `frost`, `storm`, `high_humidity` |
-| `severity` | VARCHAR(20) | `info`, `warning`, `critical` |
-| `title` | VARCHAR(255) | Short alert title |
-| `description` | TEXT | Detail |
-| `start_time` | TIMESTAMP | Alert window start |
-| `end_time` | TIMESTAMP | Alert window end |
-| `action_required` | TEXT | What farmer should do |
-| `is_acknowledged` | BOOLEAN | Farmer has read it |
+| `project_id` | UUID FK → projects | CASCADE DELETE |
+| `alert_type` | VARCHAR(50) | `heavy_rain`, `drought`, `extreme_heat`, etc. |
+| `severity` | VARCHAR(20) | `low`, `medium`, `high` |
+| `message` | TEXT | Alert message details |
+| `target_date` | DATE | Target date for the alert |
+| `is_resolved` | BOOLEAN | Resolved status |
 
 ---
 
@@ -508,68 +507,54 @@ Individual farming tasks (the core of daily guidance).
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `project_id` | UUID FK → projects | |
-| `plan_id` | UUID FK → activity_plans | Which plan this belongs to |
-| `stage_id` | UUID FK → plant_stages | Which crop stage this is for |
-| `activity_type` | VARCHAR(50) | `watering`, `fertilizing`, `pruning`, `spraying`, `harvesting`, `monitoring` |
+| `plan_id` | UUID FK → activity_plans | CASCADE DELETE |
+| `activity_type` | VARCHAR(50) | `irrigation`, `fertilizer`, `monitoring`, etc. |
 | `title` | VARCHAR(255) | "Water plants — 180L" |
 | `description` | TEXT | Detailed instructions |
-| `scheduled_date` | DATE | When to do it |
-| `scheduled_time` | TIME | Optimal time of day |
-| `priority` | INTEGER | 1=critical, 2=normal, 3=optional |
-| `status` | VARCHAR(30) | `pending`, `done`, `skipped`, `rescheduled` |
-| `is_weather_adjusted` | BOOLEAN | Was this modified by weather? |
-| `completed_at` | TIMESTAMP | When farmer marked done |
-| `skipped_reason` | TEXT | e.g., "Rain expected 18mm" |
-| `notes` | TEXT | Farmer notes on completion |
+| `planned_date` | DATE | Planned date for activity |
+| `due_date` | DATE | Due date for activity |
+| `status` | VARCHAR(50) | `pending`, `done`, `skipped`, etc. |
+| `completed_at` | TIMESTAMP | Completion timestamp |
+| `is_ai_recommended` | BOOLEAN | Generated or recommended |
+| `ai_reasoning` | TEXT | Notes/reasoning |
 
 ---
 
 ### `activity_details`
-Key-value parameters for each activity (flexible schema for different task types).
+Details for individual activities.
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `activity_id` | UUID FK → farming_activities | |
-| `detail_key` | VARCHAR(100) | `water_liters`, `fertilizer_name`, `dosage`, `method` |
-| `detail_value` | TEXT | The value |
-| `unit` | VARCHAR(50) | Unit of measurement |
+| `activity_id` | UUID FK → farming_activities | CASCADE DELETE, UNIQUE |
+| `required_water_liters` | DECIMAL(8,2) | |
+| `required_fertilizer_kg` | DECIMAL(8,2) | |
+| `fertilizer_name` | VARCHAR(255) | |
+| `actual_water_liters` | DECIMAL(8,2) | |
+| `actual_fertilizer_kg` | DECIMAL(8,2) | |
 | `notes` | TEXT | |
-
-**Example rows for a watering activity:**
-- `water_liters` = `180`, unit = `L`
-- `method` = `drip`
-- `duration_minutes` = `45`
-
-**Example rows for a fertilizing activity:**
-- `fertilizer_name` = `Muriate of Potash`
-- `quantity_kg` = `12`, unit = `kg`
-- `method` = `broadcast`
-- `timing` = `Apply in morning, water after`
+| `attachments` | VARCHAR[] | Array of attachment S3 URLs |
 
 ---
 
 ### `project_issues`
-Farmer-reported problems (disease/pest/weather damage/other).
+Farmer-reported problems (disease/pest/nutrient deficiency/other).
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `project_id` | UUID FK → projects | |
-| `farmer_id` | UUID FK → farmer_profiles | |
-| `issue_type` | VARCHAR(50) | `disease`, `pest`, `weather_damage`, `nutritional`, `other` |
+| `project_id` | UUID FK → projects | CASCADE DELETE |
+| `issue_type` | VARCHAR(50) | `disease`, `pest`, `nutrient_deficiency`, `other` |
 | `title` | VARCHAR(255) | Brief title |
 | `description` | TEXT | Detailed description |
-| `affected_area_pct` | DECIMAL(5,2) | % of crop affected |
-| `affected_parts` | TEXT[] | `['leaves', 'fruit']` |
-| `image_urls` | TEXT[] | Uploaded photos |
-| `reported_at` | TIMESTAMP | |
-| `matched_disease_id` | UUID FK → plant_diseases | Resolved diagnosis |
-| `matched_pest_id` | UUID FK → plant_pests | Resolved diagnosis |
-| `resolution_status` | VARCHAR(30) | `open`, `diagnosed`, `resolved`, `monitoring` |
-| `resolution_notes` | TEXT | What was done |
-| `resolved_at` | TIMESTAMP | |
+| `severity` | VARCHAR(20) | `low`, `medium`, `high`, `critical` |
+| `reported_date` | DATE | Date reported |
+| `status` | VARCHAR(20) | `open`, `in_progress`, `resolved` |
+| `resolved_date` | DATE | Date resolved |
+| `identified_disease_id` | UUID FK → plant_diseases | Optional |
+| `identified_pest_id` | UUID FK → plant_pests | Optional |
+| `images` | VARCHAR[] | Array of uploaded photo URLs |
+| `ai_diagnosis` | TEXT | Stored raw diagnosis response |
 
 ---
 
@@ -581,14 +566,12 @@ Crop price records (fetched or manually entered).
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `plant_id` | UUID FK → plants | |
-| `district` | VARCHAR(100) | Market district |
-| `market_name` | VARCHAR(255) | "Colombo Pettah", "Dambulla" |
-| `price_per_unit` | DECIMAL(10,2) | |
-| `unit` | VARCHAR(30) | `kg`, `100kg`, `bushel` |
+| `plant_id` | UUID FK → plants | CASCADE DELETE |
+| `region` | VARCHAR(100) | Market region/district |
+| `date` | DATE | Date recorded |
+| `price_per_kg` | DECIMAL(10,2) | |
 | `currency` | VARCHAR(10) | Default: LKR |
 | `source` | VARCHAR(100) | Data source |
-| `recorded_date` | DATE | |
 
 ---
 
@@ -598,16 +581,11 @@ Weekly computed price trend summaries.
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `plant_id` | UUID FK → plants | |
-| `district` | VARCHAR(100) | |
-| `period_start` | DATE | Week start |
-| `period_end` | DATE | Week end |
-| `avg_price` | DECIMAL(10,2) | |
-| `min_price` | DECIMAL(10,2) | |
-| `max_price` | DECIMAL(10,2) | |
-| `trend_direction` | VARCHAR(20) | `rising`, `falling`, `stable` |
-| `trend_pct` | DECIMAL(6,2) | % change from previous period |
-| `computed_at` | TIMESTAMP | |
+| `plant_id` | UUID FK → plants | CASCADE DELETE |
+| `region` | VARCHAR(100) | |
+| `trend_direction` | VARCHAR(20) | `up`, `down`, `stable` |
+| `percentage_change` | DECIMAL(5,2) | Percentage change |
+| `analysis` | VARCHAR(255) | Brief summary analysis text |
 
 ---
 
@@ -619,26 +597,24 @@ In-app and push notification records.
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `farmer_id` | UUID FK → farmer_profiles | |
-| `project_id` | UUID FK → projects | Optional |
-| `activity_id` | UUID FK → farming_activities | Links to specific activity |
-| `issue_id` | UUID FK → project_issues | Links to specific issue |
-| `alert_id` | UUID FK → weather_alerts | Links to weather alert |
-| `notification_type` | VARCHAR(50) | `activity_reminder`, `weather_alert`, `market_alert`, `issue_update`, `ai_insight` |
+| `farmer_id` | UUID FK → farmer_profiles | CASCADE DELETE |
+| `project_id` | UUID FK → projects | CASCADE DELETE |
+| `type` | VARCHAR(50) | `activity_reminder`, `weather_alert`, `market_alert`, `issue_update`, `ai_insight` |
 | `title` | VARCHAR(255) | |
 | `message` | TEXT | |
-| `deep_link` | TEXT | URL: `/projects/[id]?scroll=activity_plan&highlight=act_123` |
+| `icon` | VARCHAR(50) | |
+| `deep_link` | VARCHAR(500) | |
+| `target_block` | VARCHAR(50) | |
+| `target_entity_id` | UUID | |
 | `is_read` | BOOLEAN | |
-| `is_pushed` | BOOLEAN | Sent via push notification |
-| `push_token` | TEXT | Device token used |
-| `scheduled_for` | TIMESTAMP | When to send |
-| `sent_at` | TIMESTAMP | When actually sent |
+| `is_pushed` | BOOLEAN | |
+| `scheduled_for` | TIMESTAMP | |
 
 ---
 
 ## Section 10: RAG & AI Tables
 
-### `farmer_rag_documents`
+### `farmer_rag_documents` [NOT IMPLEMENTED YET] [NOT IMPLEMENTED YET]
 Text documents stored in each farmer's personal knowledge base.
 
 | Column | Type | Notes |
@@ -657,7 +633,7 @@ Text documents stored in each farmer's personal knowledge base.
 
 ---
 
-### `farmer_rag_chunks`
+### `farmer_rag_chunks` [NOT IMPLEMENTED YET] [NOT IMPLEMENTED YET]
 Vector chunks from RAG documents. Uses pgvector for similarity search.
 
 | Column | Type | Notes |
@@ -667,7 +643,7 @@ Vector chunks from RAG documents. Uses pgvector for similarity search.
 | `farmer_id` | UUID FK → farmer_profiles | Denormalized for faster filtering |
 | `chunk_index` | INTEGER | Chunk position in document |
 | `content` | TEXT | Chunk text (500 tokens) |
-| `embedding` | `vector(1536)` | OpenAI text-embedding-3-small |
+| `embedding` | `vector(768)` | Gemini Embedding API (free tier) — future |
 | `token_count` | INTEGER | |
 | `metadata_json` | JSONB | Searchable metadata |
 
@@ -681,32 +657,35 @@ Chat sessions between farmer and AI assistant.
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `farmer_id` | UUID FK → farmer_profiles | |
-| `project_id` | UUID FK → projects | Context project |
+| `project_id` | UUID FK → projects | CASCADE DELETE |
 | `session_title` | VARCHAR(255) | Auto-generated from first message |
-| `messages_json` | JSONB | `[{role, content, timestamp}]` |
-| `context_summary` | TEXT | Compressed summary for long sessions |
-| `token_count` | INTEGER | Total tokens used |
-| `cost_usd` | DECIMAL(10,6) | Total cost |
+| `is_active` | BOOLEAN | Session status |
 
 ---
 
 ### `ai_query_logs`
-Token usage and cost tracking per AI call.
+Chat messages history mapping.
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
-| `farmer_id` | UUID FK | |
-| `project_id` | UUID FK | |
-| `conversation_id` | UUID FK → ai_conversations | |
-| `service_type` | VARCHAR(50) | `chat`, `disease_diagnosis`, `plan_generation`, `summary` |
-| `query_summary` | TEXT | Brief description of query |
-| `input_tokens` | INTEGER | |
-| `output_tokens` | INTEGER | |
-| `cost_usd` | DECIMAL(10,6) | |
-| `model_used` | VARCHAR(100) | claude-sonnet-4-6 |
-| `latency_ms` | INTEGER | Response time |
+| `conversation_id` | UUID FK → ai_conversations | CASCADE DELETE |
+| `role` | VARCHAR(50) | `user` or `model` |
+| `content` | TEXT | Content of message |
+| `tokens_used` | INTEGER | Tokens consumed |
+
+---
+
+### `ai_project_summaries`
+Cached AI-generated summaries for each project.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `project_id` | UUID FK → projects | CASCADE DELETE, UNIQUE |
+| `summary_json` | JSONB | Flattened project state |
+| `last_updated_at` | TIMESTAMP | Timestamp of summary creation |
+| `hash_signature` | VARCHAR(64) | Hash signature for context deduplication |
 
 ---
 
@@ -742,6 +721,106 @@ CREATE INDEX idx_weather_cache_location_date ON weather_cache(location_key, fore
 CREATE INDEX idx_plants_name_fts ON plants USING gin(to_tsvector('english', common_name || ' ' || COALESCE(scientific_name, '')));
 CREATE INDEX idx_diseases_name_fts ON plant_diseases USING gin(to_tsvector('english', disease_name || ' ' || COALESCE(symptoms, '')));
 ```
+
+---
+
+## Section 11: Marketplace Tables (B2B & B2C)
+
+### `vendor_products`
+The Agri-Input Market (Vendors selling to Farmers).
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `vendor_profile_id` | UUID FK → vendor_profiles | |
+| `name` | VARCHAR(255) | e.g., "Organic Compost 50kg" |
+| `type` | VARCHAR(50) | `Fertilizer`, `Seed`, `Equipment`, `Tool` |
+| `description` | TEXT | |
+| `price` | DECIMAL(10,2) | |
+| `currency` | VARCHAR(10) | Default LKR |
+| `stock_quantity` | INTEGER | |
+| `image_url` | TEXT | |
+| `created_at` | TIMESTAMP | |
+
+---
+
+### `harvest_listings`
+The Harvest Market (Farmers selling to Buyers). Links directly to the farming project so buyers know exactly how it was grown!
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `project_id` | UUID FK → projects | Links to RAG-tracked history, weather, soil data |
+| `farmer_profile_id` | UUID FK → farmer_profiles | |
+| `yield_amount` | DECIMAL(10,2) | Available quantity |
+| `unit` | VARCHAR(20) | kg, tons |
+| `price_per_kg` | DECIMAL(10,2) | |
+| `status` | VARCHAR(50) | `Pre-order`, `Harvested`, `Sold Out` |
+| `available_date` | DATE | Expected or actual harvest date |
+| `created_at` | TIMESTAMP | |
+
+---
+
+### `orders` [NOT IMPLEMENTED YET] [NOT IMPLEMENTED YET]
+Master order record for transactions (both input and harvest markets).
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `buyer_profile_id` | UUID FK → buyer_profiles | Optional (if bought by buyer) |
+| `farmer_profile_id` | UUID FK → farmer_profiles | Optional (if farmer bought input) |
+| `total_price` | DECIMAL(10,2) | |
+| `status` | VARCHAR(50) | `Pending`, `Paid`, `Shipped`, `Delivered`, `Cancelled` |
+| `delivery_address` | TEXT | |
+| `created_at` | TIMESTAMP | |
+
+---
+
+### `order_items` [NOT IMPLEMENTED YET] [NOT IMPLEMENTED YET]
+Line items for an order.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `order_id` | UUID FK → orders | |
+| `vendor_product_id` | UUID FK → vendor_products | Nullable |
+| `harvest_listing_id` | UUID FK → harvest_listings | Nullable |
+| `quantity` | DECIMAL(10,2) | |
+| `unit_price` | DECIMAL(10,2) | |
+| `total_price` | DECIMAL(10,2) | |
+
+---
+
+## Section 12: Transactions & Reviews
+
+### `transactions`
+Records a deal executed in the marketplace (e.g., vendor buying a product from a farmer).
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `product_id` | UUID FK → products | The marketplace listing |
+| `seller_id` | UUID FK → accounts | |
+| `buyer_id` | UUID FK → accounts | |
+| `quantity` | DECIMAL(10,2) | Quantity purchased |
+| `unit_price` | DECIMAL(12,2) | |
+| `total_price` | DECIMAL(12,2) | |
+| `status` | VARCHAR(50) | `pending`, `completed`, `cancelled` |
+| `transaction_date`| TIMESTAMP | |
+
+---
+
+### `reviews`
+Two-way review system linked to a completed transaction.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `transaction_id` | UUID FK → transactions | |
+| `reviewer_id` | UUID FK → accounts | |
+| `reviewee_id` | UUID FK → accounts | |
+| `rating` | INTEGER | 1 to 5 |
+| `comment` | TEXT | |
 
 ---
 

@@ -1,151 +1,136 @@
 # AgriFarm AI — Data Seed Guide
 
 ## Overview
-The master data is the foundation of the platform. Without properly seeded data, no project can generate activities, no disease watch works, and no soil analysis is accurate.
+The master data is the foundation of the platform. Without properly seeded data, no project can generate activities, no disease matching works, and no soil analysis is accurate.
 
-This document defines what seed data is needed, the format, and the seeding order.
-
----
-
-## Seeding Order (Respect Foreign Keys)
-
-```
-1. farming_methods
-2. plants
-3. plant_stages           (requires plants)
-4. plant_nutrient_requirements   (requires plants + plant_stages)
-5. plant_water_requirements      (requires plants + plant_stages)
-6. plant_fertilizer_recommendations (requires plants + plant_stages)
-7. plant_diseases         (requires plants)
-8. plant_pests            (requires plants)
-9. disease_solutions      (requires plant_diseases + farming_methods)
-10. pest_solutions        (requires plant_pests + farming_methods)
-```
+This document defines what data must be seeded, the exact format, and example records.
 
 ---
 
-## 1. Farming Methods
+## Seed Priority Order
+
+```
+1. farming_methods        (3 records — must exist first)
+2. plants                 (5 crops for v1.0)
+3. plant_stages           (6 stages per plant = 30 records)
+4. plant_nutrient_requirements  (per plant per stage = 30 records)
+5. plant_water_requirements     (per plant per stage = 30 records)
+6. plant_fertilizer_recommendations (per stage × method = 60 records)
+7. plant_diseases          (8-10 per crop)
+8. disease_solutions       (per disease × method)
+9. plant_pests             (5-8 per crop)
+10. pest_solutions          (per pest × method)
+```
+
+---
+
+## 1. Farming Methods (3 records)
 
 ```python
 FARMING_METHODS = [
-    {
-        "code": "organic",
-        "name": "Organic Farming",
-        "description": "Uses only natural inputs — compost, bio-pesticides, neem-based products. No synthetic chemicals."
-    },
-    {
-        "code": "conventional",
-        "name": "Conventional Farming",
-        "description": "Uses synthetic fertilizers and chemical pesticides for maximum yield."
-    },
-    {
-        "code": "integrated",
-        "name": "Integrated Farming",
-        "description": "Combines organic and conventional methods. Minimizes chemicals while ensuring good yields."
-    }
+    {"code": "organic", "name": "Organic Farming",
+     "description": "Uses natural inputs only. No synthetic chemicals, pesticides, or GMO seeds."},
+    {"code": "inorganic", "name": "Conventional Farming",
+     "description": "Uses synthetic fertilizers and chemical pesticides for maximum yield."},
+    {"code": "integrated", "name": "Integrated Farming",
+     "description": "Combines organic and conventional methods. Uses chemicals only when natural methods fail."}
 ]
 ```
 
 ---
 
-## 2. Plants (Priority Crops)
+## 2. Plants (5 Priority Crops for v1.0)
 
-### Minimum Required for Launch (8 crops)
 ```python
-PRIORITY_PLANTS = [
+PLANTS = [
     {
         "common_name": "Tomato",
-        "local_name": "Thakkali",
+        "local_name": "තක්කාලි / தக்காளி",
         "scientific_name": "Solanum lycopersicum",
         "category": "vegetable",
-        "sub_category": "fruit vegetable",
         "growth_duration_days": 90,
         "planting_season": ["Yala", "Maha"],
-        "optimal_temp_min": 18, "optimal_temp_max": 29,
-        "optimal_rainfall_mm": 600,
-        "optimal_ph_min": 6.0, "optimal_ph_max": 6.8,
-        "compatible_soil_types": ["loam", "sandy loam", "clay loam"],
+        "optimal_temp_min": 20.0,
+        "optimal_temp_max": 30.0,
+        "optimal_rainfall_mm": 500.0,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 6.8,
+        "compatible_soil_types": ["loam", "sandy_loam", "clay_loam"],
         "companion_plants": ["basil", "carrot", "marigold"],
-        "incompatible_plants": ["fennel", "brassica"]
+        "incompatible_plants": ["cabbage", "fennel"],
+        "description": "Most popular vegetable crop in Sri Lanka. High market demand year-round.",
+        "is_active": True
     },
     {
-        "common_name": "Beans (Green)",
-        "local_name": "Bonchi",
-        "scientific_name": "Phaseolus vulgaris",
-        "category": "vegetable",
-        "growth_duration_days": 60,
-        "optimal_temp_min": 16, "optimal_temp_max": 24,
-        "optimal_ph_min": 6.0, "optimal_ph_max": 7.0,
-        "compatible_soil_types": ["loam", "sandy loam"]
-    },
-    {
-        "common_name": "Cabbage",
-        "local_name": "Gova",
-        "scientific_name": "Brassica oleracea var. capitata",
-        "category": "vegetable",
-        "growth_duration_days": 80,
-        "optimal_temp_min": 7, "optimal_temp_max": 24,
-        "optimal_ph_min": 6.0, "optimal_ph_max": 7.5
-    },
-    {
-        "common_name": "Chilli (Red)",
-        "local_name": "Miris",
+        "common_name": "Chili",
+        "local_name": "මිරිස් / மிளகாய்",
         "scientific_name": "Capsicum annuum",
         "category": "vegetable",
-        "growth_duration_days": 120,
-        "optimal_temp_min": 20, "optimal_temp_max": 32,
-        "optimal_ph_min": 6.0, "optimal_ph_max": 6.8
+        "growth_duration_days": 115,
+        "planting_season": ["Yala", "Maha"],
+        "optimal_temp_min": 20.0,
+        "optimal_temp_max": 35.0,
+        "optimal_rainfall_mm": 600.0,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 7.0,
+        "compatible_soil_types": ["loam", "sandy_loam"],
+        "description": "Essential spice crop. Multiple harvests possible per season.",
+        "is_active": True
     },
     {
-        "common_name": "Brinjal (Eggplant)",
-        "local_name": "Wambatu",
-        "scientific_name": "Solanum melongena",
-        "category": "vegetable",
-        "growth_duration_days": 90,
-        "optimal_temp_min": 22, "optimal_temp_max": 32,
-        "optimal_ph_min": 5.5, "optimal_ph_max": 6.8
-    },
-    {
-        "common_name": "Paddy (Rice)",
-        "local_name": "Ala",
+        "common_name": "Rice (Paddy)",
+        "local_name": "වී / நெல்",
         "scientific_name": "Oryza sativa",
         "category": "grain",
         "growth_duration_days": 120,
+        "planting_season": ["Maha"],
+        "optimal_temp_min": 22.0,
+        "optimal_temp_max": 32.0,
+        "optimal_rainfall_mm": 1200.0,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 6.5,
+        "compatible_soil_types": ["clay", "clay_loam"],
+        "description": "Staple food crop of Sri Lanka. Grown primarily in irrigated lowlands.",
+        "is_active": True
+    },
+    {
+        "common_name": "Brinjal (Eggplant)",
+        "local_name": "වම්බටු / கத்திரிக்காய்",
+        "scientific_name": "Solanum melongena",
+        "category": "vegetable",
+        "growth_duration_days": 100,
         "planting_season": ["Yala", "Maha"],
-        "optimal_temp_min": 20, "optimal_temp_max": 35,
-        "optimal_ph_min": 5.5, "optimal_ph_max": 6.5
+        "optimal_temp_min": 22.0,
+        "optimal_temp_max": 35.0,
+        "optimal_rainfall_mm": 500.0,
+        "optimal_ph_min": 5.5,
+        "optimal_ph_max": 6.5,
+        "compatible_soil_types": ["loam", "sandy_loam", "clay_loam"],
+        "description": "Hardy vegetable with consistent demand. Multiple harvests per season.",
+        "is_active": True
     },
     {
-        "common_name": "Carrot",
-        "local_name": "Carrot",
-        "scientific_name": "Daucus carota",
+        "common_name": "Green Beans",
+        "local_name": "බෝංචි / பீன்ஸ்",
+        "scientific_name": "Phaseolus vulgaris",
         "category": "vegetable",
-        "growth_duration_days": 75,
-        "optimal_temp_min": 10, "optimal_temp_max": 24,
-        "optimal_ph_min": 6.0, "optimal_ph_max": 6.8
-    },
-    {
-        "common_name": "Okra (Ladies Finger)",
-        "local_name": "Bandakka",
-        "scientific_name": "Abelmoschus esculentus",
-        "category": "vegetable",
-        "growth_duration_days": 60,
-        "optimal_temp_min": 24, "optimal_temp_max": 35,
-        "optimal_ph_min": 6.0, "optimal_ph_max": 7.5
+        "growth_duration_days": 65,
+        "planting_season": ["Yala", "Maha"],
+        "optimal_temp_min": 18.0,
+        "optimal_temp_max": 28.0,
+        "optimal_rainfall_mm": 400.0,
+        "optimal_ph_min": 6.0,
+        "optimal_ph_max": 7.0,
+        "compatible_soil_types": ["loam", "sandy_loam"],
+        "description": "Fast-growing legume. Fixes nitrogen naturally, improving soil.",
+        "is_active": True
     }
-]
-
-# Phase 2 crops (add after launch)
-PHASE_2_PLANTS = [
-    "Cucumber", "Pumpkin", "Bitter Gourd", "Snake Gourd", "Spinach",
-    "Maize (Corn)", "Potato", "Sweet Potato", "Banana", "Papaya",
-    "Mango", "Coconut", "Rubber", "Tea", "Ginger", "Turmeric"
 ]
 ```
 
 ---
 
-## 3. Plant Stages (Example: Tomato)
+## 3. Plant Stages (Example: Tomato — 6 stages)
 
 ```python
 TOMATO_STAGES = [
@@ -154,509 +139,337 @@ TOMATO_STAGES = [
         "stage_order": 1,
         "start_day": 0,
         "end_day": 7,
-        "description": "Seeds germinate and develop root system. Keep moist and warm.",
-        "key_indicators": "Seedlings emerge from soil, first two seed leaves (cotyledons) appear.",
-        "critical_actions": "Keep growing medium moist but not waterlogged. Maintain 24–28°C. Provide indirect light.",
-        "watch_for": "Damping off (fungal disease at soil level). Over-watering. Poor germination."
+        "description": "Seed absorbs water and swells. Root radical emerges. First shoots push through soil surface.",
+        "key_indicators": "White root tip visible within 3-4 days. First cotyledon leaves emerge by day 5-7.",
+        "critical_actions": "Maintain consistent soil moisture (not waterlogged). Temperature 25-30°C ideal. Use seed trays or nursery beds.",
+        "watch_for": "Damping off disease (fungal). Over-watering causes root rot. Birds eating seeds."
     },
     {
-        "stage_name": "Seedling / Transplant",
+        "stage_name": "Seedling",
         "stage_order": 2,
-        "start_day": 7,
+        "start_day": 8,
         "end_day": 21,
-        "description": "Seedlings develop true leaves. Transplant to field at 2–4 true leaves.",
-        "key_indicators": "2–4 true leaves visible. Stem is firm. Seedling is 10–15 cm tall.",
-        "critical_actions": "Transplant carefully — avoid root disturbance. Water thoroughly after transplanting. Apply starter fertilizer. Provide shade for first 3 days.",
-        "watch_for": "Transplant shock (wilting). Cutworm attack. Damping off."
+        "description": "True leaves develop. Stem thickens and strengthens. Root system establishes.",
+        "key_indicators": "2-4 true leaves visible. Stem diameter 3-4mm. Plant height 10-15cm by day 21.",
+        "critical_actions": "Transplant to main field at day 14-21. Apply starter fertilizer (light). Begin hardening off seedlings.",
+        "watch_for": "Aphids on tender leaves. Cutworms at stem base. Nutrient burn from excess fertilizer."
     },
     {
-        "stage_name": "Vegetative Growth",
+        "stage_name": "Vegetative",
         "stage_order": 3,
-        "start_day": 21,
+        "start_day": 22,
         "end_day": 42,
-        "description": "Rapid stem and leaf growth. Plant establishes root system.",
-        "key_indicators": "Plant is 30–60 cm tall. Multiple lateral branches visible. Dark green healthy leaves.",
-        "critical_actions": "Apply nitrogen-rich fertilizer. Begin staking. Remove suckers (side shoots from leaf axils). Regular watering every 2 days. Weed control.",
-        "watch_for": "Aphids on new growth. Leaf miners. Nitrogen deficiency (yellowing lower leaves)."
+        "description": "Rapid leaf and stem growth. Plant builds the framework for fruiting.",
+        "key_indicators": "Plant reaches 40-60cm. Dense foliage. Strong main stem with lateral branches.",
+        "critical_actions": "Apply nitrogen-heavy fertilizer. Install stakes or cages for support. Remove suckers (side shoots). Begin pest monitoring.",
+        "watch_for": "Leaf curl virus (transmitted by whitefly). Bacterial wilt. Nitrogen deficiency (yellowing lower leaves)."
     },
     {
         "stage_name": "Flowering",
         "stage_order": 4,
-        "start_day": 42,
+        "start_day": 43,
         "end_day": 60,
-        "description": "Yellow flowers appear. Critical stage — blossom set determines yield.",
-        "key_indicators": "Yellow flower clusters visible. Flowers open in the morning. First flowers on bottom trusses.",
-        "critical_actions": "Switch to potassium + phosphorus fertilizer. REDUCE nitrogen. Keep soil consistently moist. Avoid spraying during peak flowering (9am–3pm). Ensure good pollination.",
-        "watch_for": "Blossom drop (heat, cold, drought, water stress). Late Blight (high humidity). Fruit borers starting. Blossom End Rot (calcium deficiency)."
+        "description": "Yellow flower clusters form. Pollination occurs. Critical period for fruit set.",
+        "key_indicators": "Flower clusters at leaf nodes. Petals yellow, star-shaped. Small green fruit forms after pollination.",
+        "critical_actions": "Switch to potassium-rich fertilizer (reduce nitrogen). Maintain consistent irrigation (irregular watering causes blossom drop). Gentle tapping to aid pollination.",
+        "watch_for": "Blossom end rot (calcium deficiency). Late Blight (high humidity). Flower drop (temperature stress >35°C)."
     },
     {
-        "stage_name": "Fruit Development",
+        "stage_name": "Fruiting",
         "stage_order": 5,
-        "start_day": 60,
-        "end_day": 78,
-        "description": "Green fruits enlarge and develop. Most critical stage for water management.",
-        "key_indicators": "Green fruits visible on all trusses. Fruits are firm and enlarging.",
-        "critical_actions": "Consistent irrigation — irregular watering causes Blossom End Rot and fruit cracking. Continue K + Ca fertilizer. Monitor for fruit borers and disease.",
-        "watch_for": "Fruit borers (holes in fruit). Blossom End Rot (brown patch on blossom end). Fruit cracking from irregular watering. Late Blight spread."
+        "start_day": 61,
+        "end_day": 80,
+        "description": "Fruits enlarge and begin to ripen. Color change from green to red.",
+        "key_indicators": "Fruits 5-8cm diameter. Colour change begins at fruit bottom. Clusters bearing 3-6 fruits each.",
+        "critical_actions": "Continue potassium fertilizer. Consistent watering to prevent fruit cracking. Support heavy fruit clusters. Monitor for fruit rot.",
+        "watch_for": "Fruit cracking (irregular watering). Sun scald. Fruit worm. Anthracnose (dark sunken spots)."
     },
     {
-        "stage_name": "Ripening & Harvest",
+        "stage_name": "Harvest",
         "stage_order": 6,
-        "start_day": 78,
+        "start_day": 81,
         "end_day": 90,
-        "description": "Fruits change color from green to red/pink. Harvest when 70–80% red.",
-        "key_indicators": "Fruits turning pink/red from bottom. Skin color change uniform.",
-        "critical_actions": "Reduce irrigation (slight drydown improves flavor and shelf life). Harvest every 2–3 days. Handle gently to avoid bruising. Do NOT wait for 100% red (too ripe for market).",
-        "watch_for": "Overripe fruit drop. Bird damage. Post-harvest rot. Fruit flies."
+        "description": "Fruits fully ripe. Pick regularly to encourage continued production.",
+        "key_indicators": "Fruits uniformly red, firm but slightly soft. Easy to detach from vine.",
+        "critical_actions": "Harvest every 2-3 days. Pick in early morning for best shelf life. Grade by size. Check market prices before selling.",
+        "watch_for": "Over-ripening on vine. Bird damage. Post-harvest bruising."
     }
 ]
 ```
 
 ---
 
-## 4. Nutrient Requirements (Example: Tomato)
+## 4. Nutrient Requirements (Example: Tomato — per stage)
 
 ```python
-# Total season N-P-K requirements for tomato per acre
-# These are SPLIT across stages proportionally
-
-TOMATO_NUTRIENT_REQUIREMENTS = [
-    {
-        "stage": "Germination",
-        "nitrogen_kg_per_acre": 0,       # No fertilizer during germination
-        "phosphorus_kg_per_acre": 0,
-        "potassium_kg_per_acre": 0,
-    },
-    {
-        "stage": "Seedling / Transplant",
-        "nitrogen_kg_per_acre": 15,      # Starter dose at transplant
-        "phosphorus_kg_per_acre": 30,    # High P for root development
-        "potassium_kg_per_acre": 15,
-        "calcium_kg_per_acre": 10,
-    },
-    {
-        "stage": "Vegetative Growth",
-        "nitrogen_kg_per_acre": 40,      # High N for leafy growth
-        "phosphorus_kg_per_acre": 20,
-        "potassium_kg_per_acre": 25,
-    },
-    {
-        "stage": "Flowering",
-        "nitrogen_kg_per_acre": 15,      # REDUCE N, boost K and P
-        "phosphorus_kg_per_acre": 25,    # P for flower development
-        "potassium_kg_per_acre": 45,     # K for fruit set
-        "calcium_kg_per_acre": 15,
-        "boron_ppm": 2.0                 # B for pollen tube growth
-    },
-    {
-        "stage": "Fruit Development",
-        "nitrogen_kg_per_acre": 10,
-        "phosphorus_kg_per_acre": 15,
-        "potassium_kg_per_acre": 50,     # Highest K for fruit sizing
-        "calcium_kg_per_acre": 20,       # Ca prevents Blossom End Rot
-    },
-    {
-        "stage": "Ripening & Harvest",
-        "nitrogen_kg_per_acre": 0,       # No more fertilizer during ripening
-        "potassium_kg_per_acre": 15,
-    }
+TOMATO_NUTRIENTS = [
+    # Germination — minimal nutrients needed
+    {"stage_order": 1, "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 0},
+    # Seedling — light starter feed
+    {"stage_order": 2, "nitrogen_kg": 5, "phosphorus_kg": 3, "potassium_kg": 2},
+    # Vegetative — heavy nitrogen for leaf growth
+    {"stage_order": 3, "nitrogen_kg": 30, "phosphorus_kg": 10, "potassium_kg": 15},
+    # Flowering — shift to potassium
+    {"stage_order": 4, "nitrogen_kg": 10, "phosphorus_kg": 15, "potassium_kg": 30},
+    # Fruiting — maintain potassium
+    {"stage_order": 5, "nitrogen_kg": 8, "phosphorus_kg": 10, "potassium_kg": 35},
+    # Harvest — minimal
+    {"stage_order": 6, "nitrogen_kg": 0, "phosphorus_kg": 0, "potassium_kg": 5}
 ]
+# All values are kg per acre
 ```
 
 ---
 
-## 5. Fertilizer Recommendations (Example: Tomato)
+## 5. Water Requirements (Example: Tomato — per stage)
 
 ```python
-TOMATO_FERTILIZER_RECS = [
-    # At transplanting (Seedling stage)
-    {
-        "stage": "Seedling / Transplant",
-        "fertilizer_type": "Triple Super Phosphate (TSP)",
-        "is_organic": False,
-        "quantity_per_acre": 50,  # kg
-        "unit": "kg",
-        "application_method": "band",
-        "timing_note": "Apply in planting hole/trench at transplant time"
-    },
-    {
-        "stage": "Seedling / Transplant",
-        "fertilizer_type": "Compost",
-        "is_organic": True,
-        "quantity_per_acre": 2000,  # kg (2 tonnes)
-        "unit": "kg",
-        "application_method": "broadcast",
-        "timing_note": "Apply 1 week before transplanting, incorporate into soil"
-    },
+TOMATO_WATER = [
+    {"stage_order": 1, "water_mm_per_day": 3.0, "frequency_days": 1, "drought_tolerance": "low"},
+    {"stage_order": 2, "water_mm_per_day": 4.0, "frequency_days": 2, "drought_tolerance": "low"},
+    {"stage_order": 3, "water_mm_per_day": 5.5, "frequency_days": 2, "drought_tolerance": "medium"},
+    {"stage_order": 4, "water_mm_per_day": 6.0, "frequency_days": 2, "drought_tolerance": "low"},
+    {"stage_order": 5, "water_mm_per_day": 6.5, "frequency_days": 2, "drought_tolerance": "low"},
+    {"stage_order": 6, "water_mm_per_day": 4.0, "frequency_days": 3, "drought_tolerance": "medium"}
+]
+# water_mm_per_day = millimeters of water per day per acre
+# frequency_days = irrigate every N days
+```
 
-    # Vegetative growth
-    {
-        "stage": "Vegetative Growth",
-        "fertilizer_type": "Urea (46-0-0)",
-        "is_organic": False,
-        "quantity_per_acre": 40,
-        "unit": "kg",
-        "application_method": "broadcast",
-        "timing_note": "Split into 2 doses: Day 21 and Day 35"
-    },
-    {
-        "stage": "Vegetative Growth",
-        "fertilizer_type": "Blood Meal",
-        "is_organic": True,
-        "quantity_per_acre": 25,
-        "unit": "kg",
-        "application_method": "broadcast",
-        "timing_note": "Apply at Day 21, water in thoroughly"
-    },
+---
 
-    # Flowering
-    {
-        "stage": "Flowering",
-        "fertilizer_type": "Muriate of Potash (MOP 0-0-60)",
-        "is_organic": False,
-        "quantity_per_acre": 45,
-        "unit": "kg",
-        "application_method": "broadcast",
-        "timing_note": "Apply at start of flowering stage (Day 42)"
-    },
-    {
-        "stage": "Flowering",
-        "fertilizer_type": "Wood Ash",
-        "is_organic": True,
-        "quantity_per_acre": 100,
-        "unit": "kg",
-        "application_method": "broadcast",
-        "timing_note": "Apply at start of flowering, water in after"
-    },
+## 6. Fertilizer Recommendations (Example: Tomato — seed/fertilizers.py)
 
-    # Fruit Development
-    {
-        "stage": "Fruit Development",
-        "fertilizer_type": "Calcium Nitrate",
-        "is_organic": False,
-        "quantity_per_acre": 25,
-        "unit": "kg",
-        "application_method": "foliar",
-        "timing_note": "Spray 0.5% solution every 10 days — prevents Blossom End Rot"
-    },
-    {
-        "stage": "Fruit Development",
-        "fertilizer_type": "Eggshell Powder",
-        "is_organic": True,
-        "quantity_per_acre": 15,
-        "unit": "kg",
-        "application_method": "broadcast",
-        "timing_note": "Apply at start of fruit development stage"
-    }
+```python
+# Fertilizer recommendations format in backend/seed/fertilizers.py
+fertilizers = [
+    # ── Tomato ──────────────────────────────
+    {"stage_id": "s2", "farming_method": "conventional", "fertilizer_name": "Starter NPK 10-26-26", "rate": 50, "instructions": "Apply at transplanting as basal dose. Mix well into soil."},
+    {"stage_id": "s2", "farming_method": "organic", "fertilizer_name": "Vermicompost", "rate": 200, "instructions": "Mix into planting holes before transplanting seedlings."},
+    {"stage_id": "s3", "farming_method": "conventional", "fertilizer_name": "Urea (46-0-0)", "rate": 30, "instructions": "Side-dress 10 cm from stem. Water immediately after."},
+    {"stage_id": "s3", "farming_method": "organic", "fertilizer_name": "Blood Meal", "rate": 25, "instructions": "Side-dress around plants. High nitrogen for vegetative growth."},
 ]
 ```
 
 ---
 
-## 6. Disease Seed Data (Example: Key Tomato Diseases)
+## 7. Diseases (Example: Tomato — 8 Common Diseases)
 
 ```python
 TOMATO_DISEASES = [
     {
         "disease_name": "Early Blight",
-        "local_name": "Muhu Blight",
+        "local_name": "මුල් ලප රෝගය",
         "pathogen_type": "fungal",
-        "symptoms": "Brown spots with concentric rings (target pattern) on older lower leaves. Yellowing around spots. Dark lesions on stem.",
-        "visual_symptoms": "Round brown spots with yellow halo on lower leaves. Spots have bullseye pattern. Leaves turn yellow and fall.",
+        "symptoms": "dark brown concentric ring spots on lower leaves yellowing leaf margins",
+        "visual_symptoms": "Brown spots with bullseye rings on older leaves. Leaves turn yellow and drop off starting from the bottom.",
         "affected_parts": ["leaves", "stem", "fruit"],
-        "spread_conditions": "High humidity (>70%), warm temperatures (24–29°C), wet weather",
-        "spread_method": "wind, rain splash, infected plant debris",
-        "severity": "medium",
-        "incubation_period": "3–5 days after infection",
-        "solutions": {
-            "conventional": [
-                {
-                    "solution_name": "Mancozeb Spray",
-                    "product_name": "Mancozeb 75 WP",
-                    "description": "Protective fungicide. Apply before symptoms appear or at first sign.",
-                    "dosage": "2g per litre of water",
-                    "application_method": "Spray all leaf surfaces, especially undersides",
-                    "frequency": "Every 7 days",
-                    "timing": "Early morning or late afternoon",
-                    "waiting_period_days": 3,
-                    "effectiveness": 8
-                }
-            ],
-            "organic": [
-                {
-                    "solution_name": "Neem Oil Spray",
-                    "product_name": "Cold-pressed Neem Oil",
-                    "description": "Natural fungicide and pest repellent.",
-                    "dosage": "5ml neem oil + 2ml liquid soap per litre water",
-                    "application_method": "Spray all leaf surfaces including undersides",
-                    "frequency": "Every 5 days",
-                    "timing": "Early morning or evening (avoid hot midday)",
-                    "waiting_period_days": 0,
-                    "effectiveness": 6
-                },
-                {
-                    "solution_name": "Baking Soda Spray",
-                    "product_name": "Sodium Bicarbonate",
-                    "description": "Raises leaf surface pH, inhibits fungal growth.",
-                    "dosage": "1 teaspoon per litre water + few drops of liquid soap",
-                    "application_method": "Spray foliage weekly",
-                    "frequency": "Every 7 days",
-                    "effectiveness": 5
-                }
-            ]
-        }
+        "spread_conditions": "Warm temperatures (24-29°C) with high humidity. Splashing rain or overhead irrigation.",
+        "severity": "medium"
     },
     {
         "disease_name": "Late Blight",
+        "local_name": "පසු ලප රෝගය",
         "pathogen_type": "fungal",
-        "symptoms": "Large dark brown to black water-soaked lesions on leaves and stems. White mold on underside in humid conditions. Fruits show dark brown firm lesions.",
-        "visual_symptoms": "Dark brown patches on leaves that spread rapidly. White fuzzy growth under leaves when humid. Stems turn dark brown and rot.",
+        "symptoms": "large water-soaked lesions dark brown spots white fuzzy growth on leaf undersides",
+        "visual_symptoms": "Large, dark, water-soaked patches on leaves. White cottony growth on undersides in humid mornings. Entire plant can collapse in 3-5 days.",
         "affected_parts": ["leaves", "stem", "fruit"],
-        "spread_conditions": "Cool temperatures (15–22°C), high humidity (>80%), rain and fog",
-        "severity": "critical",
-        "solutions": {
-            "conventional": [
-                {
-                    "solution_name": "Metalaxyl + Mancozeb",
-                    "product_name": "Ridomil Gold MZ",
-                    "dosage": "2.5g per litre",
-                    "frequency": "Every 5–7 days during high risk",
-                    "waiting_period_days": 7,
-                    "effectiveness": 9
-                }
-            ],
-            "organic": [
-                {
-                    "solution_name": "Copper Hydroxide Spray",
-                    "product_name": "Kocide (organic-approved)",
-                    "dosage": "2g per litre",
-                    "frequency": "Every 5–7 days",
-                    "waiting_period_days": 1,
-                    "effectiveness": 7
-                }
-            ]
-        }
+        "spread_conditions": "Cool nights (10-20°C) + warm humid days. Spreads rapidly via wind-borne spores.",
+        "severity": "critical"
+    },
+    {
+        "disease_name": "Bacterial Wilt",
+        "local_name": "බැක්ටීරියා වාත රෝගය",
+        "pathogen_type": "bacterial",
+        "symptoms": "sudden wilting of entire plant no leaf yellowing stem cross-section shows brown vascular tissue",
+        "visual_symptoms": "Plant suddenly wilts without yellowing. When you cut the stem, the center is brown. If you put a cut stem in water, milky ooze drips out.",
+        "affected_parts": ["stem", "roots"],
+        "spread_conditions": "Waterlogged soil, warm temperatures >28°C, poor drainage. Spreads through contaminated soil and tools.",
+        "severity": "critical"
+    },
+    {
+        "disease_name": "Leaf Curl Virus",
+        "local_name": "පත්‍ර කුරුලෑ විෂබීජ",
+        "pathogen_type": "viral",
+        "symptoms": "leaves curling upward thickened crumpled leaves stunted growth",
+        "visual_symptoms": "Leaves curl upward and become thick and leathery. New growth is stunted and bushy. Plant stops producing fruit.",
+        "affected_parts": ["leaves"],
+        "spread_conditions": "Transmitted by whitefly. Warm dry conditions favour whitefly populations.",
+        "severity": "high"
     },
     {
         "disease_name": "Blossom End Rot",
+        "local_name": "මල් කෙළවර කුණුවීම",
         "pathogen_type": "physiological",
-        "symptoms": "Brown to black leathery patch on the blossom end (bottom) of fruit. Internal tissue turns dark and papery.",
-        "visual_symptoms": "Black or brown sunken patch on the bottom of green or ripening tomatoes. Fruit stays attached to plant.",
+        "symptoms": "dark brown leathery patch on bottom of fruit sunken area calcium deficiency",
+        "visual_symptoms": "Dark brown, sunken, leathery patch on the bottom of the fruit. Starts small and grows. Not caused by a pathogen.",
         "affected_parts": ["fruit"],
-        "spread_conditions": "Calcium deficiency, irregular watering (dry/wet cycles), high temperatures",
-        "severity": "medium",
-        "solutions": {
-            "conventional": [
-                {
-                    "solution_name": "Calcium Nitrate Foliar Spray",
-                    "dosage": "5g per litre",
-                    "frequency": "Every 10 days from fruit set",
-                    "effectiveness": 9
-                }
-            ],
-            "organic": [
-                {
-                    "solution_name": "Crushed Eggshells",
-                    "description": "Add crushed eggshells to soil around plants. Consistent watering is critical.",
-                    "effectiveness": 6
-                }
-            ]
-        }
-    }
-]
-```
-
----
-
-## 7. Pest Seed Data (Example: Key Tomato Pests)
-
-```python
-TOMATO_PESTS = [
-    {
-        "pest_name": "Aphids",
-        "local_name": "Plant Lice",
-        "pest_type": "insect",
-        "pest_category": "sucking",
-        "symptoms": "Sticky honeydew on leaves. Curled or distorted new growth. Sooty mold. Clusters of tiny green/black insects under leaves.",
-        "visual_symptoms": "Small (1–2mm) green or black bugs clustered on stem tips and undersides of young leaves. Leaves curl inward.",
-        "affected_parts": ["leaves", "stem"],
-        "infestation_conditions": "Warm dry weather, heavy nitrogen fertilization (lush growth)",
-        "severity": "low",
-        "solutions": {
-            "conventional": [
-                {
-                    "solution_name": "Imidacloprid spray",
-                    "dosage": "0.3ml per litre",
-                    "frequency": "Once. Repeat after 14 days if needed.",
-                    "waiting_period_days": 7,
-                    "effectiveness": 9
-                }
-            ],
-            "organic": [
-                {
-                    "solution_name": "Neem Oil Spray",
-                    "dosage": "5ml per litre + soap",
-                    "frequency": "Every 3 days for 2 weeks",
-                    "effectiveness": 7
-                },
-                {
-                    "solution_name": "Strong Water Spray",
-                    "description": "Knock aphids off with a strong stream of water. Best for small infestations.",
-                    "effectiveness": 5
-                }
-            ]
-        }
+        "spread_conditions": "Irregular watering, calcium deficiency in soil, over-fertilization with nitrogen.",
+        "severity": "medium"
     },
     {
-        "pest_name": "Fruit Borer",
-        "local_name": "Polos Patthu",
-        "pest_type": "insect",
-        "pest_category": "boring",
-        "symptoms": "Round holes in fruits. Frass (insect droppings) near entry hole. Caterpillar visible inside fruit. Rotten fruit.",
-        "visual_symptoms": "1–2mm circular entry holes in green or ripening tomatoes. Dark frass around hole. Fruit rots from inside.",
-        "affected_parts": ["fruit", "stem"],
-        "severity": "high",
-        "solutions": {
-            "conventional": [
-                {
-                    "solution_name": "Chlorpyrifos spray",
-                    "dosage": "2ml per litre",
-                    "frequency": "At first sign. Every 7 days.",
-                    "waiting_period_days": 14,
-                    "effectiveness": 8
-                }
-            ],
-            "organic": [
-                {
-                    "solution_name": "Bt (Bacillus thuringiensis) spray",
-                    "product_name": "DiPel / Thuricide",
-                    "description": "Natural bacterial insecticide that kills caterpillars. Safe for humans and beneficial insects.",
-                    "dosage": "2g per litre",
-                    "frequency": "Every 5–7 days",
-                    "waiting_period_days": 0,
-                    "effectiveness": 8
-                }
-            ]
-        }
-    },
-    {
-        "pest_name": "Whitefly",
-        "pest_type": "insect",
-        "pest_category": "sucking",
-        "symptoms": "Tiny white insects flying from plant when disturbed. Yellow leaves. Sticky honeydew. Sooty mold. Tomato Yellow Leaf Curl Virus spread.",
-        "visual_symptoms": "Tiny white flies (1.5mm) on leaf undersides. Clouds of white flies when plant is touched. Leaves turn yellow and curl upward.",
+        "disease_name": "Powdery Mildew",
+        "pathogen_type": "fungal",
+        "symptoms": "white powdery coating on leaf surface leaves yellowing curling",
+        "visual_symptoms": "White powdery spots on leaf surfaces. Leaves eventually yellow and die. Common in dry weather with cool nights.",
         "affected_parts": ["leaves"],
-        "severity": "high",
-        "solutions": {
-            "conventional": [
-                {
-                    "solution_name": "Acetamiprid spray",
-                    "dosage": "0.2g per litre",
-                    "frequency": "Every 7 days",
-                    "waiting_period_days": 7,
-                    "effectiveness": 9
-                }
-            ],
-            "organic": [
-                {
-                    "solution_name": "Yellow sticky traps",
-                    "description": "Hang yellow sticky traps at plant height. Whiteflies are attracted to yellow.",
-                    "effectiveness": 6
-                },
-                {
-                    "solution_name": "Neem Oil Spray",
-                    "dosage": "5ml per litre + soap",
-                    "frequency": "Every 4 days",
-                    "effectiveness": 6
-                }
-            ]
-        }
+        "severity": "medium"
+    },
+    {
+        "disease_name": "Anthracnose",
+        "pathogen_type": "fungal",
+        "symptoms": "dark sunken circular spots on ripe fruit concentric rings fruit rot",
+        "visual_symptoms": "Dark, sunken, circular spots on ripening fruit. Spots have concentric ring pattern. Fruit rots quickly.",
+        "affected_parts": ["fruit"],
+        "severity": "medium"
+    },
+    {
+        "disease_name": "Fusarium Wilt",
+        "pathogen_type": "fungal",
+        "symptoms": "one-sided wilting yellowing on one side of plant brown vascular tissue",
+        "visual_symptoms": "Leaves on one side of the plant wilt and turn yellow. Cut stem shows brown streaks in the vascular tissue.",
+        "affected_parts": ["stem", "roots", "leaves"],
+        "severity": "high"
     }
 ]
 ```
 
 ---
 
-## 8. Python Seed Script Structure
+## 8. Disease Solutions (Example: Early Blight)
 
 ```python
-# scripts/seed_database.py
+EARLY_BLIGHT_SOLUTIONS = [
+    # Organic
+    {
+        "method": "organic",
+        "solution_name": "Bordeaux Mixture",
+        "product_name": "Copper sulfate + Slaked lime",
+        "active_ingredient": "Copper",
+        "dosage": "10g copper sulfate + 10g lime per 1 liter water",
+        "application_method": "Full coverage foliar spray on both leaf sides",
+        "frequency": "Every 7-10 days",
+        "timing": "Early morning, when dew has dried",
+        "waiting_period_days": 7,
+        "precautions": "Do not mix with other chemicals. Wear gloves.",
+        "estimated_cost": 250.0,
+        "effectiveness": 7
+    },
+    {
+        "method": "organic",
+        "solution_name": "Neem Oil Spray",
+        "product_name": "Cold-pressed neem oil",
+        "active_ingredient": "Azadirachtin",
+        "dosage": "5ml neem oil + 2ml liquid soap per 1 liter water",
+        "application_method": "Foliar spray, cover all leaf surfaces",
+        "frequency": "Every 5-7 days",
+        "timing": "Evening, avoid direct sunlight",
+        "waiting_period_days": 3,
+        "precautions": "Emulsify well before spraying. Test on one leaf first.",
+        "estimated_cost": 180.0,
+        "effectiveness": 6
+    },
+    # Conventional
+    {
+        "method": "conventional",
+        "solution_name": "Mancozeb Spray",
+        "product_name": "Dithane M-45",
+        "active_ingredient": "Mancozeb 75% WP",
+        "dosage": "2g per liter of water",
+        "application_method": "Full coverage foliar spray",
+        "frequency": "Every 7-10 days",
+        "timing": "Morning, dry conditions",
+        "waiting_period_days": 14,
+        "precautions": "Wear mask and gloves. Do not apply within 14 days of harvest.",
+        "estimated_cost": 350.0,
+        "effectiveness": 9
+    },
+    {
+        "method": "conventional",
+        "solution_name": "Chlorothalonil",
+        "product_name": "Daconil 2787",
+        "active_ingredient": "Chlorothalonil 75% WP",
+        "dosage": "2g per liter of water",
+        "application_method": "Protective foliar spray",
+        "frequency": "Every 7 days (preventive) or 5 days (active infection)",
+        "timing": "Morning, dry weather expected for 24 hours",
+        "waiting_period_days": 7,
+        "precautions": "Toxic to fish. Do not apply near water sources.",
+        "estimated_cost": 400.0,
+        "effectiveness": 9
+    }
+]
+```
 
+---
+
+## 9. Seed Script Structure
+
+```python
+# backend/seed/run_seed.py
 import asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import engine
-from app.models import *
-from seed_data import FARMING_METHODS, PRIORITY_PLANTS, ...
+from database import async_session
+from seed.farming_methods import seed_farming_methods
+from seed.plants import seed_plants
+from seed.stages import seed_stages
+from seed.nutrients import seed_nutrients
+from seed.water import seed_water
+from seed.fertilizers import seed_fertilizers
+from seed.diseases import seed_diseases
+from seed.solutions import seed_solutions
+from seed.pests import seed_pests
 
-async def seed_all():
-    async with AsyncSession(engine) as session:
-        # 1. Farming methods
-        for method_data in FARMING_METHODS:
-            method = FarmingMethod(**method_data)
-            session.add(method)
-        await session.flush()
+async def run_all_seeds():
+    async with async_session() as db:
+        print("🌱 Seeding farming methods...")
+        await seed_farming_methods(db)
 
-        # 2. Plants
-        for plant_data in PRIORITY_PLANTS:
-            plant = Plant(**{k: v for k, v in plant_data.items() if k not in ['stages', 'diseases']})
-            session.add(plant)
-        await session.flush()
+        print("🌱 Seeding plants (5 crops)...")
+        await seed_plants(db)
 
-        # 3. Stages
-        for plant_name, stages_data in PLANT_STAGES.items():
-            plant = await get_plant_by_name(session, plant_name)
-            for stage_data in stages_data:
-                stage = PlantStage(plant_id=plant.id, **stage_data)
-                session.add(stage)
-        await session.flush()
+        print("🌱 Seeding plant stages...")
+        await seed_stages(db)
 
-        # 4. Nutrient/Water/Fertilizer requirements
-        # ... (same pattern for each)
+        print("🌱 Seeding nutrient requirements...")
+        await seed_nutrients(db)
 
-        # 5. Diseases + solutions
-        for disease_data in ALL_DISEASES:
-            disease = PlantDisease(**{k: v for k, v in disease_data.items() if k != 'solutions'})
-            session.add(disease)
-            await session.flush()
-            for method_code, solutions in disease_data['solutions'].items():
-                method = await get_method_by_code(session, method_code)
-                for sol_data in solutions:
-                    sol = DiseaseSolution(disease_id=disease.id, method_id=method.id, **sol_data)
-                    session.add(sol)
+        print("🌱 Seeding water requirements...")
+        await seed_water(db)
 
-        await session.commit()
-        print("✅ Database seeded successfully")
+        print("🌱 Seeding fertilizer recommendations...")
+        await seed_fertilizers(db)
+
+        print("🌱 Seeding diseases & solutions...")
+        await seed_diseases(db)
+        await seed_solutions(db)
+
+        print("🌱 Seeding pests & solutions...")
+        await seed_pests(db)
+
+        print("✅ All seed data loaded!")
 
 if __name__ == "__main__":
-    asyncio.run(seed_all())
+    asyncio.run(run_all_seeds())
+```
+
+### Run Command
+```bash
+# After running migrations:
+python -m backend.seed.run_seed
 ```
 
 ---
 
-## 9. Data Validation Rules
+## Seed Data Validation Checklist
 
-| Table | Validation |
-|-------|-----------|
-| `plant_stages` | `start_day` < `end_day`; stages don't overlap; sequential `stage_order` |
-| `plant_nutrient_requirements` | All ppm values > 0; unique per (plant_id, stage_id) |
-| `plant_water_requirements` | `water_mm_per_day` > 0; `irrigation_frequency_days` ≥ 1 |
-| `plant_diseases` | `symptoms` length > 50 chars (must be keyword-rich for matching) |
-| `disease_solutions` | `dosage` and `application_method` must not be null |
-| `farming_methods` | Exactly 3 records: organic, conventional, integrated |
-
----
-
-## 10. Seed Data Verification Checklist
-
-After seeding, verify:
-- [ ] `SELECT COUNT(*) FROM plants;` → ≥ 8
-- [ ] `SELECT COUNT(*) FROM plant_stages;` → ≥ 48 (8 plants × 6 stages)
-- [ ] `SELECT COUNT(*) FROM plant_nutrient_requirements;` → ≥ 48
-- [ ] `SELECT COUNT(*) FROM plant_water_requirements;` → ≥ 48
-- [ ] `SELECT COUNT(*) FROM plant_fertilizer_recommendations;` → ≥ 60
-- [ ] `SELECT COUNT(*) FROM plant_diseases;` → ≥ 50
-- [ ] `SELECT COUNT(*) FROM plant_pests;` → ≥ 30
-- [ ] `SELECT COUNT(*) FROM disease_solutions;` → ≥ 100 (organic + conventional)
-- [ ] `SELECT COUNT(*) FROM farming_methods;` → exactly 3
-- [ ] Test: create a project → verify activities are generated
-- [ ] Test: submit soil test → verify recommendations appear
+| Check | Expected |
+|-------|----------|
+| `SELECT COUNT(*) FROM farming_methods` | 3 |
+| `SELECT COUNT(*) FROM plants` | 5 |
+| `SELECT COUNT(*) FROM plant_stages` | 30 (6 per crop) |
+| `SELECT COUNT(*) FROM plant_nutrient_requirements` | 30 (1 per stage) |
+| `SELECT COUNT(*) FROM plant_water_requirements` | 30 (1 per stage) |
+| `SELECT COUNT(*) FROM plant_fertilizer_recommendations` | ~60 (organic + conventional per stage) |
+| `SELECT COUNT(*) FROM plant_diseases WHERE plant_id = (tomato)` | 8 |
+| `SELECT COUNT(*) FROM disease_solutions` | ~32 (2 per disease per method) |
+| Create a tomato project → check activities generated | ~77 activities |

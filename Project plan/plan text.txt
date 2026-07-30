@@ -1,0 +1,277 @@
+Comprehensive Project Blueprint: AgriAI PlatformThis document serves as the complete, production-ready architecture and project design blueprint for AgriAI. It bridges immediate, deterministic algorithmic services (to keep token costs down) with a clear roadmap toward localized Agentic Retrieval-Augmented Generation (RAG) models and Model Context Protocol (MCP) servers for deeply personalized farmer AI assistance.1. Architectural Blueprint & Multi-Platform Tech StackTo support a seamless experience across web, Android, and iOS while maintaining data parity, a decoupled, API-first microservices architecture is required.       [ Web App (React) ]      [ Mobile App (Flutter) ]
+                \                  /
+                 \                /
+           [ REST API / WebSocket Gateway ]
+                        |
+            [ FastAPI Service Mesh ]
+           /            |             \
+ [Deterministic Engine] [Data Ingestion] [Future MCP/RAG Orchestrator]
+         |              |               |
+ [PostgreSQL/PostGIS] [Redis Cache] [Vector Database (pgvector)]
+Technology Stack Selection & JustificationLayerRecommended TechnologyTechnical JustificationBackend FrameworkFastAPI (Python 3.11+)High performance, native asynchronous support (asyncio), auto-generated OpenAPI documentation, and effortless integration with Python data-science, image-processing, and AI frameworks.Cross-Platform MobileFlutter (Dart)Compiles to native ARM code for both iOS and Android. High-performance rendering engine (Impeller) ensures smooth UI animations on low-spec devices in rural areas. Excellent offline-first state management.Web FrontendReact.js + TailwindCSSComponent-driven architecture maximizes reuse between the web dashboard and the mobile interface design system.Primary DatabasePostgreSQL 16 + PostGISRelational database to model complex user-to-farm configurations. The PostGIS extension allows for native geospatial queries (e.g., polygon definitions for farm plots, location-based weather tracking).Caching & Message QueueRedisIn-memory cache for fast lookups of current weather data, active user session data, and rate-limiting queues.Vector Search (Future)pgvector (PostgreSQL extension)Keeps data infrastructure simple in Phase 1 by housing vector embeddings for localized farming guidelines inside the primary relational database.2. Hierarchical Contextual RAG & MCP ArchitectureTo deliver hyper-personalized guidance without massive cloud token overhead, the platform implements a multi-tier context routing architecture.+------------------------------------------------------------+
+| Global Agronomy Knowledge Base (Static Context / Embeddings) |
++------------------------------------------------------------+
+                              ▲
+                              │ Synchronized Updates
+                              ▼
++------------------------------------------------------------+
+|  Regional / Country Context (Soil Zones, Market Prices)   |
++------------------------------------------------------------+
+                              ▲
+                              │ Aggregated Upward
+                              ▼
++------------------------------------------------------------+
+|  Farmer-Specific RAG Instance (Historical Data + Projects) |
++------------------------------------------------------------+
+                              ▲
+                              │ Exposed via Protocol
+                              ▼
++------------------------------------------------------------+
+|          Model Context Protocol (MCP) Server               |
++------------------------------------------------------------+
+The Architectural BlueprintThe Core LLM Application: A centralized reasoning engine (such as a hosted Claude model) connects dynamically to individual farmer endpoints via MCP.The Localized MCP Server: Each farmer’s profile and active projects expose standard JSON-RPC endpoints compliant with the Model Context Protocol. This architecture enables the primary LLM to securely read a farmer's historical data, soil status, and exact crop calendar without forcing all that raw information into the system prompt context window for every generic turn.The Multi-Tiered Vector Space:Tier 1 (Global/Regional): General plant science, disease indices, and treatment alternatives (organic vs. inorganic).Tier 2 (Farmer/Project Private): Specific historical actions, unique soil test metrics, and geo-coordinates.Data Synchronization FlowThe core application sends a user query along with a location token to the backend orchestrator.The orchestrator uses the farmer's private MCP server to pull current local context: soil metrics from database tables, localized weather telemetry, and current growth cycle stage.This contextual data is packaged dynamically into structured function calls, completely avoiding the need for an open-ended, multi-agent conversational loop for everyday lookups.3. Relational Database Schema DesignThe following schema enforces structural integrity while allowing geo-spatial queries via PostGIS for precise agricultural tracking.       +---------------+             +---------------+
+       |     users     |1           *|  farm_lands   |
+       +---------------+-------------+---------------+
+       | id (PK)       |             | id (PK)       |
+       | email         |             | user_id (FK)  |
+       | role          |             | boundary(Geo) |
+       +---------------+             +---------------+
+                                             |1
+                                             |
+                                             |*
++-------------------+1             *+----------------+
+|  crop_templates   +---------------+ farm_projects  |
++-------------------+               +----------------+
+| id (PK)           |               | id (PK)        |
+| common_name       |               | land_id (FK)   |
+| base_cycle_days   |               | template_id(FK)|
++-------------------+               +----------------+
+1. User & Profile ManagementSQLCREATE TYPE user_role AS ENUM ('farmer', 'middleman', 'vendor', 'admin');
+CREATE TYPE farming_method AS ENUM ('organic', 'inorganic', 'hybrid');
+
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    phone_number VARCHAR(15) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role user_role NOT NULL DEFAULT 'farmer',
+    preferred_language VARCHAR(5) DEFAULT 'si', -- 'si' (Sinhala), 'ta' (Tamil), 'en' (English)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE farmer_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    full_name VARCHAR(255) NOT NULL,
+    preferred_method farming_method NOT NULL DEFAULT 'hybrid',
+    experience_years INT DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+2. Geo-Spatial Farm & Crop Project SetupSQLCREATE TABLE farm_lands (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    farmer_id UUID REFERENCES farmer_profiles(id) ON DELETE CASCADE,
+    land_name VARCHAR(100) NOT NULL,
+    location_polygon GEOMETRY(Polygon, 4326), -- PostGIS GeoJSON mapping coordinates
+    centroid GEOMETRY(Point, 4326) NOT NULL,   -- Focal point for localized weather fetching
+    total_area_acres NUMERIC(6,2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE crop_templates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    common_name VARCHAR(100) NOT NULL, -- e.g., 'Tomato'
+    scientific_name VARCHAR(150),
+    base_lifecycle_days INT NOT NULL,   -- e.g., 120 days total
+    water_requirement_index INT NOT NULL, -- Scale 1-5
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE farm_projects (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    land_id UUID REFERENCES farm_lands(id) ON DELETE CASCADE,
+    template_id UUID REFERENCES crop_templates(id),
+    project_name VARCHAR(150) NOT NULL, -- e.g., "Maha Season Tomato Batch A"
+    scale_quantity INT NOT NULL,        -- e.g., 50 plants or 1 acre
+    scale_unit VARCHAR(20) NOT NULL,    -- 'plants', 'acres', 'hectares'
+    start_date DATE NOT NULL,
+    current_stage_day INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+3. Soil Metrics & Physical Analytics LogsSQLCREATE TABLE soil_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    land_id UUID REFERENCES farm_lands(id) ON DELETE CASCADE,
+    ph_level NUMERIC(3,1),
+    nitrogen_n NUMERIC(5,2),  -- mg/kg
+    phosphorus_p NUMERIC(5,2),-- mg/kg
+    potassium_k NUMERIC(5,2), -- mg/kg
+    organic_matter_percentage NUMERIC(4,2),
+    last_tested_date DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+4. Shared Knowledge Base: Diseases & Crop InterventionsSQLCREATE TABLE plant_diseases (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    template_id UUID REFERENCES crop_templates(id) ON DELETE CASCADE,
+    disease_name VARCHAR(150) NOT NULL,
+    symptoms_description TEXT NOT NULL,
+    visual_identifiers JSONB -- Key visual features for computer vision identification
+);
+
+CREATE TABLE agricultural_solutions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    disease_id UUID REFERENCES plant_diseases(id) ON DELETE CASCADE,
+    method_type farming_method NOT NULL,
+    step_by_step_treatment TEXT NOT NULL,
+    input_materials_needed TEXT[], -- Array of tools or solutions needed
+    is_preventative BOOLEAN DEFAULT false
+);
+5. Supply Chain & B2B Agribusiness EcosystemSQLCREATE TABLE product_catalog (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    vendor_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    product_name VARCHAR(200) NOT NULL,
+    category VARCHAR(50) NOT NULL, -- 'fertilizer', 'seed', 'pesticide', 'tool'
+    is_organic BOOLEAN DEFAULT false,
+    unit_price NUMERIC(10,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'LKR',
+    stock_quantity NUMERIC(10,2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE marketplace_listings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    farmer_id UUID REFERENCES farmer_profiles(id) ON DELETE CASCADE,
+    project_id UUID REFERENCES farm_projects(id),
+    crop_type VARCHAR(100) NOT NULL,
+    expected_harvest_date DATE,
+    quantity NUMERIC(10,2) NOT NULL,
+    unit VARCHAR(10) NOT NULL, -- 'kg', 'mt'
+    asking_price_per_unit NUMERIC(10,2),
+    status VARCHAR(20) DEFAULT 'available' -- 'available', 'negotiating', 'sold'
+);
+4. Core Service Logic & Deterministic EngineTo optimize API operation costs, the application runs on a deterministic service engine written in native Python code. This avoids expensive LLM calls for day-to-day scheduling calculations.Service 1: Weather-Driven Smart Irrigation EngineThis engine calculates irrigation windows by evaluating rain patterns, saving water and avoiding nutrient washout from fertilizer applications.Pythonimport datetime
+from typing import Dict, Any
+
+class WeatherIrrigationEngine:
+    def __init__(self, db_connection, weather_api_client):
+        self.db = db_connection
+        self.weather_api = weather_api_client
+
+    def calculate_irrigation_necessity(self, project_id: str) -> Dict[str, Any]:
+        # 1. Fetch project profile and location coordinates
+        project = self.db.fetch_project_with_location(project_id)
+        centroid = project["centroid"] # Geo-coordinates
+        
+        # 2. Extract telemetry via Weather API
+        # Fetches a 5-day predictive forecast window
+        forecast_5_day = self.weather_api.get_forecast(lat=centroid.y, lon=centroid.x)
+        
+        total_predicted_rainfall_mm = sum(day["rain_mm"] for day in forecast_5_day[:5])
+        will_rain_imminently_24h = forecast_5_day[0]["rain_probability"] > 0.70
+        
+        # 3. Retrieve baseline metrics for the specific crop
+        crop_water_need = project["water_requirement_index"] # Factor rating (1-5 scale)
+        last_watering_date = self.db.get_last_activity(project_id, activity_type="irrigation")
+        days_since_water = (datetime.date.today() - last_watering_date).days if last_watering_date else 99
+        
+        # Deterministic Decision Rule Tree
+        decision = {
+            "action_required": True,
+            "reasoning": "Standard lifecycle interval reached.",
+            "water_volume_liters_per_unit": crop_water_need * 1.5
+        }
+        
+        if will_rain_imminently_24h:
+            decision["action_required"] = False
+            decision["reasoning"] = "Heavy precipitation forecast within the next 24 hours. Postponing irrigation to preserve root health."
+        elif total_predicted_rainfall_mm > 25.0:
+            decision["action_required"] = False
+            decision["reasoning"] = "Substantial cumulative rainfall expected across the 5-day matrix; natural hydration is sufficient."
+        elif days_since_water < 2 and crop_water_need < 4:
+            decision["action_required"] = False
+            decision["reasoning"] = "Soil profile dampness index is within the green target threshold based on recent watering history."
+            
+        return decision
+Service 2: Structural Crop Lifecycle & Fertilizer SchedulerThis engine map steps throughout a crop's natural growth cycle, adjusting instructions according to whether the farm uses organic or inorganic methods.Pythondef generate_crop_timeline_schedule(project_id: str, database_session) -> list[dict]:
+    # Retrieve project data joined with crop templates and user profile preferences
+    meta = database_session.query_project_metadata(project_id)
+    
+    start_date = meta["start_date"]
+    total_days = meta["base_lifecycle_days"]
+    farming_type = meta["preferred_method"] -- 'organic' | 'inorganic'
+    
+    schedule_timeline = []
+    
+    # Sequential milestone distribution logic loops
+    for day in range(0, total_days + 1):
+        current_date = start_date + datetime.timedelta(days=day)
+        percent_complete = (day / total_days) * 100
+        
+        # Phase 1: Emergence & Early Ground Establishment (First 15%)
+        if day == 0:
+            schedule_timeline.append({
+                "target_day": day, "date": current_date, "category": "Planting",
+                "task": "Sow seeds or plant seedlings into prepared beds.",
+                "importance": "critical"
+            })
+        elif percent_complete >= 10.0 and percent_complete <= 12.0:
+            fertilizer = "Liquid compost tea or seaweed extract" if farming_type == "organic" else "NPK Starter Blend (High Nitrogen)"
+            schedule_timeline.append({
+                "target_day": day, "date": current_date, "category": "Fertilization",
+                "task": f"Apply first round of root-boosting feed: Use {fertilizer}.",
+                "importance": "high"
+            })
+            
+        # Phase 2: Vegetative Growth Framework (15% to 50%)
+        elif percent_complete >= 30.0 and percent_complete <= 32.0:
+            fertilizer = "Well-rotted poultry manure mix" if farming_type == "organic" else "Urea / Nitrogen boost application"
+            schedule_timeline.append({
+                "target_day": day, "date": current_date, "category": "Fertilization",
+                "task": f"Apply structural vegetative fertilizer: Use {fertilizer}.",
+                "importance": "medium"
+            })
+            
+        # Phase 3: Flowering & Fruit Production (50% to 85%)
+        elif percent_complete >= 60.0 and percent_complete <= 62.0:
+            fertilizer = "Wood ash extract / Bone meal infusion" if farming_type == "organic" else "Muriate of Potash (MOP) high-potassium treatment"
+            schedule_timeline.append({
+                "target_day": day, "date": current_date, "category": "Fertilization",
+                "task": f"Apply bloom and fruit-set enhancement: Use {fertilizer}.",
+                "importance": "high"
+            })
+            
+    return schedule_timeline
+5. UI Architecture & User Experience DesignThe application's interface uses a modular, visual design to stay accessible for users with varying digital literacy levels.View 1: Main Aggregation Landing ScreenTop Header Layer: User profile identification, active notification bell icon, and a global marketplace switch.The "Active Farm Projects" Canvas Grid: Lists every crop currently being grown (e.g., Tomato Project - 1 Acre, Chili Patch - 50 Plants). Each project is rendered inside a large, visual card featuring an illustrative icon of the crop, a progress bar tracking its growth timeline, and an active status badge.The Quick Actions Floating Bar: Large, high-contrast, icon-driven shortcut buttons:[ New Project + ] (Launches an image-guided creation wizard)[ Identify Illness (Camera Icon) ] (Opens a direct camera interface for immediate visual analysis)View 2: Modular Project Dashboard ("Farming Circle")When a user taps an active project card, the app transitions into that specific project's dashboard.+-----------------------------------------------------------------+
+| [<- Back]              Tomato Project (1 Acre)       [Settings] |
++-----------------------------------------------------------------+
+|                                                                 |
+|   ( O ) -------- ( O ) -------- [ ( NOW ) ] -------- ( Harvest )|
+|  Planting       Veg Stage       Day 42: Bloom        Day 100    |
+|                                                                 |
++-----------------------------------------------------------------+
+|  CRITICAL ALERTS & NOTIFICATIONS                                 |
+|  [!] Heavy Rain Forecast for Tomorrow! Postpone Fertilizer.     |
+|  [*] High Risk of Blight due to current humidity.               |
++-----------------------------------------------------------------+
+|  PROJECT BLOCKS MODULES                                         |
+|                                                                 |
+|  +-----------------------+             +---------------------+  |
+|  |   Irrigation Block    |             |  Fertilizer Block   |  |
+|  |   Status: Satisfied   |             |  Status: Due in 2d  |  |
+|  +-----------------------+             +---------------------+  |
+|  +-----------------------+             +---------------------+  |
+|  |  Pest & Disease Logs  |             |  Market Price Feed  |  |
+|  |  No Active Infections |             |  Current: 450 LKR/kg|  |
+|  +-----------------------+             +---------------------+  |
++-----------------------------------------------------------------+
+Interactive Notification RoutingIf a notification requires an action (e.g., "Apply Bloom Fertilizer Today"), tapping it triggers an automatic scroll down to the Fertilizer Block.The targeted block flashes with a high-contrast highlight border and automatically expands.This expansion reveals exact operational instructions generated by the deterministic engine: clear application steps, precise mixing ratios based on the farm's acreage, and safety guidelines.6. Implementation Strategy & Next StepsThis plan splits development into distinct milestones, allowing you to deploy working software immediately while setting up future AI integration.Phase 1: Core System Implementation (The Foundation)Initialize the database using the PostgreSQL and PostGIS relational schemas defined above.Deploy the foundational FastAPI backend service mesh.Build the core calculation routines for the deterministic weather and crop timeline engines.Launch the frontend application surfaces using Flutter for mobile devices and React for web browsers.Phase 2: Agentic Integration (The Smart Evolution)Add a dedicated vector embedding extension (pgvector) to your active database cluster.Use the Model Context Protocol (MCP) to expose individual database tables as clean structured data sources.Connect an advanced reasoning LLM to your backend orchestrator. The LLM can now dynamically call the database endpoints via the MCP server, turning plain-language chat prompts into contextual updates for individual farm projects.
+
+in Doc folder need to impliment these plan
+ditional coverage:
+
+✅ PostGIS geospatial farm boundaries — mentioned in DB model but need a dedicated section
+⚠️ Revenue Calculator (Expected Yield × Market Price) — not detailed in any doc
+⚠️ Notification Routing (tap notification → scroll to block → highlight) — not detailed
+⚠️ Offline-first architecture details — mentioned but not deeply planned
+⚠️ Docker Compose configuration — referenced but no actual config planned
+⚠️ Computer Vision for disease (future) — mentioned but not planned
+⚠️ Folder structure for the actual codebase — not in any doc
