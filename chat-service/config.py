@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     # ── Main Backend API (for user profile sync) ──
     MAIN_BACKEND_URL: str = "http://backend:8000/api/v1"
 
+    # ── CORS — set to your Vercel URL in production ──
+    FRONTEND_URL: str = "http://localhost:3000"
+
     # ── Uploads ──
     UPLOAD_DIR: str = "uploads"
     MAX_VOICE_SIZE_MB: int = 25

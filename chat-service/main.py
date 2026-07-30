@@ -35,10 +35,13 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
 # ── CORS ──
+# FRONTEND_URL env var is set to the Vercel URL in production (see render.yaml)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_origin_regex=r"^https?://.*$",  # Allow any origin (dev only)
+    allow_origins=[
+        settings.FRONTEND_URL,      # Vercel URL (set via env FRONTEND_URL)
+        "http://localhost:3000",     # Local dev
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

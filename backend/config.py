@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     GOOGLE_AI_STUDIO_API_KEY: Optional[str] = None
     OPENWEATHER_API_KEY: Optional[str] = None
 
+    # CORS — set to your Vercel URL in production
+    FRONTEND_URL: str = "http://localhost:3000"
+
     # AI — Gemini Model & Backend
     GEMINI_MODEL: str = "gemini-2.5-flash"
     GEMINI_MAX_OUTPUT_TOKENS: int = 2048
