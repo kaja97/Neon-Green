@@ -16,7 +16,7 @@ export interface Message {
   sender_id: string;
   sender_name: string;
   sender_avatar?: string;
-  message_type: 'text' | 'voice' | 'image';
+  message_type: 'text' | 'voice' | 'image' | 'file';
   content?: string;
   voice_url?: string;
   voice_duration?: number;
