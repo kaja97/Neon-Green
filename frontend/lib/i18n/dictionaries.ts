@@ -1,0 +1,55 @@
+export const dictionaries = {
+  en: {
+    settings: {
+      title: 'Settings',
+      subtitle: 'Manage your app preferences',
+      notifications: 'Notifications',
+      push_notifications: 'Push Notifications',
+      push_desc: 'Receive alerts for weather and diseases',
+      history: 'Notification History',
+      history_desc: 'View all past alerts',
+      account: 'Account',
+      details: 'Account Details',
+      details_desc: 'Manage your farm profile',
+      language: 'Language',
+      language_desc: 'Choose your preferred language',
+      logout: 'Log Out',
+    },
+  },
+  si: {
+    settings: {
+      title: 'සැකසුම්',
+      subtitle: 'ඔබගේ යෙදුම් මනාප කළමනාකරණය කරන්න',
+      notifications: 'දැනුම්දීම්',
+      push_notifications: 'තල්ලු දැනුම්දීම්',
+      push_desc: 'කාලගුණය සහ රෝග සඳහා ඇඟවීම් ලබා ගන්න',
+      history: 'දැනුම්දීම් ඉතිහාසය',
+      history_desc: 'සියලු අතීත ඇඟවීම් බලන්න',
+      account: 'ගිණුම',
+      details: 'ගිණුම් විස්තර',
+      details_desc: 'ඔබේ ගොවිපල පැතිකඩ කළමනාකරණය කරන්න',
+      language: 'භාෂාව',
+      language_desc: 'ඔබ කැමති භාෂාව තෝරන්න',
+      logout: 'ඉවත් වන්න',
+    },
+  },
+  ta: {
+    settings: {
+      title: 'அமைப்புகள்',
+      subtitle: 'உங்கள் பயன்பாட்டு விருப்பங்களை நிர்வகிக்கவும்',
+      notifications: 'அறிவிப்புகள்',
+      push_notifications: 'புஷ் அறிவிப்புகள்',
+      push_desc: 'வானிலை மற்றும் நோய்களுக்கான விழிப்பூட்டல்களைப் பெறவும்',
+      history: 'அறிவிப்பு வரலாறு',
+      history_desc: 'கடந்தகால விழிப்பூட்டல்களைக் காண்க',
+      account: 'கணக்கு',
+      details: 'கணக்கு விவரங்கள்',
+      details_desc: 'உங்கள் பண்ணை சுயவிவரத்தை நிர்வகிக்கவும்',
+      language: 'மொழி',
+      language_desc: 'உங்கள் விருப்பமான மொழியைத் தேர்வுசெய்க',
+      logout: 'வெளியேறு',
+    },
+  },
+};
+
+export type Dictionary = typeof dictionaries.en;
