@@ -1,6 +1,6 @@
 services:
   # ─────────────────────────────────────────────
-  # 1. Main Backend (FastAPI)
+  # Main Backend (FastAPI)
   # ─────────────────────────────────────────────
   - type: web
     name: neon-farming-backend
@@ -10,73 +10,60 @@ services:
     plan: free
     healthCheckPath: /health
     envVars:
-      # ── Database ──────────────────────────────
+      # ── Database (Supabase PostgreSQL) ────────
+      # Set this in the Render dashboard — do NOT commit your DB password!
       - key: DATABASE_URL
-        value: postgresql+asyncpg://USER:PASSWORD@HOST:PORT/DBNAME   # ← Fill after creating Supabase DB
+        sync: false
 
       # ── Redis (Upstash) ───────────────────────
       - key: REDIS_URL
-        value: rediss://default:PASSWORD@UPSTASH_ENDPOINT:6380/0     # ← Fill after creating Upstash Redis
+        sync: false
       - key: CELERY_BROKER_URL
-        value: rediss://default:PASSWORD@UPSTASH_ENDPOINT:6380/1     # ← Same Redis, different DB index
+        sync: false
       - key: CELERY_RESULT_BACKEND
-        value: rediss://default:PASSWORD@UPSTASH_ENDPOINT:6380/2     # ← Same Redis, different DB index
+        sync: false
 
-      # ── JWT (must be same secret as chat-service) ─
+      # ── JWT ───────────────────────────────────
       - key: JWT_SECRET_KEY
-        generateValue: true                                           # ← Render auto-generates; copy to chat-service!
+        sync: false
 
       # ── AI / APIs ─────────────────────────────
       - key: GOOGLE_AI_STUDIO_API_KEY
-        value: YOUR_GEMINI_API_KEY                                    # ← Get from https://aistudio.google.com/
+        sync: false
       - key: OPENWEATHER_API_KEY
-        value: YOUR_OPENWEATHER_API_KEY                               # ← Get from https://openweathermap.org/
+        sync: false
 
       # ── Push Notifications (VAPID) ────────────
       - key: VAPID_PUBLIC_KEY
-        value: YOUR_VAPID_PUBLIC_KEY                                  # ← Run: npx web-push generate-vapid-keys
+        sync: false
       - key: VAPID_PRIVATE_KEY
-        value: YOUR_VAPID_PRIVATE_KEY
+        sync: false
       - key: VAPID_EMAIL
-        value: mailto:your@email.com
-
-      # ── Email (SMTP fallback via Gmail) ───────
-      - key: SMTP_USER
-        value: your@gmail.com                                         # ← Your Gmail address
-      - key: SMTP_PASSWORD
-        value: YOUR_GMAIL_APP_PASSWORD                                # ← Gmail App Password (not your login password)
+        value: mailto:admin@agrifarm.app
 
       # ── CORS: allow frontend ──────────────────
       - key: FRONTEND_URL
-        value: https://YOUR-APP.vercel.app                            # ← Fill after deploying frontend to Vercel
+        sync: false
 
   # ─────────────────────────────────────────────
-  # 2. Chat Service (FastAPI + WebSocket)
+  # Chat Service — NOT DEPLOYED YET
+  # Uncomment when ready to deploy
   # ─────────────────────────────────────────────
-  - type: web
-    name: neon-farming-chat
-    runtime: docker
-    dockerfilePath: ./chat-service/Dockerfile
-    dockerContext: ./chat-service
-    plan: free
-    healthCheckPath: /health
-    envVars:
-      # ── Database (can be same Supabase DB, different schema, or same DB) ─
-      - key: CHAT_DATABASE_URL
-        value: postgresql+asyncpg://USER:PASSWORD@HOST:PORT/DBNAME   # ← Same or different Supabase DB
-
-      # ── Redis (same Upstash instance) ─────────
-      - key: REDIS_URL
-        value: rediss://default:PASSWORD@UPSTASH_ENDPOINT:6380/1     # ← Same Upstash Redis
-
-      # ── JWT (must match backend secret!) ──────
-      - key: JWT_SECRET_KEY
-        value: COPY_FROM_BACKEND_SERVICE                              # ← Must be IDENTICAL to backend JWT_SECRET_KEY
-
-      # ── Main Backend URL (for user profile sync) ─
-      - key: MAIN_BACKEND_URL
-        value: https://neon-farming-backend.onrender.com/api/v1      # ← Render gives this URL after backend deploys
-
-      # ── CORS: allow frontend ──────────────────
-      - key: FRONTEND_URL
-        value: https://YOUR-APP.vercel.app                            # ← Fill after deploying frontend to Vercel
+  # - type: web
+  #   name: neon-farming-chat
+  #   runtime: docker
+  #   dockerfilePath: ./chat-service/Dockerfile
+  #   dockerContext: ./chat-service
+  #   plan: free
+  #   healthCheckPath: /health
+  #   envVars:
+  #     - key: CHAT_DATABASE_URL
+  #       sync: false
+  #     - key: REDIS_URL
+  #       sync: false
+  #     - key: JWT_SECRET_KEY
+  #       sync: false
+  #     - key: MAIN_BACKEND_URL
+  #       sync: false
+  #     - key: FRONTEND_URL
+  #       sync: false
