@@ -50,9 +50,9 @@ export interface DashboardData {
     area_acres?: number;
     farming_method?: string;
   };
+  current_stage: Stage | null;
   farming_circle: {
     stages: StageProgress[];
-    current_stage: Stage | null;
     current_day: number;
     total_days: number;
   };
