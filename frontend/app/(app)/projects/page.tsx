@@ -125,7 +125,7 @@ export default function ProjectsListPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredProjects.map((project: any, idx) => (
+          {filteredProjects.map((project: any, idx: number) => (
             <Link
               key={project.id}
               href={`/projects/${project.id}`}
