@@ -92,7 +92,7 @@ export default function NotificationsPage() {
             <Loader2 className="w-8 h-8 text-primary animate-spin drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
           </div>
         ) : notifications && notifications.length > 0 ? (
-          notifications.map((n: any, idx) => {
+          notifications.map((n: any, idx: number) => {
             const Icon = getIcon(n.type);
             const { text, bg } = getColor(n.type);
 
