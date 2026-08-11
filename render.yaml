@@ -33,6 +33,10 @@ services:
       - key: OPENWEATHER_API_KEY
         sync: false
 
+      # ── Email: Google OAuth Token (JSON string) ─
+      - key: GOOGLE_OAUTH_TOKEN_JSON
+        sync: false
+
       # ── Push Notifications (VAPID) ────────────
       - key: VAPID_PUBLIC_KEY
         sync: false

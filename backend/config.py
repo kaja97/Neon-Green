@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     # ── Email: Google OAuth 2.0 (User Token - Primary) ───
     GOOGLE_OAUTH_CREDENTIALS_FILE: Optional[str] = None
     GOOGLE_OAUTH_TOKEN_FILE: Optional[str] = None
+    GOOGLE_OAUTH_TOKEN_JSON: Optional[str] = None  # Cloud: token.json contents as env var
 
     # ── Email: SMTP Fallback ─────────────────────────────
     SMTP_HOST: Optional[str] = "smtp.gmail.com"

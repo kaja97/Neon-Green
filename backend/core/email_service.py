@@ -19,6 +19,7 @@ Usage:
         plain_body="Your code: 123456",
     )
 """
+import json
 import logging
 import os
 import base64
@@ -92,44 +93,45 @@ async def send_email(
         except Exception:
             google_failures = 0
 
-    # Try Google Gmail API first (if available and not in failure mode)
-    if google_failures < GOOGLE_FAILURE_THRESHOLD and settings.GOOGLE_OAUTH_TOKEN_FILE:
+    # Determine credential source: env var JSON string OR file path
+    token_json_str = settings.GOOGLE_OAUTH_TOKEN_JSON
+    resolved_path = None
+    if not token_json_str and settings.GOOGLE_OAUTH_TOKEN_FILE:
         resolved_path = _resolve_token_file(settings.GOOGLE_OAUTH_TOKEN_FILE)
-        if resolved_path:
-            try:
-                success = await _send_via_google_api(
-                    to=to,
-                    subject=subject,
-                    html_body=html_body,
-                    plain_body=plain_body,
-                    token_file=resolved_path,
-                )
-                if success:
-                    # Reset failure counter on success
-                    if redis and google_failures > 0:
-                        await redis.delete(GOOGLE_FAILURE_KEY)
-                    return True
-                else:
-                    logger.warning("Google Gmail API returned False for %s", to)
-            except Exception as e:
-                logger.warning(
-                    "Google Gmail API failed (attempt %d): %s: %s",
-                    google_failures + 1, type(e).__name__, e,
-                )
-                # Increment failure counter
-                if redis:
-                    try:
-                        new_count = await redis.incr(GOOGLE_FAILURE_KEY)
-                        if new_count == 1:
-                            await redis.expire(GOOGLE_FAILURE_KEY, GOOGLE_FAILURE_TTL)
-                    except Exception:
-                        pass
-        else:
-            logger.warning(
-                "Google OAuth token file not found at '%s'. "
-                "Run 'python scripts/generate_token.py' to generate it.",
-                settings.GOOGLE_OAUTH_TOKEN_FILE,
+
+    has_google_creds = bool(token_json_str or resolved_path)
+
+    # Try Google Gmail API first (if available and not in failure mode)
+    if google_failures < GOOGLE_FAILURE_THRESHOLD and has_google_creds:
+        try:
+            success = await _send_via_google_api(
+                to=to,
+                subject=subject,
+                html_body=html_body,
+                plain_body=plain_body,
+                token_file=resolved_path,
+                token_json_str=token_json_str,
             )
+            if success:
+                # Reset failure counter on success
+                if redis and google_failures > 0:
+                    await redis.delete(GOOGLE_FAILURE_KEY)
+                return True
+            else:
+                logger.warning("Google Gmail API returned False for %s", to)
+        except Exception as e:
+            logger.warning(
+                "Google Gmail API failed (attempt %d): %s: %s",
+                google_failures + 1, type(e).__name__, e,
+            )
+            # Increment failure counter
+            if redis:
+                try:
+                    new_count = await redis.incr(GOOGLE_FAILURE_KEY)
+                    if new_count == 1:
+                        await redis.expire(GOOGLE_FAILURE_KEY, GOOGLE_FAILURE_TTL)
+                except Exception:
+                    pass
     else:
         if google_failures >= GOOGLE_FAILURE_THRESHOLD:
             logger.info("Google API in fallback mode (%d failures). Using SMTP.", google_failures)
@@ -167,10 +169,15 @@ async def _send_via_google_api(
     subject: str,
     html_body: str,
     plain_body: Optional[str],
-    token_file: str,
+    token_file: Optional[str] = None,
+    token_json_str: Optional[str] = None,
 ) -> bool:
     """
     Send email via Google Gmail API using OAuth 2.0 User Token (refresh token).
+
+    Supports two credential sources:
+      - token_json_str: JSON string from GOOGLE_OAUTH_TOKEN_JSON env var (cloud)
+      - token_file: Path to token.json file (local/Docker)
 
     Requires:
       - google-auth
@@ -187,11 +194,22 @@ async def _send_via_google_api(
 
         SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
-        if not os.path.exists(token_file):
-            logger.error("OAuth token file not found at %s", token_file)
+        # Load credentials from env var JSON string or file
+        using_env_var = False
+        if token_json_str:
+            info = json.loads(token_json_str)
+            credentials = Credentials.from_authorized_user_info(info, SCOPES)
+            using_env_var = True
+            logger.debug("Loaded Google OAuth credentials from GOOGLE_OAUTH_TOKEN_JSON env var")
+        elif token_file and os.path.exists(token_file):
+            credentials = Credentials.from_authorized_user_file(token_file, SCOPES)
+            logger.debug("Loaded Google OAuth credentials from file: %s", token_file)
+        else:
+            logger.error(
+                "No OAuth token source available. "
+                "Set GOOGLE_OAUTH_TOKEN_JSON env var or GOOGLE_OAUTH_TOKEN_FILE path."
+            )
             return False
-
-        credentials = Credentials.from_authorized_user_file(token_file, SCOPES)
 
         from google.auth.exceptions import RefreshError
 
@@ -200,14 +218,16 @@ async def _send_via_google_api(
                 logger.info("Refreshing expired Google OAuth token...")
                 try:
                     credentials.refresh(Request())
-                    # Save refreshed token back
-                    try:
-                        with open(token_file, "w") as f:
-                            f.write(credentials.to_json())
-                        logger.info("Refreshed token saved to %s", token_file)
-                    except OSError as e:
-                        # In Docker, the volume may be read-only in some setups
-                        logger.warning("Could not save refreshed token: %s", e)
+                    # Save refreshed token back to file (only when using file mode)
+                    if not using_env_var and token_file:
+                        try:
+                            with open(token_file, "w") as f:
+                                f.write(credentials.to_json())
+                            logger.info("Refreshed token saved to %s", token_file)
+                        except OSError as e:
+                            logger.warning("Could not save refreshed token: %s", e)
+                    else:
+                        logger.info("Token refreshed in-memory (env var mode, no file write-back)")
                 except RefreshError as re:
                     logger.error(
                         "Google OAuth refresh token expired or revoked (%s). "
