@@ -1,3 +1,5 @@
+import ssl
+
 from celery import Celery
 from celery.schedules import crontab
 from celery.signals import worker_process_init
@@ -22,6 +24,13 @@ celery_app.conf.update(
     timezone='UTC',
     enable_utc=True,
 )
+
+# ── TLS/SSL for Upstash Redis (rediss://) ───────────────────
+if settings.CELERY_BROKER_URL.startswith("rediss://"):
+    celery_app.conf.update(
+        broker_use_ssl={"ssl_cert_reqs": ssl.CERT_NONE},
+        redis_backend_use_ssl={"ssl_cert_reqs": ssl.CERT_NONE},
+    )
 
 # ── Periodic task schedule ──────────────────────────────────
 # Weather data is refreshed every hour so dashboards stay current
