@@ -82,10 +82,8 @@ async def generate_ai_recommendations(
         if not description:
             continue
 
-        # Prepend priority badge to description for display
+        # Keep description clean for email and UI display
         priority = item.get("priority", "medium")
-        if priority == "high":
-            description = f"⚠️ [HIGH PRIORITY] {description}"
 
         recommendations.append(SoilRecommendation(
             soil_test_id=test.id,
@@ -329,10 +327,10 @@ def _process_nutrients(
             ))
 
         elif value_ppm > optimal["max"]:
-            # Excess — warn but don't recommend fertilizer
+            # Optimal to abundant reserve
             desc = (
-                f"{friendly_name} is above optimal ({value_ppm} ppm, optimal: {optimal['min']}-{optimal['max']} ppm). "
-                f"Monitor crop for toxicity symptoms. Avoid further application."
+                f"{friendly_name} reserve is abundant ({value_ppm} ppm, optimal: {optimal['min']}-{optimal['max']} ppm). "
+                f"Sufficient nutrient reserve present; withhold additional {friendly_name.lower()} fertilizer this cycle."
             )
             recs.append(SoilRecommendation(
                 soil_test_id=test.id,

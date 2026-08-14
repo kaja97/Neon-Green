@@ -10,7 +10,7 @@ class SoilTestRepository(BaseRepository[SoilTest, None, None]):
 
     async def get_by_project(self, db: AsyncSession, project_id: uuid.UUID):
         result = await db.execute(
-            select(self.model).where(self.model.project_id == project_id).order_by(self.model.test_date.desc())
+            select(self.model).where(self.model.project_id == project_id).order_by(self.model.created_at.desc(), self.model.test_date.desc())
         )
         return result.scalars().all()
 

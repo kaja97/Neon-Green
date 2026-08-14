@@ -224,11 +224,33 @@ class SoilService(BaseService):
         if not tests:
             return []
 
-        latest = tests[0]
-        latest.results = await self.result_repo.get_by_test(db, latest.id)
-        latest.recommendations = await self.rec_repo.get_by_test(db, latest.id)
+        # Populate complete results and recommendations for all tests in history
+        for test in tests:
+            test.results = await self.result_repo.get_by_test(db, test.id)
+            test.recommendations = await self.rec_repo.get_by_test(db, test.id)
 
         return tests
+
+    async def resend_soil_email(
+        self,
+        db: AsyncSession,
+        test_id: uuid.UUID,
+        account_id: uuid.UUID,
+    ):
+        soil_test = await self.test_repo.get(db, test_id)
+        if not soil_test:
+            raise HTTPException(status_code=404, detail="Soil test not found")
+
+        farmer_id = await self._get_farmer_id(db, account_id)
+        project = await self.project_repo.get(db, soil_test.project_id)
+        if not project or project.farmer_id != farmer_id:
+            raise HTTPException(status_code=403, detail="Not authorized to access this soil test")
+
+        soil_test.recommendations = await self.rec_repo.get_by_test(db, soil_test.id)
+        await self._send_recommendation_email(
+            db, account_id, project, soil_test, soil_test.recommendations
+        )
+        return {"message": "Soil recommendation email sent successfully"}
 
     async def get_soil_recommendations(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
         farmer_id = await self._get_farmer_id(db, account_id)

@@ -110,7 +110,10 @@ async def _fallback_context(
     # Soil — only if needed
     if needed is None or "soil" in needed or "nutrient_needs" in needed:
         soil_res = await db.execute(
-            select(SoilTest).where(SoilTest.project_id == project_id).order_by(SoilTest.test_date.desc()).limit(1)
+            select(SoilTest)
+            .where(SoilTest.project_id == project_id)
+            .order_by(SoilTest.created_at.desc(), SoilTest.test_date.desc())
+            .limit(1)
         )
         latest_soil = soil_res.scalars().first()
         soil_info = None
@@ -121,10 +124,15 @@ async def _fallback_context(
             nut = nut_res.scalars().first()
             if nut:
                 soil_info = {
+                    "test_date": latest_soil.test_date.isoformat(),
+                    "created_at": latest_soil.created_at.isoformat() if latest_soil.created_at else None,
+                    "tested_by": latest_soil.tested_by,
                     "ph": float(nut.ph_level),
                     "nitrogen_ppm": float(nut.nitrogen_n) if nut.nitrogen_n else None,
                     "phosphorus_ppm": float(nut.phosphorus_p) if nut.phosphorus_p else None,
                     "potassium_ppm": float(nut.potassium_k) if nut.potassium_k else None,
+                    "electrical_conductivity_ec": float(nut.electrical_conductivity_ec) if nut.electrical_conductivity_ec else None,
+                    "organic_carbon_oc": float(nut.organic_carbon_oc) if nut.organic_carbon_oc else None,
                 }
         context["soil"] = soil_info
 

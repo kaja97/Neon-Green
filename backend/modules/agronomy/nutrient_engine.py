@@ -153,7 +153,7 @@ async def _fetch_latest_soil_result(
     test_res = await db.execute(
         select(SoilTest)
         .where(SoilTest.project_id == project_id)
-        .order_by(SoilTest.test_date.desc())
+        .order_by(SoilTest.created_at.desc(), SoilTest.test_date.desc())
         .limit(1)
     )
     test = test_res.scalars().first()

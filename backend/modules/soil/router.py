@@ -42,3 +42,13 @@ async def get_recommendations(
 ):
     recommendations = await soil_service.get_soil_recommendations(db, project_id, current_user.id)
     return success_response([schemas.SoilRecommendationResponse.model_validate(r).model_dump() for r in recommendations])
+
+@router.post("/tests/{test_id}/resend-email", status_code=200)
+async def resend_email(
+    test_id: uuid.UUID,
+    current_user: Account = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    soil_service: SoilService = Depends(get_soil_service)
+):
+    result = await soil_service.resend_soil_email(db, test_id, current_user.id)
+    return success_response(result)
