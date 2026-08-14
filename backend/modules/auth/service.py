@@ -70,36 +70,6 @@ class AuthService(BaseService):
         refresh = create_refresh_token(payload)
         return access, refresh
 
-    async def _dispatch_otp_email(self, email: str, code: str, purpose: str) -> None:
-        """Dispatch OTP email via Celery task, with direct fallback if Celery is unavailable."""
-        sent = False
-        try:
-            from tasks.otp_tasks import send_otp_email_task
-            send_otp_email_task.delay(email, code, purpose)
-            sent = True
-        except Exception as exc:
-            self.logger.warning("Celery dispatch failed (%s). Falling back to direct email sending.", exc)
-
-        if not sent:
-            try:
-                from core.email_service import send_email
-                from core.email_templates import otp_email
-                subject_map = {
-                    "register": "AgriFarm AI - Verify Your Email",
-                    "forgot_password": "AgriFarm AI - Reset Your Password",
-                    "change_email": "AgriFarm AI - Confirm New Email",
-                    "change_phone": "AgriFarm AI - Confirm Phone Change",
-                }
-                html_body, plain_body = otp_email(code=code, purpose=purpose)
-                await send_email(
-                    to=email,
-                    subject=subject_map.get(purpose, "AgriFarm AI - Verification Code"),
-                    html_body=html_body,
-                    plain_body=plain_body,
-                )
-            except Exception as direct_exc:
-                self.logger.error("Direct email fallback failed: %s", direct_exc)
-
     # ── 1. Registration OTP Flow ────────────────────────────
 
     async def request_register_otp(self, db: AsyncSession, data: RegisterOTPRequest) -> dict:
@@ -115,7 +85,11 @@ class AuthService(BaseService):
             context={"phone": data.phone},
         )
 
-        await self._dispatch_otp_email(data.email, code, "register")
+        try:
+            from tasks.otp_tasks import send_otp_email_task
+            send_otp_email_task.delay(data.email, code, "register")
+        except Exception as exc:
+            self.logger.warning("Celery not available (or eager execution failed). Error: %s. OTP code for %s: %s", exc, data.email, code)
 
         return {
             "message": f"Verification code sent to {data.email}",
@@ -305,12 +279,16 @@ class AuthService(BaseService):
         account = await self.account_repo.get_by_email_or_phone(db, data.email_or_phone)
 
         if account and account.email:
-            code = await generate_otp(
-                purpose="forgot_password",
-                identifier=account.email,
-                context={"user_id": str(account.id)},
-            )
-            await self._dispatch_otp_email(account.email, code, "forgot_password")
+            try:
+                code = await generate_otp(
+                    purpose="forgot_password",
+                    identifier=account.email,
+                    context={"user_id": str(account.id)},
+                )
+                from tasks.otp_tasks import send_otp_email_task
+                send_otp_email_task.delay(account.email, code, "forgot_password")
+            except Exception:
+                self.logger.warning("Failed to send forgot-password OTP for %s", data.email_or_phone)
 
         return {
             "message": "If an account exists, a verification code has been sent.",
@@ -357,7 +335,11 @@ class AuthService(BaseService):
             context={"user_id": str(user.id), "old_email": user.email},
         )
 
-        await self._dispatch_otp_email(data.new_email, code, "change_email")
+        try:
+            from tasks.otp_tasks import send_otp_email_task
+            send_otp_email_task.delay(data.new_email, code, "change_email")
+        except Exception:
+            self.logger.warning("Celery not available. OTP for %s: %s", data.new_email, code)
 
         return {
             "message": f"Verification code sent to {data.new_email}",
@@ -394,14 +376,17 @@ class AuthService(BaseService):
         )
 
         if user.email:
-            await self._dispatch_otp_email(user.email, code, "change_phone")
+            try:
+                from tasks.otp_tasks import send_otp_email_task
+                send_otp_email_task.delay(user.email, code, "change_phone")
+            except Exception:
+                self.logger.warning("Celery not available. Phone change OTP: %s", code)
 
         return {
             "message": "Verification code sent to your email.",
             "otp_sent_to": user.email or data.new_phone,
             "expires_in_seconds": 300,
         }
-
 
     async def verify_change_phone_otp(self, db: AsyncSession, user: Account, data: ChangePhoneVerifyRequest) -> dict:
         context = await verify_otp("change_phone", data.new_phone, data.otp_code)

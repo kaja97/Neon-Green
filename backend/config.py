@@ -10,7 +10,6 @@ class Settings(BaseSettings):
     REDIS_URL: str
     CELERY_BROKER_URL: str
     CELERY_RESULT_BACKEND: str
-    CELERY_EAGER_MODE: bool = False
 
     # JWT
     JWT_SECRET_KEY: str
