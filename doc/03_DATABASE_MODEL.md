@@ -282,6 +282,25 @@ Specific fertilizer products recommended per plant stage and farming method.
 
 ---
 
+### `plant_pruning_guides`
+Pruning and canopy management guidelines per plant growth stage. Used by the planner engine to auto-generate pruning activities.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | |
+| `plant_stage_id` | UUID FK → plant_stages | On delete cascade |
+| `pruning_type` | VARCHAR(100) | `pinching`, `desuckering`, `topping`, `thinning`, `leaf_removal`, `sanitization`, `canopy_training` |
+| `pruning_method` | TEXT | Step-by-step method and technique description |
+| `trigger_day` | INTEGER | Day offset within the growth stage |
+| `frequency_days` | INTEGER | Repeat cycle in days (0 = one-time) |
+| `pre_pruning` | TEXT | Pre-pruning preparation (e.g. tool sterilization, weather check) |
+| `post_pruning` | TEXT | Post-pruning care (e.g. fungicide wound paste application) |
+| `tools_needed` | TEXT | Required tools (e.g. bypass secateurs, alcohol disinfectant) |
+| `season_notes` | TEXT | Weather and seasonal considerations |
+| `importance` | VARCHAR(50) | `critical`, `recommended`, `optional`, `maintenance`, `formative` |
+
+---
+
 ## Section 3: Diseases & Pests Tables
 
 ### `farming_methods` [NOT IMPLEMENTED AS A DB TABLE]
@@ -521,19 +540,33 @@ Individual farming tasks (the core of daily guidance).
 ---
 
 ### `activity_details`
-Details for individual activities.
+Execution and reference details for individual farming activities (Irrigation, Fertilizer, Pruning, Pest Control, Monitoring, Harvesting).
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID PK | |
 | `activity_id` | UUID FK → farming_activities | CASCADE DELETE, UNIQUE |
-| `required_water_liters` | DECIMAL(8,2) | |
-| `required_fertilizer_kg` | DECIMAL(8,2) | |
-| `fertilizer_name` | VARCHAR(255) | |
-| `actual_water_liters` | DECIMAL(8,2) | |
-| `actual_fertilizer_kg` | DECIMAL(8,2) | |
-| `notes` | TEXT | |
-| `attachments` | VARCHAR[] | Array of attachment S3 URLs |
+| `required_water_liters` | DECIMAL(8,2) | Computed water volume in liters |
+| `actual_water_liters` | DECIMAL(8,2) | Actual volume applied by farmer |
+| `required_fertilizer_kg` | DECIMAL(8,2) | Recommended fertilizer quantity (kg) |
+| `actual_fertilizer_kg` | DECIMAL(8,2) | Actual quantity applied by farmer (kg) |
+| `fertilizer_name` | VARCHAR(255) | Prescribed product name |
+| `pruning_type` | VARCHAR(100) | Pruning operation (`pinching`, `desuckering`, `topping`, `thinning`, `leaf_removal`) |
+| `pruning_level` | VARCHAR(50) | `critical`, `recommended`, `maintenance`, `formative` |
+| `target_canopy_level` | VARCHAR(100) | Target area (`top shoots`, `lateral suckers`, `lower canopy`) |
+| `tools_needed` | TEXT | Equipment needed (secateurs, curved knife, alcohol) |
+| `how_to_instructions` | TEXT | Comprehensive step-by-step technique paragraph |
+| `pre_pruning_care` | TEXT | Pre-care sterilization and weather instructions |
+| `post_pruning_care` | TEXT | Post-care wound treatment and sanitization |
+| `waste_biomass_kg` | DECIMAL(8,2) | Pruned waste biomass removed (kg) |
+| `target_pest_disease` | VARCHAR(200) | Target pest / pathogen name |
+| `treatment_name` | VARCHAR(255) | Chemical or organic bio-control product |
+| `dosage` | VARCHAR(100) | Application dosage (e.g. `2.5g/L` or `5ml/L`) |
+| `application_method` | VARCHAR(100) | `foliar spray`, `soil drench`, `trap installation` |
+| `safety_interval_days` | INTEGER | Pre-harvest safety waiting period (days) |
+| `day_offset` | INTEGER | Days from planting date |
+| `notes` | TEXT | Farmer execution notes & observations |
+| `attachments` | VARCHAR[] | Array of attachment photo/doc URLs |
 
 ---
 
