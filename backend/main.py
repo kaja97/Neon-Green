@@ -62,6 +62,19 @@ async def root():
 async def health_check():
     return {"success": True, "data": {"status": "healthy"}}
 
+@app.get("/api/v1")
+@app.get("/api/v1/")
+async def api_v1_root():
+    return {
+        "success": True,
+        "data": {
+            "version": "1.0.0",
+            "status": "online",
+            "message": "AgriFarm AI API v1 is active",
+            "docs_url": "/docs",
+        },
+    }
+
 # ── Route Registration ───────────────────────────────────
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(farmer_router, prefix="/api/v1")
