@@ -330,7 +330,7 @@ def _process_nutrients(
             # Optimal to abundant reserve
             desc = (
                 f"{friendly_name} reserve is abundant ({value_ppm} ppm, optimal: {optimal['min']}-{optimal['max']} ppm). "
-                f"Sufficient nutrient reserve present; withhold additional {friendly_name.lower()} fertilizer this cycle."
+                f"Sufficient nutrient reserve present; avoid additional {friendly_name.lower()} fertilizer this cycle."
             )
             recs.append(SoilRecommendation(
                 soil_test_id=test.id,

@@ -32,12 +32,14 @@ COOKIE_MAX_AGE = 30 * 24 * 60 * 60  # 30 days
 
 def _set_refresh_cookie(response: Response, token: str) -> None:
     """Set httpOnly refresh token cookie."""
+    from config import settings
+    is_production = settings.FRONTEND_URL.startswith("https") or "vercel.app" in settings.FRONTEND_URL
     response.set_cookie(
         key="refresh_token",
         value=token,
         httponly=True,
-        secure=False,  # TODO: True in production
-        samesite="lax",
+        secure=is_production,
+        samesite="none" if is_production else "lax",
         max_age=COOKIE_MAX_AGE,
     )
 
