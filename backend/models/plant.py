@@ -15,6 +15,9 @@ class Plant(BaseModel):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
+    stages: Mapped[list["PlantStage"]] = relationship("PlantStage", back_populates="plant", cascade="all, delete-orphan", order_by="PlantStage.stage_order")
+    varieties: Mapped[list["PlantVariety"]] = relationship("PlantVariety", back_populates="plant", cascade="all, delete-orphan")
+
 class PlantStage(BaseModel):
     __tablename__ = "plant_stages"
     
@@ -28,6 +31,12 @@ class PlantStage(BaseModel):
     critical_actions: Mapped[str | None] = mapped_column(Text, nullable=True)
     watch_for: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    plant: Mapped["Plant"] = relationship("Plant", back_populates="stages")
+    water_req: Mapped["PlantWaterReq"] = relationship("PlantWaterReq", back_populates="stage", uselist=False, cascade="all, delete-orphan")
+    nutrient_req: Mapped["PlantNutrientReq"] = relationship("PlantNutrientReq", back_populates="stage", uselist=False, cascade="all, delete-orphan")
+    fertilizer_recommendations: Mapped[list["PlantFertilizerRecommendation"]] = relationship("PlantFertilizerRecommendation", back_populates="stage", cascade="all, delete-orphan")
+    pruning_guides: Mapped[list["PlantPruningGuide"]] = relationship("PlantPruningGuide", back_populates="stage", cascade="all, delete-orphan")
+
 class PlantNutrientReq(BaseModel):
     __tablename__ = "plant_nutrient_requirements"
     
@@ -38,6 +47,8 @@ class PlantNutrientReq(BaseModel):
     calcium_kg: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
     magnesium_kg: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
 
+    stage: Mapped["PlantStage"] = relationship("PlantStage", back_populates="nutrient_req")
+
 class PlantWaterReq(BaseModel):
     __tablename__ = "plant_water_requirements"
 
@@ -46,13 +57,9 @@ class PlantWaterReq(BaseModel):
     frequency_days: Mapped[int] = mapped_column(Integer)
     drought_tolerance: Mapped[str] = mapped_column(String(50))
 
+    stage: Mapped["PlantStage"] = relationship("PlantStage", back_populates="water_req")
 
 class PlantVariety(BaseModel):
-    """A named cultivar/variety of a plant (e.g. Tomato → Roma, Cherry).
-
-    A plant may have zero or more varieties. When a farmer creates a project,
-    they pick a plant and then optionally a variety from this table.
-    """
     __tablename__ = "plant_varieties"
 
     plant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("plants.id", ondelete="CASCADE"))
@@ -60,7 +67,6 @@ class PlantVariety(BaseModel):
     scientific_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     
-    # Biological metrics moved from Plant
     growth_duration_days: Mapped[int] = mapped_column(Integer)
     planting_season: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     
@@ -75,3 +81,5 @@ class PlantVariety(BaseModel):
     companion_plants: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     incompatible_plants: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    plant: Mapped["Plant"] = relationship("Plant", back_populates="varieties")

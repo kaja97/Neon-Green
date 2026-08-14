@@ -1,20 +1,14 @@
 from sqlalchemy import String, ForeignKey, Text, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from .base import BaseModel
 import uuid
 
-
 class PlantPruningGuide(BaseModel):
     """Pruning reference data for a specific plant growth stage.
 
-    Each record describes one pruning operation (type + method + timing)
-    that should be performed during the linked stage.  The planner engine
-    reads these to auto-generate ``FarmingActivity`` records with
-    ``activity_type = "pruning"``.
-
-    Design mirrors ``PlantFertilizerRecommendation`` — one guide per
-    pruning-type per stage, linked via ``plant_stage_id``.
+    Describes specific pruning operations (type, method, timing, care, tools)
+    to perform on a crop during a growth stage.
     """
     __tablename__ = "plant_pruning_guides"
 
@@ -22,9 +16,8 @@ class PlantPruningGuide(BaseModel):
         UUID(as_uuid=True), ForeignKey("plant_stages.id", ondelete="CASCADE")
     )
 
-    # What kind of pruning (pinching, desuckering, topping, thinning,
-    # training, formative, maintenance, rejuvenation, leaf_removal, vine_tipping)
-    pruning_type: Mapped[str] = mapped_column(String(50))
+    # Pruning Type: pinching, desuckering, topping, thinning, training, formative, maintenance, leaf_removal, sanitization
+    pruning_type: Mapped[str] = mapped_column(String(100))
 
     # Step-by-step description of how to perform this pruning
     pruning_method: Mapped[str] = mapped_column(Text)
@@ -48,4 +41,6 @@ class PlantPruningGuide(BaseModel):
     season_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Importance level: critical, recommended, optional
-    importance: Mapped[str] = mapped_column(String(20), default="recommended")
+    importance: Mapped[str] = mapped_column(String(50), default="recommended")
+
+    stage: Mapped["PlantStage"] = relationship("PlantStage", back_populates="pruning_guides")

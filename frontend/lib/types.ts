@@ -57,6 +57,36 @@ export interface Activity {
   completed_at?: string;
   is_ai_recommended: boolean;
   ai_reasoning?: string;
+
+  // Watering resources
+  required_water_liters?: number;
+  actual_water_liters?: number;
+
+  // Fertilizer
+  required_fertilizer_kg?: number;
+  fertilizer_name?: string;
+  actual_fertilizer_kg?: number;
+
+  // Pruning
+  pruning_type?: string;
+  pruning_level?: string;
+  target_canopy_level?: string;
+  tools_needed?: string;
+  how_to_instructions?: string;
+  pre_pruning_care?: string;
+  post_pruning_care?: string;
+  waste_biomass_kg?: number;
+
+  // Pest Control & Spraying
+  target_pest_disease?: string;
+  treatment_name?: string;
+  dosage?: string;
+  application_method?: string;
+  safety_interval_days?: number;
+
+  // Timeline & Notes
+  day_offset?: number;
+  notes?: string;
 }
 
 /* ── Disease ── */

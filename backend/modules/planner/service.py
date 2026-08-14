@@ -49,25 +49,21 @@ class PlannerService(BaseService):
             raise HTTPException(status_code=404, detail="Activity not found")
         return activity
 
-    async def get_active_plan(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID) -> ActivityPlan:
+    async def get_active_plan(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
         farmer_id = await self._get_farmer_id(db, account_id)
         project = await self.project_repo.get(db, project_id)
         if not project or project.farmer_id != farmer_id:
             raise HTTPException(status_code=404, detail="Project not found")
-            
+
         plan = await self.plan_repo.get_active_by_project(db, project_id)
         if not plan:
             raise HTTPException(status_code=404, detail="No active plan found for this project")
         return plan
 
     async def list_activities(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
-        farmer_id = await self._get_farmer_id(db, account_id)
-        project = await self.project_repo.get(db, project_id)
-        if not project or project.farmer_id != farmer_id:
-            raise HTTPException(status_code=404, detail="Project not found")
-
-        plan = await self.plan_repo.get_active_by_project(db, project_id)
-        if not plan:
+        try:
+            plan = await self.get_active_plan(db, project_id, account_id)
+        except HTTPException:
             return []
 
         return await self.activity_repo.get_by_plan(db, plan.id)
@@ -108,6 +104,12 @@ class PlannerService(BaseService):
             detail.actual_water_liters = data.actual_water_liters
         if data.actual_fertilizer_kg is not None:
             detail.actual_fertilizer_kg = data.actual_fertilizer_kg
+        if data.waste_biomass_kg is not None:
+            detail.waste_biomass_kg = data.waste_biomass_kg
+        if data.treatment_name:
+            detail.treatment_name = data.treatment_name
+        if data.dosage:
+            detail.dosage = data.dosage
         if data.attachments is not None:
             detail.attachments = data.attachments
             
@@ -234,6 +236,7 @@ class PlannerService(BaseService):
         if detail:
             detail.actual_water_liters = None
             detail.actual_fertilizer_kg = None
+            detail.waste_biomass_kg = None
             detail.notes = None
             detail.attachments = None
             

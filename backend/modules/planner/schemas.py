@@ -4,7 +4,6 @@ from datetime import date, datetime
 import uuid
 
 # Canonical activity-type enum shared between backend + frontend.
-# The planner engine emits these values; the UI select uses the same set.
 ACTIVITY_TYPES = [
     "irrigation",
     "fertilizer",
@@ -18,8 +17,6 @@ ACTIVITY_TYPES = [
     "other",
 ]
 
-# Map legacy planner labels to the canonical enum so already-generated
-# activities (and any stragglers in the engine) render correctly in the UI.
 _ACTIVITY_TYPE_ALIASES = {
     "watering": "irrigation",
     "fertilizing": "fertilizer",
@@ -36,13 +33,7 @@ _ACTIVITY_TYPE_ALIASES = {
     "training": "pruning",
 }
 
-
 def normalize_activity_type(value: Optional[str]) -> str:
-    """Normalize a raw activity type string to a canonical ACTIVITY_TYPES value.
-
-    Unknown / unrecognized values collapse to 'other' (the free-text type),
-    so we never store an unmapped string the UI can't render.
-    """
     if not value:
         return "other"
     v = value.strip().lower().replace("-", "_").replace(" ", "_")
@@ -51,7 +42,6 @@ def normalize_activity_type(value: Optional[str]) -> str:
     if v in _ACTIVITY_TYPE_ALIASES:
         return _ACTIVITY_TYPE_ALIASES[v]
     return "other"
-
 
 class ActivityResponse(BaseModel):
     id: uuid.UUID
@@ -68,9 +58,34 @@ class ActivityResponse(BaseModel):
     is_ai_recommended: bool = False
     ai_reasoning: Optional[str] = None
 
+    # Watering resources
+    required_water_liters: Optional[float] = None
+    actual_water_liters: Optional[float] = None
+
+    # Fertilizer resources
     required_fertilizer_kg: Optional[float] = None
     fertilizer_name: Optional[str] = None
     actual_fertilizer_kg: Optional[float] = None
+
+    # Pruning details & instructions
+    pruning_type: Optional[str] = None
+    pruning_level: Optional[str] = None
+    target_canopy_level: Optional[str] = None
+    tools_needed: Optional[str] = None
+    how_to_instructions: Optional[str] = None
+    pre_pruning_care: Optional[str] = None
+    post_pruning_care: Optional[str] = None
+    waste_biomass_kg: Optional[float] = None
+
+    # Pest Control & Spraying
+    target_pest_disease: Optional[str] = None
+    treatment_name: Optional[str] = None
+    dosage: Optional[str] = None
+    application_method: Optional[str] = None
+    safety_interval_days: Optional[int] = None
+
+    # Timeline & Notes
+    day_offset: Optional[int] = None
     notes: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -80,35 +95,28 @@ class ActivityResponse(BaseModel):
     def _normalize_type(cls, v):
         return normalize_activity_type(v)
 
-
 class CompleteRequest(BaseModel):
     notes: Optional[str] = None
     actual_water_liters: Optional[float] = None
     actual_fertilizer_kg: Optional[float] = None
+    waste_biomass_kg: Optional[float] = None
+    treatment_name: Optional[str] = None
+    dosage: Optional[str] = None
     attachments: Optional[List[str]] = None
 
-
 class SkipRequest(BaseModel):
-    """Accept both 'reason' (frontend sends this) and 'skipped_reason'."""
     skipped_reason: Optional[str] = None
     reason: Optional[str] = None
 
     @field_validator("skipped_reason", mode="after")
     @classmethod
     def resolve_reason(cls, v: Optional[str], info) -> str:
-        """Prefer skipped_reason, fall back to reason (frontend compatibility)."""
         if v:
             return v
         values = info.data
         return values.get("reason") or ""
 
-
 class ActivityCreate(BaseModel):
-    """Schema for farmer-created manual tasks.
-
-    `activity_type` must be one of ACTIVITY_TYPES. `name` is an optional
-    free-text label surfaced by the UI when type == 'other' (stored on title).
-    """
     title: str
     activity_type: str
     name: Optional[str] = None
@@ -120,9 +128,7 @@ class ActivityCreate(BaseModel):
     def _validate_activity_type(cls, v: str) -> str:
         return normalize_activity_type(v)
 
-
 class ActivityUpdate(BaseModel):
-    """Schema for editing manual tasks."""
     title: Optional[str] = None
     activity_type: Optional[str] = None
     description: Optional[str] = None

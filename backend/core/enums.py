@@ -50,11 +50,17 @@ class ActivityStatus(str, Enum):
 
 
 class ActivityType(str, Enum):
-    WATERING    = "watering"
-    FERTILIZING = "fertilizing"
-    MONITORING  = "monitoring"
-    SPRAYING    = "spraying"
-    HARVESTING  = "harvesting"
+    WATERING         = "watering"
+    FERTILIZING      = "fertilizing"
+    MONITORING       = "monitoring"
+    SPRAYING         = "spraying"
+    PRUNING          = "pruning"
+    PEST_CONTROL     = "pest_control"
+    DISEASE_CHECK    = "disease_check"
+    WEEDING          = "weeding"
+    SOIL_PREPARATION = "soil_preparation"
+    HARVESTING       = "harvesting"
+    OTHER            = "other"
 
 
 # ── Issue ────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, SkipForward, Clock, Droplets, Leaf, Bug, Sprout } from "lucide-react";
+import { Check, SkipForward, Clock, Droplets, Leaf, Bug, Sprout, Scissors, ShieldAlert, Sparkles, Shovel } from "lucide-react";
 import { formatDateFull, formatTime } from "@/lib/utils/dateUtils";
 
 interface Activity {
@@ -24,11 +24,16 @@ interface ActivityCardProps {
   isHighlighted?: boolean;
 }
 
-const TYPE_ICONS: Record<string, typeof Droplets> = {
+const TYPE_ICONS: Record<string, any> = {
   watering: Droplets,
   irrigation: Droplets,
   fertilizer: Leaf,
   fertilizing: Leaf,
+  pruning: Scissors,
+  pest_control: Bug,
+  disease_check: ShieldAlert,
+  weeding: Sparkles,
+  soil_preparation: Shovel,
   monitoring: Bug,
   planting: Sprout,
   harvesting: Sprout,
@@ -39,6 +44,11 @@ const TYPE_COLORS: Record<string, { text: string; bg: string }> = {
   irrigation: { text: "text-blue-400", bg: "bg-blue-500/10" },
   fertilizer: { text: "text-emerald-400", bg: "bg-emerald-500/10" },
   fertilizing: { text: "text-emerald-400", bg: "bg-emerald-500/10" },
+  pruning: { text: "text-amber-400", bg: "bg-amber-500/10" },
+  pest_control: { text: "text-rose-400", bg: "bg-rose-500/10" },
+  disease_check: { text: "text-red-400", bg: "bg-red-500/10" },
+  weeding: { text: "text-teal-400", bg: "bg-teal-500/10" },
+  soil_preparation: { text: "text-orange-400", bg: "bg-orange-500/10" },
   monitoring: { text: "text-amber-400", bg: "bg-amber-500/10" },
   planting: { text: "text-green-400", bg: "bg-green-500/10" },
   harvesting: { text: "text-purple-400", bg: "bg-purple-500/10" },
@@ -80,7 +90,7 @@ export default function ActivityCard({
             <span
               className={`text-[10px] font-bold uppercase tracking-wider ${colors.text}`}
             >
-              {actType}
+              {actType.replace("_", " ")}
             </span>
             {activity.scheduled_time && (
               <span className="text-[10px] font-mono text-text-muted">

@@ -18,6 +18,7 @@ import Modal from "@/components/ui/Modal";
 const ACTIVITY_TYPES = [
   { value: "irrigation", label: "💧 Irrigation" },
   { value: "fertilizer", label: "🧪 Fertilizer" },
+  { value: "pruning", label: "✂️ Pruning" },
   { value: "pest_control", label: "🐛 Pest Control" },
   { value: "disease_check", label: "🔍 Disease Check" },
   { value: "harvesting", label: "🌾 Harvesting" },
@@ -48,6 +49,8 @@ export default function PlanPage({ params }: { params: { id: string } }) {
   const [completingTask, setCompletingTask] = useState<any>(null);
   const [actualWater, setActualWater] = useState("");
   const [actualFertilizer, setActualFertilizer] = useState("");
+  const [wasteBiomass, setWasteBiomass] = useState("");
+  const [treatmentUsed, setTreatmentUsed] = useState("");
   const [notes, setNotes] = useState("");
 
   // Add/Edit modal
@@ -471,6 +474,18 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                 <input type="number" value={actualFertilizer} onChange={e => setActualFertilizer(e.target.value)} className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Optional" />
               </div>
             )}
+            {completingTask.activity_type === "pruning" && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-300">Pruned Waste Biomass (Kg)</label>
+                <input type="number" value={wasteBiomass} onChange={e => setWasteBiomass(e.target.value)} className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Optional (e.g. 2.5)" />
+              </div>
+            )}
+            {(completingTask.activity_type === "pest_control" || completingTask.activity_type === "disease_check") && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-300">Treatment / Product Applied</label>
+                <input type="text" value={treatmentUsed} onChange={e => setTreatmentUsed(e.target.value)} className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="e.g. Neem Oil 5ml/L, Copper Fungicide" />
+              </div>
+            )}
             <div className="space-y-1">
               <label className="text-sm font-medium text-slate-300">Notes / Observations</label>
               <textarea value={notes} onChange={e => setNotes(e.target.value)} className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none h-24" placeholder="Any unusual signs?" />
@@ -497,8 +512,91 @@ export default function PlanPage({ params }: { params: { id: string } }) {
             </div>
             {detailTask.description && (
               <div>
-                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Description / Instructions</h4>
+                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Summary Overview</h4>
                 <p className="text-sm text-slate-350 mt-0.5 bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 leading-relaxed">{detailTask.description}</p>
+              </div>
+            )}
+
+            {detailTask.how_to_instructions && (
+              <div className="p-3.5 bg-emerald-950/40 border border-emerald-800/60 rounded-xl space-y-1">
+                <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  📖 Detailed Step-by-Step Instructions & Technique
+                </h4>
+                <p className="text-sm text-slate-200 leading-relaxed">{detailTask.how_to_instructions}</p>
+              </div>
+            )}
+
+            {detailTask.activity_type === "pruning" && (
+              <div className="bg-amber-950/30 border border-amber-800/50 rounded-xl p-3.5 space-y-2.5">
+                <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  ✂️ Pruning Parameters & Care Guide
+                </h4>
+                <div className="grid grid-cols-2 gap-2.5 text-xs">
+                  {detailTask.pruning_type && (
+                    <div>
+                      <span className="text-slate-400">Operation:</span>{" "}
+                      <span className="text-white font-semibold capitalize">{detailTask.pruning_type.replace("_", " ")}</span>
+                    </div>
+                  )}
+                  {detailTask.pruning_level && (
+                    <div>
+                      <span className="text-slate-400">Importance:</span>{" "}
+                      <span className="text-amber-300 font-semibold capitalize">{detailTask.pruning_level}</span>
+                    </div>
+                  )}
+                  {detailTask.tools_needed && (
+                    <div className="col-span-2">
+                      <span className="text-slate-400">Tools Needed:</span>{" "}
+                      <span className="text-white font-medium">{detailTask.tools_needed}</span>
+                    </div>
+                  )}
+                  {detailTask.pre_pruning_care && (
+                    <div className="col-span-2">
+                      <span className="text-slate-400">Pre-Pruning:</span>{" "}
+                      <span className="text-slate-300">{detailTask.pre_pruning_care}</span>
+                    </div>
+                  )}
+                  {detailTask.post_pruning_care && (
+                    <div className="col-span-2">
+                      <span className="text-slate-400">Post-Pruning:</span>{" "}
+                      <span className="text-slate-300">{detailTask.post_pruning_care}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {(detailTask.activity_type === "pest_control" || detailTask.activity_type === "disease_check") && (
+              <div className="bg-rose-950/30 border border-rose-800/50 rounded-xl p-3.5 space-y-2.5">
+                <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                  🐛 Pest & Disease Protection Guide
+                </h4>
+                <div className="grid grid-cols-2 gap-2.5 text-xs">
+                  {detailTask.target_pest_disease && (
+                    <div className="col-span-2">
+                      <span className="text-slate-400">Target:</span>{" "}
+                      <span className="text-white font-semibold">{detailTask.target_pest_disease}</span>
+                    </div>
+                  )}
+                  {detailTask.treatment_name && (
+                    <div>
+                      <span className="text-slate-400">Treatment:</span>{" "}
+                      <span className="text-rose-300 font-semibold">{detailTask.treatment_name}</span>
+                    </div>
+                  )}
+                  {detailTask.dosage && (
+                    <div>
+                      <span className="text-slate-400">Dosage:</span>{" "}
+                      <span className="text-white font-medium">{detailTask.dosage}</span>
+                    </div>
+                  )}
+                  {detailTask.safety_interval_days && (
+                    <div className="col-span-2">
+                      <span className="text-slate-400">Pre-Harvest Safety Waiting Period:</span>{" "}
+                      <span className="text-amber-300 font-semibold">{detailTask.safety_interval_days} Days</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
