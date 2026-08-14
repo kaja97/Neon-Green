@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Sprout, LayoutDashboard, FolderOpen, Store, MessageCircle, LogIn, ArrowRight, UserCheck, Sparkles } from "lucide-react";
+import { Sprout, LayoutDashboard, FolderOpen, Store, MessageCircle, LogIn, ArrowRight, Sparkles } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/authStore";
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import ProfileDropdown from "@/components/layout/ProfileDropdown";
 
 export default function LandingNavbar() {
   const [mounted, setMounted] = useState(false);
@@ -27,15 +28,6 @@ export default function LandingNavbar() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
-
-  const initials = user?.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "ME";
 
   return (
     <header
@@ -157,13 +149,7 @@ export default function LandingNavbar() {
                 <span className="hidden sm:inline">Go to</span> Dashboard
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
-              <Link
-                href="/profile"
-                className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-600/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 font-bold text-xs hover:border-emerald-400 hover:scale-105 transition-all"
-                title={`Logged in as ${user?.name || user?.email}`}
-              >
-                {initials}
-              </Link>
+              <ProfileDropdown variant="landing" />
             </div>
           ) : (
             /* Logged-Out Guest Actions */

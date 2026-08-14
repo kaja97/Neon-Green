@@ -1,12 +1,13 @@
 "use client";
 
-import { Bell, User, WifiOff, ShieldAlert, Sprout, FolderOpen, Store, MessagesSquare, MessageCircle } from "lucide-react";
+import { Bell, WifiOff, ShieldAlert, Sprout, FolderOpen, Store, MessagesSquare, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useOffline } from "@/lib/hooks/useOffline";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import ProfileDropdown from "@/components/layout/ProfileDropdown";
 
 export default function TopBar() {
   const isOffline = useOffline();
@@ -27,14 +28,6 @@ export default function TopBar() {
   });
 
   const unreadCount = countData?.count || 0;
-  const initials = user?.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "?";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-surface-primary/80 backdrop-blur-xl">
@@ -115,6 +108,7 @@ export default function TopBar() {
           <Link
             href="/notifications"
             className="relative p-2.5 rounded-xl text-text-secondary hover:text-white hover:bg-surface-tertiary transition-all"
+            title="Notifications"
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
@@ -124,13 +118,8 @@ export default function TopBar() {
             )}
           </Link>
 
-          {/* Profile Avatar */}
-          <Link
-            href="/profile"
-            className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-600/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-xs hover:border-primary/60 transition-all"
-          >
-            {initials}
-          </Link>
+          {/* Profile Dropdown */}
+          <ProfileDropdown variant="topbar" />
         </div>
       </div>
     </header>

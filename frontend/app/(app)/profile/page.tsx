@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Settings, User, Map, Globe, Bell, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
+import { ArrowLeft, Settings, User, Map, Globe, Bell, ChevronRight, LogOut, Moon, Sun, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { useRouter } from "next/navigation";
@@ -17,8 +17,10 @@ import LivestockSection from "@/components/settings/LivestockSection";
 
 export default function SettingsPage() {
   const logout = useAuthStore(state => state.logout);
+  const user = useAuthStore(state => state.user);
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"profile" | "farm" | "preferences">("profile");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { isSupported, isSubscribed, isLoading, subscribe, unsubscribe } = usePushNotifications();
   const { t, language, setLanguage } = useTranslation();
@@ -41,25 +43,57 @@ export default function SettingsPage() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    router.push("/login");
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } catch (e) {
+      console.error("Logout failed:", e);
+    } finally {
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      } else {
+        router.push("/login");
+      }
+    }
   };
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 pb-24">
-      <header className="flex items-center gap-4 animate-fade-in">
-        <Link
-          href="/dashboard"
-          className="p-2.5 glass-card-hover rounded-xl text-text-secondary hover:text-text-primary transition-all duration-300"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-text-primary">
-            Account Hub<span className="text-green-400 text-glow-green">.</span>
-          </h1>
-          <p className="text-text-muted font-medium mt-1">Manage your profile, farm data, and settings.</p>
+      {/* Header with Quick Sign Out Button */}
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard"
+            className="p-2.5 glass-card-hover rounded-xl text-text-secondary hover:text-text-primary transition-all duration-300"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-text-primary">
+              Account Hub<span className="text-green-400 text-glow-green">.</span>
+            </h1>
+            <p className="text-text-muted font-medium mt-1">Manage your profile, farm data, and settings.</p>
+          </div>
         </div>
+
+        {/* Prominent Header Logout Button */}
+        <button
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 text-sm font-bold shadow-sm hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] transition-all"
+        >
+          {isLoggingOut ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin text-red-400" />
+              <span>Signing Out...</span>
+            </>
+          ) : (
+            <>
+              <LogOut className="w-4 h-4 text-red-400" />
+              <span>Sign Out</span>
+            </>
+          )}
+        </button>
       </header>
 
       {/* Tabs */}
@@ -202,15 +236,22 @@ export default function SettingsPage() {
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4">Danger Zone</h3>
                 <button
                   onClick={handleLogout}
+                  disabled={isLoggingOut}
                   className="w-full p-4 flex items-center justify-between bg-red-500/[0.06] hover:bg-red-500/10 border border-red-500/20 rounded-2xl transition-colors text-left group"
                 >
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-red-500/10 group-hover:bg-red-500/20 rounded-xl transition-colors">
-                      <LogOut className="w-5 h-5 text-red-400" />
+                      {isLoggingOut ? (
+                        <Loader2 className="w-5 h-5 animate-spin text-red-400" />
+                      ) : (
+                        <LogOut className="w-5 h-5 text-red-400" />
+                      )}
                     </div>
                     <div>
-                      <p className="font-bold text-red-400">Logout of AgriFarm</p>
-                      <p className="text-xs text-red-400/70">You will need to sign in again.</p>
+                      <p className="font-bold text-red-400">
+                        {isLoggingOut ? "Signing Out..." : "Logout of AgriFarm"}
+                      </p>
+                      <p className="text-xs text-red-400/70">Reset active session and return to sign in.</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-red-400/50 group-hover:text-red-400 transition-colors" />

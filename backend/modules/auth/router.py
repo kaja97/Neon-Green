@@ -120,12 +120,24 @@ async def refresh(
 @router.post("/logout", status_code=200)
 async def logout(
     response: Response,
-    current_user: Account = Depends(get_current_user),
+    request: Request,
     auth_service: AuthService = Depends(get_auth_service),
 ):
-    """Invalidate refresh token and clear cookie."""
-    await auth_service.logout_user(str(current_user.id))
+    """Invalidate refresh token and clear cookie. Safe even if token is already expired."""
     _clear_refresh_cookie(response)
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+        try:
+            import jwt
+            from config import settings
+            payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM], options={"verify_exp": False})
+            user_id = payload.get("sub")
+            if user_id:
+                await auth_service.logout_user(str(user_id))
+        except Exception:
+            pass
+
     return message_response("Logged out successfully.")
 
 

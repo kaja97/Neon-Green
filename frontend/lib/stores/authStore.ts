@@ -23,7 +23,7 @@ interface AuthState {
   user: User | null;
   accessToken: string | null;
   login: (user: User, accessToken: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
 }
 
@@ -37,19 +37,33 @@ export const useAuthStore = create<AuthState>()(
         set({ user, accessToken }),
         
       logout: async () => {
+        const token = get().accessToken;
+
+        // 1. Immediately reset memory state
+        set({ user: null, accessToken: null });
+
+        // 2. Immediately clear client persistence stores
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem('auth-storage');
+            sessionStorage.clear();
+          } catch (e) {
+            console.error('Storage clear error:', e);
+          }
+        }
+
+        // 3. Best-effort notify backend to revoke refresh token and clear cookies
         try {
           await axios.post(
             `${getBaseUrl()}/auth/logout`,
             {},
             { 
               withCredentials: true,
-              headers: { Authorization: `Bearer ${get().accessToken}` }
+              headers: token ? { Authorization: `Bearer ${token}` } : {}
             }
           );
         } catch (error) {
-          console.error("Logout API failed", error);
-        } finally {
-          set({ user: null, accessToken: null });
+          console.warn("Backend logout notification finished or skipped:", error);
         }
       },
         
@@ -63,6 +77,13 @@ export const useAuthStore = create<AuthState>()(
           set({ accessToken: res.data.data.access_token });
         } catch (error) {
           set({ user: null, accessToken: null });
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.removeItem('auth-storage');
+            } catch (e) {
+              console.error(e);
+            }
+          }
           throw error;
         }
       },
