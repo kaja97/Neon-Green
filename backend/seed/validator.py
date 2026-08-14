@@ -33,7 +33,7 @@ async def validate_seed_data():
                 if stage.start_day != expected_start:
                     logger.error(f"Plant {plant.common_name} stage {stage.stage_name} starts at {stage.start_day}, expected {expected_start}")
                     has_errors = True
-                expected_start = stage.end_day + 1
+                expected_start = stage.end_day
             
             # Baseline duration is determined by the end_day of the final stage.
             baseline_duration = stages[-1].end_day

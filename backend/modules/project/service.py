@@ -130,14 +130,20 @@ class ProjectService(BaseService):
         db.add(project)
         await db.flush()
 
-        # Generate activity plan via Celery
+        # Generate activity plan via Celery with sync fallback
         try:
             from tasks.planner_tasks import generate_season_plan_task
             generate_season_plan_task.delay(str(project.id))
             logger.info("Dispatched plan generation for project %s", project.id)
         except Exception as e:
-            logger.error("Failed to dispatch plan generation task: %s", e)
-            project.plan_generation_status = "failed"
+            logger.warning("Celery dispatch failed (%s). Running synchronous plan generation fallback...", e)
+            try:
+                from modules.planner.sync_planner import generate_plan_for_project
+                await generate_plan_for_project(db, project.id)
+                project.plan_generation_status = "completed"
+            except Exception as sync_err:
+                logger.error("Synchronous plan generation failed: %s", sync_err)
+                project.plan_generation_status = "failed"
 
         await db.commit()
         

@@ -33,22 +33,30 @@ async def generate_plan_for_project(db: AsyncSession, project_id: uuid.UUID):
     )
     stages = stages_res.scalars().all()
 
-    # Inactivate old plans
-    old_plans_res = await db.execute(
-        select(ActivityPlan).where(ActivityPlan.project_id == project_id, ActivityPlan.is_active == True)
-    )
-    for old_plan in old_plans_res.scalars().all():
-        old_plan.is_active = False
+    from sqlalchemy import delete
 
-    # Create new plan
-    new_plan = ActivityPlan(
-        project_id=project_id,
-        generated_at=datetime.now(timezone.utc),
-        version=1,
-        is_active=True
+    # Check for existing plan or create new
+    existing_plan_res = await db.execute(
+        select(ActivityPlan).where(ActivityPlan.project_id == project_id)
     )
-    db.add(new_plan)
-    await db.flush()
+    new_plan = existing_plan_res.scalars().first()
+
+    if new_plan:
+        # Clear previous activities to avoid duplicates on re-plan
+        await db.execute(delete(FarmingActivity).where(FarmingActivity.plan_id == new_plan.id))
+        new_plan.generated_at = datetime.now(timezone.utc)
+        new_plan.version = (new_plan.version or 1) + 1
+        new_plan.is_active = True
+    else:
+        new_plan = ActivityPlan(
+            id=uuid.uuid4(),
+            project_id=project_id,
+            generated_at=datetime.now(timezone.utc),
+            version=1,
+            is_active=True
+        )
+        db.add(new_plan)
+        await db.flush()
 
     activities = []
     planting_date = project.planting_date

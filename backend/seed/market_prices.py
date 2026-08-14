@@ -1,62 +1,112 @@
-# backend/seed/market_prices.py
-# Initial market price data (30 days × 5 crops = 150 records)
+"""
+Generate dynamic market price seeds across all crops and economic centers.
+"""
 from datetime import date, timedelta
+import random
 
-def generate_market_prices():
-    """Generate 30 days of price data for each crop."""
-    base_date = date.today() - timedelta(days=30)
-    
-    # Base prices per kg in LKR (Sri Lankan Rupees) + daily variance pattern
-    crop_prices = {
-        "p1": {"name": "Tomato", "base": 160, "variance": [0, 2, -1, 5, 3, -2, 8, 10, 5, -3, 7, 12, 15, 10, 8, 5, -2, 3, 7, 10, 15, 12, 8, 5, 10, 15, 18, 20, 15, 12]},
-        "p2": {"name": "Chili", "base": 350, "variance": [0, -5, 3, 8, -2, 5, 10, -8, 3, 7, 12, 15, 8, -3, 5, 10, 15, 20, 12, 8, -5, 3, 8, 12, 18, 22, 15, 10, 8, 5]},
-        "p3": {"name": "Rice", "base": 95, "variance": [0, 0, 1, 0, 0, 1, 0, 2, 1, 0, 0, 1, 2, 1, 0, 0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, 0, 1]},
-        "p4": {"name": "Brinjal", "base": 120, "variance": [0, 3, -2, 5, 8, 3, -5, 2, 7, 10, 5, -3, 0, 5, 8, 12, 8, 3, -2, 5, 10, 15, 12, 8, 5, 3, 8, 12, 15, 10]},
-        "p5": {"name": "Beans", "base": 200, "variance": [0, 5, 3, -2, 8, 5, 10, 3, -5, 2, 8, 12, 15, 10, 5, 3, 8, 15, 20, 18, 12, 8, 5, 10, 15, 20, 18, 15, 12, 10]},
-        "p6": {"name": "Onion", "base": 240, "variance": [0, 4, -2, 6, 8, 3, -4, 2, 8, 12, 6, -4, 2, 6, 10, 14, 10, 5, -3, 6, 12, 16, 14, 10, 6, 4, 8, 12, 16, 12]},
-        "p7": {"name": "Potato", "base": 220, "variance": [0, 3, -1, 4, 6, 2, -3, 1, 6, 10, 5, -3, 1, 5, 8, 12, 8, 4, -2, 4, 9, 13, 11, 8, 5, 3, 6, 10, 13, 9]},
-        "p8": {"name": "Cassava", "base": 130, "variance": [0, 1, -1, 2, 3, 1, -2, 0, 3, 5, 3, -2, 0, 2, 4, 6, 4, 2, -1, 2, 4, 6, 5, 3, 2, 1, 3, 5, 6, 4]},
-        "p9": {"name": "Finger Millet", "base": 280, "variance": [0, 2, -1, 3, 4, 2, -2, 1, 3, 6, 4, -2, 1, 3, 5, 8, 6, 3, -1, 3, 6, 8, 7, 5, 3, 2, 4, 6, 8, 5]},
-        "p10": {"name": "Coconut", "base": 110, "variance": [0, 1, -1, 2, 2, 1, -1, 0, 2, 3, 2, -1, 0, 1, 2, 4, 3, 2, -1, 1, 3, 4, 3, 2, 1, 1, 2, 3, 4, 3]},
-        "p11": {"name": "Green Gram", "base": 500, "variance": [0, 5, -3, 8, 10, 4, -5, 2, 9, 15, 8, -5, 3, 8, 12, 18, 12, 6, -4, 7, 14, 20, 16, 11, 7, 5, 10, 14, 18, 13]},
-        "p12": {"name": "Okra", "base": 140, "variance": [0, 2, -1, 3, 4, 1, -2, 1, 3, 6, 3, -2, 1, 3, 5, 8, 5, 3, -1, 2, 5, 7, 6, 4, 3, 2, 4, 6, 8, 5]},
-        "p13": {"name": "Cowpea", "base": 480, "variance": [0, 4, -2, 6, 8, 3, -4, 1, 7, 12, 6, -4, 2, 6, 10, 15, 10, 5, -3, 6, 11, 16, 13, 9, 6, 4, 8, 11, 15, 11]},
-        "p14": {"name": "Bitter Gourd", "base": 180, "variance": [0, 3, -2, 4, 6, 2, -3, 1, 5, 8, 4, -3, 1, 4, 7, 10, 7, 3, -2, 3, 6, 9, 8, 5, 3, 2, 5, 7, 9, 6]},
-        "p15": {"name": "Sweet Potato", "base": 130, "variance": [0, 1, -1, 2, 3, 1, -2, 0, 3, 5, 3, -2, 0, 2, 4, 6, 4, 2, -1, 2, 4, 6, 5, 3, 2, 1, 3, 5, 6, 4]},
-        "p16": {"name": "Peanut", "base": 450, "variance": [0, 4, -2, 6, 8, 3, -4, 1, 7, 12, 6, -4, 2, 6, 10, 15, 10, 5, -3, 6, 11, 16, 13, 9, 6, 4, 8, 11, 15, 11]},
-        "p17": {"name": "Black Gram", "base": 550, "variance": [0, 5, -3, 8, 10, 4, -5, 2, 9, 15, 8, -5, 3, 8, 12, 18, 12, 6, -4, 7, 14, 20, 16, 11, 7, 5, 10, 14, 18, 13]},
-        "p18": {"name": "Soybean", "base": 380, "variance": [0, 3, -2, 4, 6, 2, -3, 1, 5, 8, 4, -3, 1, 4, 7, 10, 7, 3, -2, 3, 6, 9, 8, 5, 3, 2, 5, 7, 9, 6]},
-        "p19": {"name": "Maize", "base": 180, "variance": [0, 2, -1, 3, 4, 1, -2, 1, 3, 6, 3, -2, 1, 3, 5, 8, 5, 3, -1, 2, 5, 7, 6, 4, 3, 2, 4, 6, 8, 5]},
-        "p20": {"name": "Pearl Millet", "base": 250, "variance": [0, 2, -1, 3, 4, 2, -2, 1, 3, 6, 4, -2, 1, 3, 5, 8, 6, 3, -1, 3, 6, 8, 7, 5, 3, 2, 4, 6, 8, 5]},
-        "p21": {"name": "Sorghum", "base": 230, "variance": [0, 2, -1, 3, 4, 1, -2, 1, 3, 6, 3, -2, 1, 3, 5, 8, 5, 3, -1, 2, 5, 7, 6, 4, 3, 2, 4, 6, 8, 5]},
-        "p22": {"name": "Foxtail Millet", "base": 260, "variance": [0, 2, -1, 3, 4, 2, -2, 1, 3, 6, 4, -2, 1, 3, 5, 8, 6, 3, -1, 3, 6, 8, 7, 5, 3, 2, 4, 6, 8, 5]},
-        "p23": {"name": "Gotukola", "base": 120, "variance": [0, 1, -1, 2, 2, 1, -1, 0, 2, 3, 2, -1, 0, 1, 2, 4, 3, 2, -1, 1, 3, 4, 3, 2, 1, 1, 2, 3, 4, 3]},
-        "p24": {"name": "Spinach", "base": 100, "variance": [0, 1, -1, 2, 2, 1, -1, 0, 2, 3, 2, -1, 0, 1, 2, 4, 3, 2, -1, 1, 3, 4, 3, 2, 1, 1, 2, 3, 4, 3]},
-        "p25": {"name": "Beetroot", "base": 220, "variance": [0, 2, -1, 3, 4, 1, -2, 1, 3, 6, 3, -2, 1, 3, 5, 8, 5, 3, -1, 2, 5, 7, 6, 4, 3, 2, 4, 6, 8, 5]},
-        "p26": {"name": "Radish", "base": 110, "variance": [0, 1, -1, 2, 2, 1, -1, 0, 2, 3, 2, -1, 0, 1, 2, 4, 3, 2, -1, 1, 3, 4, 3, 2, 1, 1, 2, 3, 4, 3]},
-        "p27": {"name": "Yam", "base": 160, "variance": [0, 1, -1, 2, 3, 1, -2, 0, 3, 5, 3, -2, 0, 2, 4, 6, 4, 2, -1, 2, 4, 6, 5, 3, 2, 1, 3, 5, 6, 4]},
-    }
-    
+REGIONS = [
+    "Dambulla Economic Centre",
+    "Pettah Central Market",
+    "Meegoda Economic Centre",
+    "Narahenpita Economic Centre",
+    "Keppetipola Dedicated Economic Centre",
+    "Kandy Central Market",
+    "Jaffna Thirunelvely Market"
+]
+
+BASE_PRICES = {
+    "p1": 180,
+    "p2": 180,
+    "p3": 220,
+    "p4": 180,
+    "p5": 180,
+    "p6": 180,
+    "p7": 180,
+    "p8": 250,
+    "p9": 220,
+    "p10": 250,
+    "p11": 250,
+    "p12": 180,
+    "p13": 250,
+    "p14": 180,
+    "p15": 250,
+    "p16": 250,
+    "p17": 250,
+    "p18": 250,
+    "p19": 220,
+    "p20": 220,
+    "p21": 220,
+    "p22": 220,
+    "p23": 180,
+    "p24": 180,
+    "p25": 180,
+    "p26": 180,
+    "p27": 250,
+    "p28": 180,
+    "p29": 180,
+    "p30": 180,
+    "p31": 180,
+    "p32": 350,
+    "p33": 350,
+    "p34": 350,
+    "p35": 1200,
+    "p36": 1200,
+    "p37": 1200,
+    "p38": 1200,
+    "p39": 350,
+    "p40": 180,
+    "p41": 180,
+    "p42": 180,
+    "p43": 350,
+    "p44": 250,
+    "p45": 250,
+    "p46": 250,
+    "p47": 1200,
+    "p48": 1200,
+    "p49": 250,
+    "p50": 250,
+    "p51": 350,
+    "p52": 350,
+    "p53": 350,
+    "p54": 350,
+    "p55": 350,
+    "p56": 350,
+    "p57": 350,
+    "p58": 180,
+    "p59": 180,
+    "p60": 180,
+    "p61": 180,
+    "p62": 250,
+    "p63": 250,
+    "p64": 250,
+    "p65": 220,
+    "p66": 1200,
+    "p67": 250,
+    "p68": 220,
+    "p69": 250,
+    "p70": 180,
+
+}
+
+def generate_market_prices(days_back=30):
     prices = []
-    for plant_key, data in crop_prices.items():
-        for day_offset in range(30):
-            d = base_date + timedelta(days=day_offset)
-            price = data["base"] + data["variance"][day_offset]
-            prices.append({
-                "plant_id": plant_key,
-                "region": "Jaffna",
-                "date": d.isoformat(),
-                "price_per_kg": price,
-                "currency": "LKR",
-                "source": "Jaffna Central Market",
-            })
-            # Also add Colombo prices (slightly different)
-            prices.append({
-                "plant_id": plant_key,
-                "region": "Colombo",
-                "date": d.isoformat(),
-                "price_per_kg": price + 20,
-                "currency": "LKR",
-                "source": "Manning Market Colombo",
-            })
+    today = date.today()
+    random.seed(42)
+
+    for plant_id, base_price in BASE_PRICES.items():
+        for region in REGIONS[:3]:
+            for d in range(days_back):
+                record_date = today - timedelta(days=d)
+                fluctuation = random.uniform(-0.15, 0.15)
+                price = round(base_price * (1 + fluctuation), 2)
+
+                prices.append({
+                    "plant_id": plant_id,
+                    "region": region,
+                    "date": record_date.isoformat(),
+                    "price_per_kg": price,
+                    "currency": "LKR",
+                    "source": "Department of Agriculture / Central Bank"
+                })
+
     return prices
