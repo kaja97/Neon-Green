@@ -240,6 +240,34 @@ class ProjectService(BaseService):
 
     async def delete_project(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
         project = await self.get_project(db, project_id, account_id)
+        
+        # Clean up nested child rows in child-to-parent order to satisfy foreign keys
+        from sqlalchemy import delete as sql_delete, select
+        from models.activity import ActivityPlan, FarmingActivity
+        from models.project import ProjectService
+        from models.soil import SoilTest, SoilNutrientResult, SoilRecommendation
+        from models.issue import ProjectIssue
+
+        # 1. Activities and Plan
+        plan_res = await db.execute(select(ActivityPlan.id).where(ActivityPlan.project_id == project_id))
+        plan_ids = plan_res.scalars().all()
+        if plan_ids:
+            await db.execute(sql_delete(FarmingActivity).where(FarmingActivity.plan_id.in_(plan_ids)))
+        await db.execute(sql_delete(ActivityPlan).where(ActivityPlan.project_id == project_id))
+
+        # 2. Soil Tests, Results, Recommendations
+        soil_res = await db.execute(select(SoilTest.id).where(SoilTest.project_id == project_id))
+        soil_ids = soil_res.scalars().all()
+        if soil_ids:
+            await db.execute(sql_delete(SoilNutrientResult).where(SoilNutrientResult.soil_test_id.in_(soil_ids)))
+            await db.execute(sql_delete(SoilRecommendation).where(SoilRecommendation.soil_test_id.in_(soil_ids)))
+        await db.execute(sql_delete(SoilTest).where(SoilTest.project_id == project_id))
+
+        # 3. Project Services & Issues
+        await db.execute(sql_delete(ProjectService).where(ProjectService.project_id == project_id))
+        await db.execute(sql_delete(ProjectIssue).where(ProjectIssue.project_id == project_id))
+
+        # 4. Delete Project
         await db.delete(project)
         await db.commit()
 
