@@ -3,32 +3,31 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/stores/authStore";
 import {
   User,
+  LogOut,
+  ChevronDown,
   LayoutDashboard,
   FolderOpen,
   Store,
-  MessageCircle,
-  LogOut,
-  ChevronDown,
+  Sparkles,
   ShieldAlert,
   Loader2,
-  Sparkles,
 } from "lucide-react";
-import { useAuthStore } from "@/lib/stores/authStore";
 
 interface ProfileDropdownProps {
-  variant?: "topbar" | "landing";
+  variant?: "topbar" | "navbar" | string;
 }
 
-export default function ProfileDropdown({ variant = "topbar" }: ProfileDropdownProps) {
+export default function ProfileDropdown({ variant }: ProfileDropdownProps = {}) {
+  const router = useRouter();
+  const { user, logout } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { user, logout } = useAuthStore();
-  const router = useRouter();
 
-  // Close dropdown on click outside or escape key
+  // Close dropdown on outside click or ESC key
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -46,64 +45,56 @@ export default function ProfileDropdown({ variant = "topbar" }: ProfileDropdownP
       document.addEventListener("mousedown", handleClickOutside);
       document.addEventListener("keydown", handleKeyDown);
     }
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 
+  const handleLogoutClick = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      setIsOpen(false);
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   if (!user) return null;
 
-  const initials = user?.name
+  // Get initials for fallback avatar
+  const initials = user.name
     ? user.name
         .split(" ")
         .map((n) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2)
-    : user?.email
-    ? user.email.slice(0, 2).toUpperCase()
-    : "ME";
-
-  const handleLogoutClick = async () => {
-    setIsLoggingOut(true);
-    setIsOpen(false);
-    try {
-      await logout();
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      } else {
-        router.push("/login");
-      }
-    } catch (e) {
-      console.error("Logout error:", e);
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      }
-    }
-  };
+    : user.email
+    ? user.email[0].toUpperCase()
+    : "U";
 
   return (
-    <div className="relative inline-block text-left" ref={dropdownRef}>
-      {/* Trigger Button */}
+    <div className="relative" ref={dropdownRef}>
+      {/* Profile Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        disabled={isLoggingOut}
-        className={`group flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-2xl transition-all duration-300 ${
-          variant === "landing"
-            ? "bg-surface-secondary/80 border border-emerald-500/30 hover:border-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-            : "bg-surface-secondary/70 border border-primary/30 hover:border-primary hover:shadow-[0_0_15px_rgba(34,197,94,0.25)]"
-        } ${isOpen ? "ring-2 ring-primary/50 shadow-[0_0_20px_rgba(34,197,94,0.3)]" : ""}`}
-        aria-haspopup="true"
         aria-expanded={isOpen}
-        title={`Account: ${user.name || user.email}`}
+        aria-haspopup="true"
+        className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-1.5 rounded-2xl bg-surface-secondary/80 hover:bg-surface-secondary border border-border/80 hover:border-primary/40 transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-primary/40"
       >
-        {/* Avatar with Online Badge */}
-        <div className="relative flex-shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 flex items-center justify-center text-slate-950 font-black text-xs shadow-sm group-hover:scale-105 transition-transform">
+        {/* Avatar Ring */}
+        <div className="relative">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-slate-950 font-black text-xs shadow-[0_0_12px_rgba(34,197,94,0.35)] group-hover:scale-105 transition-transform duration-300">
             {initials}
           </div>
-          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border-2 border-surface-primary rounded-full shadow-[0_0_6px_#10b981]" />
+          {/* Online Indicator Dot */}
+          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-surface-primary animate-pulse" />
         </div>
 
         {/* User First Name / Email snippet on larger screens */}
@@ -197,20 +188,6 @@ export default function ProfileDropdown({ variant = "topbar" }: ProfileDropdownP
               <div className="flex flex-col">
                 <span className="font-bold">Marketplace</span>
                 <span className="text-[10px] text-text-muted">Wholesale pricing, buyer orders</span>
-              </div>
-            </Link>
-
-            <Link
-              href="/chat"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-tertiary transition-colors group"
-            >
-              <div className="p-1.5 rounded-lg bg-surface-secondary group-hover:bg-purple-500/15 text-text-muted group-hover:text-purple-400 transition-colors">
-                <MessageCircle className="w-4 h-4" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold">AI Agronomist</span>
-                <span className="text-[10px] text-text-muted">Ask questions about your farm</span>
               </div>
             </Link>
 

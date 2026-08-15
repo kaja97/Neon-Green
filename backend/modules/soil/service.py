@@ -6,10 +6,12 @@ from datetime import date, datetime
 from typing import List, Optional, Dict, Any
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from models.soil import SoilTest, SoilNutrientResult, SoilRecommendation
 from models.project import Project
 from models.plant import Plant, PlantVariety
+from models.account import Account, FarmerProfile
 from .repository import SoilTestRepository, SoilNutrientResultRepository, SoilRecommendationRepository
 from .schemas import SoilTestCreate, SoilNutrientResultCreate
 from .calculator import calculate_nutrient_gaps, generate_ai_recommendations
@@ -35,40 +37,53 @@ class SoilService:
         self.project_repo = project_repo
 
     async def _get_farmer_id(self, db: AsyncSession, account_id: uuid.UUID) -> uuid.UUID:
-        from models.account import Account
-        account = await db.get(Account, account_id)
-        if not account or not account.farmer_profile:
+        """Safely fetch FarmerProfile ID for an account without lazy loading issues."""
+        result = await db.execute(
+            select(FarmerProfile).where(FarmerProfile.account_id == account_id)
+        )
+        profile = result.scalar_one_or_none()
+        if not profile:
             raise HTTPException(status_code=403, detail="User is not registered as a farmer")
-        return account.farmer_profile.id
+        return profile.id
 
     async def _build_project_context(
         self, db: AsyncSession, project: Project
     ) -> dict[str, Any]:
         """Gather crop name, variety, growth stage, farming method, area for Gemini."""
-        plant = await db.get(Plant, project.plant_id)
+        plant = await db.get(Plant, project.plant_id) if project.plant_id else None
         variety = await db.get(PlantVariety, project.variety_id) if project.variety_id else None
 
         days_since_planting = None
         growth_stage = "vegetative"
         if project.planting_date:
-            days_since_planting = (date.today() - project.planting_date).days
-            if days_since_planting < 14:
-                growth_stage = "nursery / seedling"
-            elif days_since_planting < 45:
-                growth_stage = "vegetative"
-            elif days_since_planting < 75:
-                growth_stage = "flowering"
-            elif days_since_planting < 105:
-                growth_stage = "fruit development"
-            else:
-                growth_stage = "harvest / maturity"
+            try:
+                days_since_planting = (date.today() - project.planting_date).days
+                if days_since_planting < 14:
+                    growth_stage = "nursery / seedling"
+                elif days_since_planting < 45:
+                    growth_stage = "vegetative"
+                elif days_since_planting < 75:
+                    growth_stage = "flowering"
+                elif days_since_planting < 105:
+                    growth_stage = "fruit development"
+                else:
+                    growth_stage = "harvest / maturity"
+            except Exception:
+                pass
+
+        area_str = "1 acre"
+        if project.area:
+            try:
+                area_str = f"{float(project.area)} {project.area_unit or 'acres'}"
+            except Exception:
+                area_str = f"{project.area} {project.area_unit or 'acres'}"
 
         return {
-            "crop_name": plant.common_name if plant else "Unknown Crop",
+            "crop_name": plant.common_name if plant and plant.common_name else "Unknown Crop",
             "crop_category": plant.category if plant else None,
             "variety": variety.variety_name if variety else None,
-            "farming_method": project.farming_method,
-            "area": f"{float(project.area)} {project.area_unit}",
+            "farming_method": project.farming_method or "conventional",
+            "area": area_str,
             "growth_stage": growth_stage,
             "days_since_planting": days_since_planting,
             "planting_date": project.planting_date.isoformat() if project.planting_date else None,
@@ -117,6 +132,7 @@ class SoilService:
         db.add(soil_res)
 
         # 3. Generate recommendations — try AI first, fall back to static calculator
+        recs = []
         try:
             project_context = await self._build_project_context(db, project)
             recs = await generate_ai_recommendations(soil_test, soil_res, project_context)
@@ -125,9 +141,10 @@ class SoilService:
             logger.warning(
                 "AI soil recommendations failed, falling back to static calculator: %s", e
             )
-            recs = calculate_nutrient_gaps(soil_test, soil_res, project.farming_method)
+            recs = calculate_nutrient_gaps(soil_test, soil_res, project.farming_method or "conventional")
 
-        db.add_all(recs)
+        if recs:
+            db.add_all(recs)
 
         await db.commit()
         await db.refresh(soil_test)
@@ -218,14 +235,12 @@ class SoilService:
             )
 
             response_text = response.text or "{}"
-            # Clean markdown codeblocks if present
             cleaned_json = re.sub(r"^```json\s*", "", response_text.strip())
             cleaned_json = re.sub(r"^```\s*", "", cleaned_json)
             cleaned_json = re.sub(r"\s*```$", "", cleaned_json)
 
             data = json.loads(cleaned_json)
 
-            # Ensure results dict exists and contains ph_level
             results = data.get("results", {})
             if "ph_level" not in results or results["ph_level"] is None:
                 results["ph_level"] = 6.5
@@ -256,10 +271,8 @@ class SoilService:
         content_type: Optional[str] = None
     ) -> SoilTest:
         """One-click upload, security scan, AI extraction, and soil test creation with recommendations."""
-        # 1. Extract report data via AI
         extracted = await self.extract_soil_report(file_bytes, filename, content_type)
 
-        # 2. Parse test_date
         test_date_val = date.today()
         if extracted.get("test_date"):
             try:
@@ -267,7 +280,6 @@ class SoilService:
             except Exception:
                 test_date_val = date.today()
 
-        # 3. Build SoilTestCreate payload
         res_data = extracted.get("results", {})
         nutrient_create = SoilNutrientResultCreate(
             ph_level=float(res_data.get("ph_level", 6.5)),
@@ -294,7 +306,6 @@ class SoilService:
             results=nutrient_create
         )
 
-        # 4. Submit soil test & calculate recommendations
         return await self.submit_soil_test(db, project_id, account_id, test_create)
 
     async def _send_recommendation_email(
@@ -305,9 +316,8 @@ class SoilService:
         soil_test: SoilTest,
         recommendations: list[SoilRecommendation],
     ) -> None:
-        """Send soil recommendations to the farmer's email. Failures are logged, not raised."""
+        """Send soil recommendations to the farmer's email. Failures are logged, never raised."""
         try:
-            from models.account import Account
             from core.email_service import send_email
             from core.email_templates import soil_recommendation_email
 
@@ -316,13 +326,23 @@ class SoilService:
                 logger.warning("No email found for account %s — skipping soil email", account_id)
                 return
 
-            profile = account.farmer_profile
-            full_name = profile.full_name if profile else "Farmer"
+            res = await db.execute(
+                select(FarmerProfile).where(FarmerProfile.account_id == account_id)
+            )
+            profile = res.scalar_one_or_none()
+            full_name = profile.full_name if profile and profile.full_name else (account.email.split("@")[0] if account.email else "Farmer")
 
-            plant = await db.get(Plant, project.plant_id)
-            crop_name = plant.common_name if plant else "Unknown Crop"
-            project_area = f"{float(project.area)} {project.area_unit}"
-            test_date = soil_test.test_date.isoformat()
+            plant = await db.get(Plant, project.plant_id) if project.plant_id else None
+            crop_name = plant.common_name if plant and plant.common_name else "Your Farm Crop"
+
+            area_str = "1 acre"
+            if project.area:
+                try:
+                    area_str = f"{float(project.area)} {project.area_unit or 'acres'}"
+                except Exception:
+                    area_str = f"{project.area} {project.area_unit or 'acres'}"
+
+            test_date = soil_test.test_date.isoformat() if soil_test.test_date else date.today().isoformat()
 
             rec_dicts = [
                 {
@@ -339,30 +359,33 @@ class SoilService:
             html_body, plain_body = soil_recommendation_email(
                 full_name=full_name,
                 crop_name=crop_name,
-                project_area=project_area,
+                project_area=area_str,
                 test_date=test_date,
                 recommendations=rec_dicts,
             )
 
-            success = await send_email(
-                to=account.email,
-                subject=f"🌱 Soil Test Results & Recommendations — {crop_name}",
-                html_body=html_body,
-                plain_body=plain_body,
-            )
+            try:
+                success = await send_email(
+                    to=account.email,
+                    subject=f"🌱 Soil Test Results & Recommendations — {crop_name}",
+                    html_body=html_body,
+                    plain_body=plain_body,
+                )
 
-            if success:
-                logger.info(
-                    "Soil recommendation email sent to %s for project %s",
-                    account.email, project.id,
-                )
-            else:
-                logger.warning(
-                    "Soil recommendation email failed for %s (project %s)",
-                    account.email, project.id,
-                )
+                if success:
+                    logger.info(
+                        "Soil recommendation email sent to %s for project %s",
+                        account.email, project.id,
+                    )
+                else:
+                    logger.warning(
+                        "Soil recommendation email skipped for %s (project %s)",
+                        account.email, project.id,
+                    )
+            except Exception as mail_err:
+                logger.warning("send_email error caught safely: %s", mail_err)
         except Exception as e:
-            logger.error("Failed to send soil recommendation email: %s", e, exc_info=True)
+            logger.error("Failed to process soil recommendation email: %s", e, exc_info=True)
 
     async def get_soil_tests(self, db: AsyncSession, project_id: uuid.UUID, account_id: uuid.UUID):
         farmer_id = await self._get_farmer_id(db, account_id)

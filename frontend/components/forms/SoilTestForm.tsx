@@ -3,10 +3,11 @@
 import { useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { toast } from "sonner";
 import {
   FlaskConical, Save, Loader2, Sparkles, RotateCcw,
   Upload, FileText, CheckCircle2, AlertCircle, FileSpreadsheet,
-  Image as ImageIcon, X, ShieldCheck
+  Image as ImageIcon, X, ShieldCheck, HelpCircle
 } from "lucide-react";
 
 interface SoilTestFormProps {
@@ -84,8 +85,9 @@ export default function SoilTestForm({
 
   const prefillAverages = () => {
     setResults(STANDARD_AVERAGES);
-    if (!labName) setLabName("AgriLab Precision Diagnostic");
+    if (!labName) setLabName("Department of Agriculture / Regional Soil Lab");
     if (!notes) setNotes("Pre-planting soil baseline evaluation");
+    toast.info("Prefilled standard agronomic baseline values");
   };
 
   const clearForm = () => {
@@ -94,6 +96,7 @@ export default function SoilTestForm({
     setExtractSuccess(null);
     setExtractedRawList([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    toast.info("Soil form fields reset");
   };
 
   const parseNum = (val: string) => {
@@ -126,24 +129,20 @@ export default function SoilTestForm({
 
       const extracted = res.data?.data || res.data;
       if (extracted) {
-        // Update Test Date if extracted
         if (extracted.test_date) {
           setTestDate(extracted.test_date);
         }
 
-        // Update Lab Name
         if (extracted.tested_by) {
           setLabName(extracted.tested_by);
         } else if (!labName) {
           setLabName(`Report: ${selectedFile.name}`);
         }
 
-        // Update Notes
         if (extracted.notes) {
           setNotes(extracted.notes);
         }
 
-        // Update Nutrient Results
         if (extracted.results) {
           const r = extracted.results;
           setResults({
@@ -170,15 +169,16 @@ export default function SoilTestForm({
         }
 
         setExtractSuccess(
-          `AI Report Extracted: Successfully auto-filled nutrient values from "${selectedFile.name}"!`
+          `AI Report Extracted: Successfully auto-filled values from "${selectedFile.name}"!`
         );
+        toast.success("AI extracted soil report metrics successfully!");
         setHighlightFields(true);
         setTimeout(() => setHighlightFields(false), 3000);
       }
     } catch (err: any) {
-      setError(
-        err.response?.data?.detail || err.response?.data?.error?.message || "Failed to extract data from soil report."
-      );
+      const msg = err.response?.data?.detail || err.response?.data?.error?.message || "Failed to extract data from soil report.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsExtracting(false);
     }
@@ -224,11 +224,12 @@ export default function SoilTestForm({
       queryClient.invalidateQueries({ queryKey: ["soil_tests", projectId] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", projectId] });
 
+      toast.success("Soil test saved & AI recommendations calculated!");
       onSuccess?.();
     } catch (err: any) {
-      setError(
-        err.response?.data?.detail || err.response?.data?.error?.message || "Failed to submit soil test."
-      );
+      const msg = err.response?.data?.detail || err.response?.data?.error?.message || "Failed to submit soil test.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -254,7 +255,7 @@ export default function SoilTestForm({
               Soil Test Diagnostic Entry
             </h3>
             <p className="text-xs text-text-muted">
-              Upload laboratory report or manually enter nutrient metrics
+              Upload laboratory report file or enter values manually
             </p>
           </div>
         </div>
@@ -278,7 +279,7 @@ export default function SoilTestForm({
             AI Document Scanner & Auto-Fill
           </span>
           <span className="text-[11px] font-mono text-text-muted">
-            Supports PDF, PNG, JPG, DOCX, XLSX, CSV
+            PDF, PNG, JPG, DOCX, XLSX, CSV
           </span>
         </div>
 
@@ -319,7 +320,7 @@ export default function SoilTestForm({
                 className="w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-dashed border-border hover:border-emerald-400 flex items-center justify-center gap-2 text-xs font-semibold text-text-secondary cursor-pointer hover:text-emerald-400 transition-all"
               >
                 <Upload className="w-4 h-4" />
-                <span>Choose or drop Soil Report (PDF / Image / Excel / Word)</span>
+                <span>Upload Soil Report Document (PDF, Image, Excel, Word)</span>
               </label>
             )}
           </div>
@@ -334,7 +335,7 @@ export default function SoilTestForm({
             {isExtracting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Analyzing Report...</span>
+                <span>Scanning & Extracting...</span>
               </>
             ) : (
               <>
@@ -353,7 +354,7 @@ export default function SoilTestForm({
               <p className="font-semibold">{extractSuccess}</p>
               {extractedRawList.length > 0 && (
                 <p className="text-[11px] text-text-muted">
-                  Found {extractedRawList.length} parameter items. You can review and fine-tune below before saving.
+                  Auto-mapped {extractedRawList.length} chemical parameters. Review the fields below before saving.
                 </p>
               )}
             </div>
@@ -381,16 +382,16 @@ export default function SoilTestForm({
             onChange={(e) => setTestDate(e.target.value)}
             required
             disabled={isLoading}
-            className={inputClasses}
+            className={`${inputClasses} [color-scheme:dark]`}
           />
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-text-secondary">
-            Testing Laboratory / Organization
+            Testing Laboratory / Agency
           </label>
           <input
             type="text"
-            placeholder="e.g. Department of Agriculture Lab"
+            placeholder="e.g. Regional Agriculture Soil Testing Lab"
             value={labName}
             onChange={(e) => setLabName(e.target.value)}
             disabled={isLoading}
@@ -402,11 +403,11 @@ export default function SoilTestForm({
       {/* Sample Notes */}
       <div className="space-y-1.5">
         <label className="text-xs font-medium text-text-secondary">
-          Sample Notes / Field Location
+          Sample Notes & Field Location
         </label>
         <input
           type="text"
-          placeholder="e.g. North Plot - 0-15cm topsoil composite sample"
+          placeholder="e.g. North Sector - 0-15cm topsoil composite sample"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           disabled={isLoading}
@@ -584,7 +585,7 @@ export default function SoilTestForm({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 h-11 btn-secondary flex items-center justify-center text-sm"
+            className="flex-1 h-11 btn-secondary flex items-center justify-center text-sm font-semibold"
           >
             Cancel
           </button>
@@ -601,14 +602,17 @@ export default function SoilTestForm({
         <button
           type="submit"
           disabled={isLoading || isExtracting}
-          className={`${onCancel ? "flex-[2]" : "flex-1"} h-11 btn-primary flex items-center justify-center gap-2 text-sm disabled:opacity-50`}
+          className={`${onCancel ? "flex-[2]" : "flex-1"} h-11 btn-primary flex items-center justify-center gap-2 text-sm disabled:opacity-50 font-bold`}
         >
           {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Calculating AI Recommendations...</span>
+            </>
           ) : (
             <>
               <Save className="w-4 h-4" />
-              <span>Save & Calculate Recommendations</span>
+              <span>Save Soil Test & Generate Recommendations</span>
             </>
           )}
         </button>
