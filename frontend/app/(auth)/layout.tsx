@@ -1,6 +1,7 @@
 "use client";
 
 import { Sprout } from "lucide-react";
+import Link from "next/link";
 
 export default function AuthLayout({
   children,
@@ -34,20 +35,20 @@ export default function AuthLayout({
         />
       </div>
 
-      {/* Logo */}
-      <div className="relative z-10 flex items-center gap-3 mb-8 animate-fade-in">
-        <div className="p-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 glow-green">
-          <Sprout className="w-8 h-8 text-white" />
+      {/* Clickable Logo pointing to Landing Page */}
+      <Link href="/" className="relative z-10 flex items-center gap-3 mb-8 animate-fade-in group hover:opacity-90 transition-opacity">
+        <div className="p-3 rounded-2xl bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 shadow-[0_0_20px_rgba(0,255,135,0.4)] group-hover:scale-105 transition-transform">
+          <Sprout className="w-8 h-8 text-slate-950 stroke-[2.5]" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            AgriFarm AI
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-1">
+            AgriFarm <span className="text-emerald-600 dark:text-emerald-400">AI</span>
           </h1>
-          <p className="text-xs font-medium text-text-secondary tracking-widest uppercase">
+          <p className="text-xs font-bold text-text-secondary tracking-widest uppercase">
             Intelligent Growth
           </p>
         </div>
-      </div>
+      </Link>
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-md px-4 animate-slide-up">
@@ -55,8 +56,8 @@ export default function AuthLayout({
       </div>
 
       {/* Footer */}
-      <p className="relative z-10 mt-8 text-xs text-text-muted animate-fade-in">
-        © 2026 AgriFarm AI · Zero-Cost AI for Farmers
+      <p className="relative z-10 mt-8 text-xs text-text-muted animate-fade-in font-medium">
+        © 2026 AgriFarm AI · Zero-Cost AI for Modern Agriculture
       </p>
     </div>
   );

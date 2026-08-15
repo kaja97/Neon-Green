@@ -89,7 +89,7 @@ export default function WorkflowSection() {
             <div
               key={step.step}
               onClick={() => setActiveStep(idx)}
-              className={`glass-card-hover p-6 rounded-3xl cursor-pointer transition-all duration-400 flex flex-col justify-between relative overflow-hidden ${
+              className={`glass-card-hover p-6 rounded-3xl cursor-pointer transition-all duration-300 flex flex-col justify-between relative overflow-hidden ${
                 isCurrent
                   ? "border-emerald-500 shadow-[0_0_30px_rgba(0,255,135,0.22)] scale-[1.02]"
                   : "border-border opacity-90 hover:opacity-100"

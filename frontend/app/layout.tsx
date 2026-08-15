@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import QueryProvider from "@/components/providers/QueryProvider";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,6 +16,13 @@ export const metadata: Metadata = {
   description:
     "AI-powered personalized farming assistant with weather tracking, soil analysis, crop planning, and market insights. Zero-cost AI, built for Sri Lankan farmers.",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
   keywords: [
     "farming",
     "agriculture",
@@ -43,8 +51,6 @@ export const viewport: Viewport = {
 // and stamp the correct class on <html>. Falls back to dark.
 const themeBootstrap = `(function(){try{var s=localStorage.getItem('ui-storage');var t=s?JSON.parse(s).state?.theme:null;var c=(t==='light')?'light':'dark';var d=document.documentElement;d.classList.remove('dark','light');d.classList.add(c);}catch(e){document.documentElement.classList.add('dark');}})();`;
 
-import { Toaster } from "sonner";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -53,6 +59,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>
       <body

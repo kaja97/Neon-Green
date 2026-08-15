@@ -33,7 +33,7 @@ export default function TopBar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Left: Brand Logo & Navigation */}
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="flex items-center gap-2.5 group select-none">
+          <Link href="/" className="flex items-center gap-2.5 group select-none">
             <div className="p-2 rounded-xl bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 shadow-[0_0_15px_rgba(0,255,135,0.4)] group-hover:scale-105 transition-transform">
               <Sprout className="w-5 h-5 text-slate-950 stroke-[2.5]" />
             </div>
