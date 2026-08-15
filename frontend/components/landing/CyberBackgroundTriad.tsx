@@ -15,28 +15,28 @@ export default function CyberBackgroundTriad() {
 
   // Smooth Spring Scroll Interpolation for Butter-smooth Transitions
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 75,
-    damping: 24,
+    stiffness: 85,
+    damping: 26,
     restDelta: 0.001,
   });
 
   // Stage 1 (Genesis): 0.0 -> 0.35
-  const stage1Opacity = useTransform(smoothProgress, [0, 0.22, 0.36], [1, 1, 0]);
-  const stage1Scale = useTransform(smoothProgress, [0, 0.36], [1, 1.06]);
+  const stage1Opacity = useTransform(smoothProgress, [0, 0.20, 0.35], [1, 0.9, 0]);
+  const stage1Scale = useTransform(smoothProgress, [0, 0.35], [1, 1.05]);
 
-  // Stage 2 (Synthesis): 0.28 -> 0.70
-  const stage2Opacity = useTransform(smoothProgress, [0.26, 0.38, 0.58, 0.70], [0, 1, 1, 0]);
-  const stage2Scale = useTransform(smoothProgress, [0.26, 0.48, 0.70], [0.94, 1, 1.05]);
+  // Stage 2 (Synthesis): 0.25 -> 0.70
+  const stage2Opacity = useTransform(smoothProgress, [0.24, 0.36, 0.56, 0.70], [0, 1, 1, 0]);
+  const stage2Scale = useTransform(smoothProgress, [0.24, 0.46, 0.70], [0.95, 1, 1.04]);
 
-  // Stage 3 (Abundance): 0.62 -> 1.0
-  const stage3Opacity = useTransform(smoothProgress, [0.60, 0.72, 1], [0, 1, 1]);
-  const stage3Scale = useTransform(smoothProgress, [0.60, 0.85, 1], [0.94, 1, 1]);
+  // Stage 3 (Abundance): 0.60 -> 1.0
+  const stage3Opacity = useTransform(smoothProgress, [0.58, 0.72, 1], [0, 1, 1]);
+  const stage3Scale = useTransform(smoothProgress, [0.58, 0.85, 1], [0.95, 1, 1]);
 
   // Ambient Matrix Glow Shift based on scroll
   const glowColor1 = useTransform(
     smoothProgress,
     [0, 0.45, 0.85],
-    ["rgba(16,185,129,0.12)", "rgba(56,189,248,0.12)", "rgba(245,158,11,0.14)"]
+    ["rgba(16,185,129,0.14)", "rgba(56,189,248,0.14)", "rgba(245,158,11,0.15)"]
   );
 
   useEffect(() => {
@@ -95,8 +95,8 @@ export default function CyberBackgroundTriad() {
       </motion.div>
 
       {/* ── Vignette Gradients for Impeccable Foreground Readability ── */}
-      <div className="absolute inset-0 bg-gradient-to-b from-surface-primary/40 via-transparent to-surface-primary/70 pointer-events-none" />
-      <div className="absolute inset-0 bg-radial-vignette pointer-events-none opacity-40 dark:opacity-70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-surface-primary/50 via-surface-primary/20 to-surface-primary/80 pointer-events-none" />
+      <div className="absolute inset-0 bg-radial-vignette pointer-events-none opacity-40 dark:opacity-75" />
     </div>
   );
 }

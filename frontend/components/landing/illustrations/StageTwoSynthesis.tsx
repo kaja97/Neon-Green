@@ -45,233 +45,151 @@ export default function StageTwoSynthesis({ progress }: StageProps) {
             <stop offset="100%" stopColor="#00FF87" stopOpacity="1" />
           </linearGradient>
 
-          <linearGradient id="leafVeinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="leafGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#00FF87" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#38BDF8" stopOpacity="0.4" />
+            <stop offset="60%" stopColor="#059669" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#022C22" stopOpacity="0.2" />
+          </linearGradient>
+
+          <linearGradient id="leafGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#38BDF8" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#0D9488" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#022C22" stopOpacity="0.2" />
           </linearGradient>
 
           {/* Filters */}
-          <filter id="neonGlow2" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
+          <filter id="synthGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-
-          <filter id="laserScanFilter" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="8" result="blur1" />
-            <feGaussianBlur stdDeviation="18" result="blur2" />
-            <feMerge>
-              <feMergeNode in="blur2" />
-              <feMergeNode in="blur1" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
         </defs>
 
-        {/* ── 1. Atmospheric Photosynthetic Grid & Horizon ── */}
-        <g opacity="0.35">
-          <line x1="0" y1="480" x2="1440" y2="480" stroke="#10B981" strokeWidth="1" strokeDasharray="10 10" />
-          <path
-            d="M 0 520 C 400 480, 1000 540, 1440 500"
-            stroke="#38BDF8"
-            strokeWidth="1.2"
-            strokeDasharray="6 8"
-          />
+        {/* ── 1. Aerial LiDAR Autonomous Scanning Fan ── */}
+        <g opacity="0.45">
+          {/* Triangular Scanning Mesh Projection */}
+          <polygon points="720,40 160,800 1280,800" fill="url(#laserBeamGrad1)" fillOpacity="0.08" />
+
+          {/* Scanning Laser Beams */}
+          <line x1="720" y1="40" x2="320" y2="780" stroke="#00FF87" strokeWidth="1.6" strokeDasharray="6 4" strokeOpacity="0.7" />
+          <line x1="720" y1="40" x2="520" y2="820" stroke="#38BDF8" strokeWidth="1.2" strokeOpacity="0.6" />
+          <line x1="720" y1="40" x2="720" y2="860" stroke="#00FF87" strokeWidth="2" strokeOpacity="0.85" />
+          <line x1="720" y1="40" x2="920" y2="820" stroke="#38BDF8" strokeWidth="1.2" strokeOpacity="0.6" />
+          <line x1="720" y1="40" x2="1120" y2="780" stroke="#00FF87" strokeWidth="1.6" strokeDasharray="6 4" strokeOpacity="0.7" />
+
+          {/* LiDAR Sweep Arcs */}
+          <path d="M 400 500 A 400 400 0 0 1 1040 500" stroke="#38BDF8" strokeWidth="1.2" strokeDasharray="8 6" strokeOpacity="0.5" />
+          <path d="M 280 650 A 600 600 0 0 1 1160 650" stroke="#00FF87" strokeWidth="1.5" strokeDasharray="12 8" strokeOpacity="0.4" />
         </g>
 
-        {/* ── 2. Massive Bioluminescent Canopy & Branching Tree of Life ── */}
-        <g filter="url(#neonGlow2)">
-          {/* Main Trunk / Plant Stem Column */}
+        {/* ── 2. Cybernetic Bio-Tree & Photosynthetic Foliage ── */}
+        <g id="treeCanopy" filter="url(#synthGlow)">
+          {/* Main Central Vascular Trunk */}
           <path
-            d="M 720 900 L 720 480 C 720 420, 700 370, 720 320"
+            d="M 720 850 C 720 720, 715 620, 720 480 C 720 420, 720 360, 720 300"
             stroke="url(#trunkGrad)"
             strokeWidth="6"
             strokeLinecap="round"
           />
 
-          {/* Major Canopy Arcs / Branches */}
+          {/* Primary Canopy Arcs (Left Branches) */}
           <path
-            d="M 720 480 C 640 430, 520 410, 400 430 C 310 445, 230 480, 160 520"
-            stroke="url(#trunkGrad)"
-            strokeWidth="4"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 720 480 C 800 430, 920 410, 1040 430 C 1130 445, 1210 480, 1280 520"
-            stroke="url(#trunkGrad)"
-            strokeWidth="4"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 720 400 C 650 340, 560 300, 460 310 C 370 320, 290 350, 210 390"
+            d="M 720 540 C 640 500, 540 470, 440 450 C 350 435, 270 420, 190 390"
             stroke="url(#trunkGrad)"
             strokeWidth="3.5"
             strokeLinecap="round"
           />
           <path
-            d="M 720 400 C 790 340, 880 300, 980 310 C 1070 320, 1150 350, 1230 390"
-            stroke="url(#trunkGrad)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 720 320 C 680 250, 610 200, 530 190 M 720 320 C 760 250, 830 200, 910 190"
+            d="M 720 430 C 630 380, 520 330, 420 300 C 330 270, 240 250, 160 210"
             stroke="url(#trunkGrad)"
             strokeWidth="3"
             strokeLinecap="round"
           />
 
-          {/* Bioluminescent Leaf Vein Clusters */}
-          {[
-            { cx: 400, cy: 430, rot: -20 },
-            { cx: 1040, cy: 430, rot: 20 },
-            { cx: 460, cy: 310, rot: -35 },
-            { cx: 980, cy: 310, rot: 35 },
-            { cx: 530, cy: 190, rot: -45 },
-            { cx: 910, cy: 190, rot: 45 },
-            { cx: 720, cy: 260, rot: 0 },
-            { cx: 280, cy: 410, rot: -15 },
-            { cx: 1160, cy: 410, rot: 15 },
-          ].map((leaf, i) => (
-            <g key={i} transform={`translate(${leaf.cx}, ${leaf.cy}) rotate(${leaf.rot})`}>
-              {/* Leaf Blade Outer Contour */}
-              <path
-                d="M 0 0 C 35 -25, 75 -20, 95 0 C 75 20, 35 25, 0 0 Z"
-                fill="#10B981"
-                fillOpacity="0.25"
-                stroke="url(#leafVeinGrad)"
-                strokeWidth="1.8"
-              />
-              {/* Internal Neural Veins */}
-              <line x1="0" y1="0" x2="90" y2="0" stroke="#00FF87" strokeWidth="1.4" />
-              <line x1="30" y1="0" x2="50" y2="-12" stroke="#38BDF8" strokeWidth="1" />
-              <line x1="30" y1="0" x2="50" y2="12" stroke="#38BDF8" strokeWidth="1" />
-              <line x1="60" y1="0" x2="75" y2="-8" stroke="#38BDF8" strokeWidth="0.8" />
-              <line x1="60" y1="0" x2="75" y2="8" stroke="#38BDF8" strokeWidth="0.8" />
-              {/* Glowing Chlorophyll Node */}
-              <circle cx="95" cy="0" r="3.5" fill="#00FF87" className="animate-ping" style={{ animationDuration: "3s" }} />
-              <circle cx="95" cy="0" r="2.5" fill="#FFFFFF" />
-            </g>
-          ))}
-        </g>
-
-        {/* ── 3. Central Canopy Photosynthesis Halo ── */}
-        <g transform="translate(720, 330)" filter="url(#canopyCoreGlow)">
-          <circle cx="0" cy="0" r="140" fill="url(#canopyCoreGlow)" />
-          <circle
-            cx="0"
-            cy="0"
-            r="100"
-            stroke="#00FF87"
-            strokeWidth="1.5"
-            strokeDasharray="12 6"
-            strokeOpacity="0.7"
-            className="animate-spin"
-            style={{ animationDuration: "35s" }}
+          {/* Primary Canopy Arcs (Right Branches) */}
+          <path
+            d="M 720 540 C 800 500, 900 470, 1000 450 C 1090 435, 1170 420, 1250 390"
+            stroke="url(#trunkGrad)"
+            strokeWidth="3.5"
+            strokeLinecap="round"
           />
-          <circle
-            cx="0"
-            cy="0"
-            r="70"
-            stroke="#38BDF8"
-            strokeWidth="1.8"
-            strokeDasharray="4 8"
-            strokeOpacity="0.85"
-            className="animate-spin"
-            style={{ animationDuration: "20s", animationDirection: "reverse" }}
+          <path
+            d="M 720 430 C 810 380, 920 330, 1020 300 C 1110 270, 1200 250, 1280 210"
+            stroke="url(#trunkGrad)"
+            strokeWidth="3"
+            strokeLinecap="round"
           />
-          {/* Core Blossom */}
-          <polygon
-            points="0,-25 18,-8 11,18 -11,18 -18,-8"
-            fill="#00FF87"
-            fillOpacity="0.6"
-            stroke="#FFFFFF"
-            strokeWidth="2"
-          />
-          <circle cx="0" cy="0" r="6" fill="#FFFFFF" className="animate-pulse" />
+
+          {/* ── Geometric Silicon Leaves (Left Side) ── */}
+          <path d="M 440 450 C 430 390, 470 350, 520 370 C 570 390, 560 460, 440 450 Z" fill="url(#leafGrad1)" stroke="#00FF87" strokeWidth="1.5" />
+          <path d="M 350 435 C 330 380, 360 340, 410 355 C 450 370, 440 430, 350 435 Z" fill="url(#leafGrad1)" stroke="#38BDF8" strokeWidth="1.5" />
+          <path d="M 420 300 C 390 240, 430 200, 490 215 C 540 230, 530 300, 420 300 Z" fill="url(#leafGrad1)" stroke="#00FF87" strokeWidth="1.5" />
+          <path d="M 270 260 C 240 210, 270 170, 320 185 C 370 200, 360 260, 270 260 Z" fill="url(#leafGrad1)" stroke="#34D399" strokeWidth="1.5" />
+
+          {/* ── Geometric Silicon Leaves (Right Side) ── */}
+          <path d="M 1000 450 C 1010 390, 970 350, 920 370 C 870 390, 880 460, 1000 450 Z" fill="url(#leafGrad2)" stroke="#38BDF8" strokeWidth="1.5" />
+          <path d="M 1090 435 C 1110 380, 1080 340, 1030 355 C 990 370, 1000 430, 1090 435 Z" fill="url(#leafGrad2)" stroke="#00FF87" strokeWidth="1.5" />
+          <path d="M 1020 300 C 1050 240, 1010 200, 950 215 C 900 230, 910 300, 1020 300 Z" fill="url(#leafGrad2)" stroke="#38BDF8" strokeWidth="1.5" />
+          <path d="M 1170 260 C 1200 210, 1170 170, 1120 185 C 1070 200, 1080 260, 1170 260 Z" fill="url(#leafGrad2)" stroke="#34D399" strokeWidth="1.5" />
         </g>
 
-        {/* ── 4. Autonomous Aerial AI Drones with LiDAR Laser Cones ── */}
-        {/* DRONE 01 (Left Aerial Sector) */}
-        <g transform="translate(320, 130)" filter="url(#laserScanFilter)">
-          {/* Downward LiDAR Scan Cone */}
-          <polygon points="0,25 -160,340 160,340" fill="url(#laserBeamGrad1)" opacity="0.45" />
-          <line x1="0" y1="25" x2="-160" y2="340" stroke="#00FF87" strokeWidth="1.5" strokeOpacity="0.8" />
-          <line x1="0" y1="25" x2="160" y2="340" stroke="#00FF87" strokeWidth="1.5" strokeOpacity="0.8" />
-          <ellipse cx="0" cy="340" rx="160" ry="14" stroke="#00FF87" strokeWidth="1.5" strokeDasharray="6 4" strokeOpacity="0.7" fill="none" />
+        {/* ── 3. High-Precision Micro-Irrigation & Aeroponic Misting Rings ── */}
+        <g>
+          {/* Left Misting Emitter Node */}
+          <g transform="translate(440, 450)">
+            <circle cx="0" cy="0" r="16" stroke="#38BDF8" strokeWidth="1.4" strokeDasharray="3 3" className="animate-spin" style={{ animationDuration: "12s" }} />
+            <circle cx="0" cy="0" r="5" fill="#38BDF8" className="animate-ping" style={{ animationDuration: "3s" }} />
+            <circle cx="0" cy="0" r="4" fill="#00FF87" />
+          </g>
 
-          {/* Drone Body HUD Frame */}
-          <rect x="-35" y="-18" width="70" height="36" rx="10" fill="#022c22" stroke="#00FF87" strokeWidth="1.8" />
-          {/* Rotors */}
-          <circle cx="-42" cy="-18" r="9" stroke="#38BDF8" strokeWidth="1.5" strokeDasharray="4 4" className="animate-spin" />
-          <circle cx="42" cy="-18" r="9" stroke="#38BDF8" strokeWidth="1.5" strokeDasharray="4 4" className="animate-spin" />
-          <circle cx="-42" cy="18" r="9" stroke="#38BDF8" strokeWidth="1.5" strokeDasharray="4 4" className="animate-spin" />
-          <circle cx="42" cy="18" r="9" stroke="#38BDF8" strokeWidth="1.5" strokeDasharray="4 4" className="animate-spin" />
-          {/* Drone Core Lens */}
-          <circle cx="0" cy="0" r="7" fill="#00FF87" className="animate-pulse" />
-          <circle cx="0" cy="0" r="3" fill="#FFFFFF" />
+          {/* Right Misting Emitter Node */}
+          <g transform="translate(1000, 450)">
+            <circle cx="0" cy="0" r="16" stroke="#38BDF8" strokeWidth="1.4" strokeDasharray="3 3" className="animate-spin" style={{ animationDuration: "12s" }} />
+            <circle cx="0" cy="0" r="5" fill="#38BDF8" className="animate-ping" style={{ animationDuration: "3s" }} />
+            <circle cx="0" cy="0" r="4" fill="#00FF87" />
+          </g>
+
+          {/* Central Apex Apex Light Node */}
+          <g transform="translate(720, 260)">
+            <circle cx="0" cy="0" r="28" stroke="#00FF87" strokeWidth="1.6" strokeDasharray="6 4" className="animate-spin" style={{ animationDuration: "18s" }} />
+            <circle cx="0" cy="0" r="12" fill="#00FF87" fillOpacity="0.4" />
+            <circle cx="0" cy="0" r="6" fill="#FFFFFF" className="animate-pulse" />
+          </g>
         </g>
 
-        {/* DRONE 02 (Right Aerial Sector) */}
-        <g transform="translate(1120, 130)" filter="url(#laserScanFilter)">
-          {/* Downward LiDAR Scan Cone */}
-          <polygon points="0,25 -160,340 160,340" fill="url(#laserBeamGrad2)" opacity="0.45" />
-          <line x1="0" y1="25" x2="-160" y2="340" stroke="#38BDF8" strokeWidth="1.5" strokeOpacity="0.8" />
-          <line x1="0" y1="25" x2="160" y2="340" stroke="#38BDF8" strokeWidth="1.5" strokeOpacity="0.8" />
-          <ellipse cx="0" cy="340" rx="160" ry="14" stroke="#38BDF8" strokeWidth="1.5" strokeDasharray="6 4" strokeOpacity="0.7" fill="none" />
-
-          {/* Drone Body HUD Frame */}
-          <rect x="-35" y="-18" width="70" height="36" rx="10" fill="#082f49" stroke="#38BDF8" strokeWidth="1.8" />
-          {/* Rotors */}
-          <circle cx="-42" cy="-18" r="9" stroke="#00FF87" strokeWidth="1.5" strokeDasharray="4 4" className="animate-spin" />
-          <circle cx="42" cy="-18" r="9" stroke="#00FF87" strokeWidth="1.5" strokeDasharray="4 4" className="animate-spin" />
-          <circle cx="-42" cy="18" r="9" stroke="#00FF87" strokeWidth="1.5" strokeDasharray="4 4" className="animate-spin" />
-          <circle cx="42" cy="18" r="9" stroke="#00FF87" strokeWidth="1.5" strokeDasharray="4 4" className="animate-spin" />
-          {/* Drone Core Lens */}
-          <circle cx="0" cy="0" r="7" fill="#38BDF8" className="animate-pulse" />
-          <circle cx="0" cy="0" r="3" fill="#FFFFFF" />
+        {/* ── 4. Floating Holographic Aerial Telemetry HUD ── */}
+        {/* Left Telemetry Cluster: Evapotranspiration & Microclimate */}
+        <g transform="translate(140, 490)" opacity="0.88">
+          <rect width="230" height="110" rx="20" fill="#021c24" fillOpacity="0.88" stroke="#38BDF8" strokeWidth="1.2" />
+          <line x1="16" y1="34" x2="214" y2="34" stroke="#38BDF8" strokeOpacity="0.35" />
+          <text x="18" y="24" fill="#38BDF8" fontSize="11" fontFamily="monospace" fontWeight="bold" letterSpacing="1.5">
+            MICROCLIMATE HUD
+          </text>
+          <text x="18" y="58" fill="#FFFFFF" fontSize="14" fontFamily="sans-serif" fontWeight="bold">
+            ET₀: 4.8 MM/DAY
+          </text>
+          <text x="18" y="84" fill="#00FF87" fontSize="11" fontFamily="monospace">
+            VPD: 1.15 KPA (PERFECT)
+          </text>
+          <path d="M 230 50 L 440 450" stroke="#38BDF8" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.4" />
         </g>
 
-        {/* ── 5. Floating Aerial Agronomic Telemetry HUDs ── */}
-        {/* Left Telemetry: NDVI & Chlorophyll */}
-        <g transform="translate(190, 80)" opacity="0.9">
-          <rect width="210" height="90" rx="16" fill="#022c22" fillOpacity="0.85" stroke="#00FF87" strokeWidth="1.2" />
-          <line x1="16" y1="28" x2="194" y2="28" stroke="#00FF87" strokeOpacity="0.35" />
-          <text x="18" y="20" fill="#34D399" fontSize="11" fontFamily="monospace" fontWeight="bold" letterSpacing="1.5">
-            SPECTRUM NDVI: 0.88
+        {/* Right Telemetry Cluster: Photosynthesis Efficiency */}
+        <g transform="translate(1070, 490)" opacity="0.88">
+          <rect width="230" height="110" rx="20" fill="#021c24" fillOpacity="0.88" stroke="#00FF87" strokeWidth="1.2" />
+          <line x1="16" y1="34" x2="214" y2="34" stroke="#00FF87" strokeOpacity="0.35" />
+          <text x="18" y="24" fill="#00FF87" fontSize="11" fontFamily="monospace" fontWeight="bold" letterSpacing="1.5">
+            CHLOROPHYLL TELEMETRY
           </text>
-          <text x="18" y="50" fill="#FFFFFF" fontSize="13" fontFamily="sans-serif" fontWeight="bold">
-            CANOPY COVER: 94.2%
+          <text x="18" y="58" fill="#FFFFFF" fontSize="14" fontFamily="sans-serif" fontWeight="bold">
+            PAR: 1,420 μMOL/M²/S
           </text>
-          <text x="18" y="72" fill="#38BDF8" fontSize="11" fontFamily="monospace">
-            CHLOROPHYLL: PEAK VITAL
+          <text x="18" y="84" fill="#38BDF8" fontSize="11" fontFamily="monospace">
+            CANOPY INDEX: 3.82 LAI
           </text>
-        </g>
-
-        {/* Right Telemetry: Precision Micro-Irrigation */}
-        <g transform="translate(1040, 80)" opacity="0.9">
-          <rect width="210" height="90" rx="16" fill="#082f49" fillOpacity="0.85" stroke="#38BDF8" strokeWidth="1.2" />
-          <line x1="16" y1="28" x2="194" y2="28" stroke="#38BDF8" strokeOpacity="0.35" />
-          <text x="18" y="20" fill="#38BDF8" fontSize="11" fontFamily="monospace" fontWeight="bold" letterSpacing="1.5">
-            MICRO-SPRAY RATE
-          </text>
-          <text x="18" y="50" fill="#FFFFFF" fontSize="13" fontFamily="sans-serif" fontWeight="bold">
-            DOSAGE: 12.4 L/MIN
-          </text>
-          <text x="18" y="72" fill="#00FF87" fontSize="11" fontFamily="monospace">
-            VPD: 1.12 kPa (BALANCED)
-          </text>
-        </g>
-
-        {/* Bottom Canopy Status Bar */}
-        <g transform="translate(570, 810)" opacity="0.85">
-          <rect width="300" height="36" rx="18" fill="#022c22" fillOpacity="0.85" stroke="#00FF87" strokeWidth="1" />
-          <circle cx="18" cy="18" r="4.5" fill="#38BDF8" className="animate-pulse" />
-          <text x="34" y="23" fill="#00FF87" fontSize="11" fontFamily="monospace" fontWeight="bold" letterSpacing="1">
-            ALTITUDE: +15.0M · AERIAL CANOPY ACTIVE
-          </text>
+          <path d="M 0 50 L -70 450" stroke="#00FF87" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.4" />
         </g>
       </svg>
     </div>

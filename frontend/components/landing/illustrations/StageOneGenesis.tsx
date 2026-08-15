@@ -45,13 +45,7 @@ export default function StageOneGenesis({ progress }: StageProps) {
             <stop offset="100%" stopColor="#022C22" stopOpacity="0.05" />
           </linearGradient>
 
-          <linearGradient id="strataGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#10B981" stopOpacity="0.15" />
-            <stop offset="50%" stopColor="#047857" stopOpacity="0.06" />
-            <stop offset="100%" stopColor="#064E3B" stopOpacity="0.01" />
-          </linearGradient>
-
-          {/* Glow Filters */}
+          {/* Filters */}
           <filter id="neonGlow1" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="6" result="blur" />
             <feMerge>
@@ -59,36 +53,46 @@ export default function StageOneGenesis({ progress }: StageProps) {
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-
           <filter id="heavyGlow1" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="16" result="blur1" />
-            <feGaussianBlur stdDeviation="32" result="blur2" />
+            <feGaussianBlur stdDeviation="14" result="blur" />
             <feMerge>
-              <feMergeNode in="blur2" />
-              <feMergeNode in="blur1" />
+              <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
 
-        {/* ── 1. Soil Strata Geological Grid & Wave Contours ── */}
-        <g opacity="0.45">
+        {/* ── 1. Geometric Topographic Soil Strata & Geological Waveform ── */}
+        <g opacity="0.35">
           <path
-            d="M -100 220 C 300 270, 700 180, 1540 240 L 1540 950 L -100 950 Z"
-            fill="url(#strataGrad)"
+            d="M 0 540 C 320 500, 600 580, 880 520 C 1120 470, 1300 540, 1440 510 L 1440 900 L 0 900 Z"
+            fill="#022c22"
+            fillOpacity="0.5"
           />
           <path
-            d="M -100 450 C 400 390, 900 530, 1540 470"
+            d="M 0 620 C 380 590, 680 670, 1020 610 C 1240 570, 1380 630, 1440 610 L 1440 900 L 0 900 Z"
+            fill="#011b15"
+            fillOpacity="0.75"
+          />
+          {/* Subtle horizontal strata scanning lines */}
+          <line
+            x1="0"
+            y1="540"
+            x2="1440"
+            y2="510"
             stroke="#10B981"
-            strokeWidth="1"
-            strokeDasharray="8 12"
-            strokeOpacity="0.3"
-          />
-          <path
-            d="M -100 660 C 350 710, 1000 610, 1540 670"
-            stroke="#059669"
             strokeWidth="1.2"
             strokeDasharray="4 8"
+            strokeOpacity="0.35"
+          />
+          <line
+            x1="0"
+            y1="620"
+            x2="1440"
+            y2="610"
+            stroke="#00FF87"
+            strokeWidth="0.8"
+            strokeDasharray="6 12"
             strokeOpacity="0.25"
           />
         </g>
@@ -246,42 +250,42 @@ export default function StageOneGenesis({ progress }: StageProps) {
 
         {/* ── 5. Holographic Subterranean HUD Telemetry Widgets ── */}
         {/* Left Telemetry Cluster: N-P-K Ion Balance */}
-        <g transform="translate(200, 310)" opacity="0.9">
-          <rect width="210" height="100" rx="16" fill="#022c22" fillOpacity="0.85" stroke="#10B981" strokeWidth="1.2" />
-          <line x1="16" y1="32" x2="194" y2="32" stroke="#10B981" strokeOpacity="0.35" />
-          <text x="18" y="22" fill="#34D399" fontSize="11" fontFamily="monospace" fontWeight="bold" letterSpacing="1.5">
+        <g transform="translate(180, 290)" opacity="0.85">
+          <rect width="220" height="106" rx="18" fill="#022c22" fillOpacity="0.88" stroke="#10B981" strokeWidth="1.2" />
+          <line x1="16" y1="34" x2="204" y2="34" stroke="#10B981" strokeOpacity="0.35" />
+          <text x="18" y="24" fill="#34D399" fontSize="11" fontFamily="monospace" fontWeight="bold" letterSpacing="1.5">
             SOIL ION MATRIX
           </text>
-          <text x="18" y="54" fill="#FFFFFF" fontSize="14" fontFamily="sans-serif" fontWeight="bold">
+          <text x="18" y="58" fill="#FFFFFF" fontSize="14" fontFamily="sans-serif" fontWeight="bold">
             NPK: 140 · 45 · 210
           </text>
-          <text x="18" y="78" fill="#38BDF8" fontSize="11" fontFamily="monospace">
+          <text x="18" y="84" fill="#38BDF8" fontSize="11" fontFamily="monospace">
             BIO-ACTIVITY: 98.4%
           </text>
           {/* Target Pointer Line to Root */}
-          <path d="M 210 50 L 410 660" stroke="#10B981" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.5" />
+          <path d="M 220 50 L 410 660" stroke="#10B981" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.4" />
         </g>
 
         {/* Right Telemetry Cluster: Soil Moisture & pH */}
-        <g transform="translate(1030, 310)" opacity="0.9">
-          <rect width="210" height="100" rx="16" fill="#022c22" fillOpacity="0.85" stroke="#38BDF8" strokeWidth="1.2" />
-          <line x1="16" y1="32" x2="194" y2="32" stroke="#38BDF8" strokeOpacity="0.35" />
-          <text x="18" y="22" fill="#38BDF8" fontSize="11" fontFamily="monospace" fontWeight="bold" letterSpacing="1.5">
+        <g transform="translate(1040, 290)" opacity="0.85">
+          <rect width="220" height="106" rx="18" fill="#022c22" fillOpacity="0.88" stroke="#38BDF8" strokeWidth="1.2" />
+          <line x1="16" y1="34" x2="204" y2="34" stroke="#38BDF8" strokeOpacity="0.35" />
+          <text x="18" y="24" fill="#38BDF8" fontSize="11" fontFamily="monospace" fontWeight="bold" letterSpacing="1.5">
             AQUIFER TELEMETRY
           </text>
-          <text x="18" y="54" fill="#FFFFFF" fontSize="14" fontFamily="sans-serif" fontWeight="bold">
+          <text x="18" y="58" fill="#FFFFFF" fontSize="14" fontFamily="sans-serif" fontWeight="bold">
             MOISTURE: 68.2%
           </text>
-          <text x="18" y="78" fill="#00FF87" fontSize="11" fontFamily="monospace">
+          <text x="18" y="84" fill="#00FF87" fontSize="11" fontFamily="monospace">
             pH: 6.4 (OPTIMAL)
           </text>
           {/* Target Pointer Line to Root */}
-          <path d="M 0 50 L -180 655" stroke="#38BDF8" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.5" />
+          <path d="M 0 50 L -180 655" stroke="#38BDF8" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.4" />
         </g>
 
         {/* Bottom Sub-Telemetry Tag */}
         <g transform="translate(580, 810)" opacity="0.85">
-          <rect width="280" height="36" rx="18" fill="#022c22" fillOpacity="0.85" stroke="#10B981" strokeWidth="1" />
+          <rect width="280" height="36" rx="18" fill="#022c22" fillOpacity="0.88" stroke="#10B981" strokeWidth="1" />
           <circle cx="18" cy="18" r="4.5" fill="#00FF87" className="animate-pulse" />
           <text x="34" y="23" fill="#34D399" fontSize="11" fontFamily="monospace" fontWeight="bold" letterSpacing="1">
             DEPTH: -1.20M · ROOT SYNC ACTIVE
