@@ -1,8 +1,9 @@
 """
 Shared pytest fixtures for integration tests.
 
-Uses raw asyncpg for test data setup/cleanup to avoid SQLAlchemy
-session conflicts with the FastAPI app's own sessions.
+Uses NullPool for test sessions to prevent asyncpg connections
+from attaching to different asyncio event loops between test functions.
+Configures Celery in eager mode to prevent Redis timeouts during tests.
 """
 import asyncio
 import uuid
@@ -10,42 +11,64 @@ import pytest
 import pytest_asyncio
 import asyncpg
 from httpx import AsyncClient, ASGITransport
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.pool import NullPool
 
 from main import app
+from database import get_db
 from config import settings
 from core.security import get_password_hash, create_access_token
+from tasks.celery_app import celery_app
 
+# Enable eager execution for all celery tasks in tests
+celery_app.conf.update(
+    task_always_eager=True,
+    task_eager_propagates=True,
+)
 
 # ── Parse DB URL ─────────────────────────────────────────
 
 def _parse_db_url(url: str) -> str:
     """Convert SQLAlchemy async URL to standard postgres URL for asyncpg."""
-    # asyncpg+postgresql://... → postgresql://...
     return url.replace("postgresql+asyncpg://", "postgresql://")
 
 
 RAW_DB_URL = _parse_db_url(settings.DATABASE_URL)
 
+# ── Test Engine with NullPool (Event Loop Safe) ─────────
 
-# ── Event Loop ───────────────────────────────────────────
+test_engine = create_async_engine(
+    settings.DATABASE_URL,
+    poolclass=NullPool,
+    echo=False,
+)
 
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+test_async_session = async_sessionmaker(
+    test_engine, class_=AsyncSession, expire_on_commit=False
+)
+
+async def override_get_db():
+    """Dependency override for test database sessions with automatic rollback on error."""
+    async with test_async_session() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+
+app.dependency_overrides[get_db] = override_get_db
 
 
 # ── Test Data Tracker ────────────────────────────────────
 
 class TestData:
     """Stores IDs created during tests for cleanup."""
-    account_ids: list[str] = []
-    profile_ids: list[str] = []
-    location_ids: list[str] = []
-    land_ids: list[str] = []
-    livestock_ids: list[str] = []
-    project_ids: list[str] = []
+    account_ids: list = []
+    profile_ids: list = []
+    location_ids: list = []
+    land_ids: list = []
+    livestock_ids: list = []
+    project_ids: list = []
 
     @classmethod
     def reset(cls):
@@ -67,6 +90,7 @@ async def create_test_account(
     """
     Create account + farmer profile via raw asyncpg (bypass OTP).
     Fully commits and closes connection before returning.
+    Cleans up any colliding prior email/phone to guarantee test isolation.
 
     Returns (account_id: str, profile_id: str, email: str, password: str).
     """
@@ -76,22 +100,29 @@ async def create_test_account(
     profile_id = str(uuid.uuid4())
     pwd_hash = get_password_hash(password)
 
-    conn = await asyncpg.connect(RAW_DB_URL)
     try:
-        await conn.execute(
-            """INSERT INTO accounts (id, email, phone, password_hash, role,
-               is_verified, is_active, created_at, updated_at)
-               VALUES ($1::uuid, $2, $3, $4, 'farmer', true, true, now(), now())""",
-            uuid.UUID(account_id), email, phone, pwd_hash,
-        )
-        await conn.execute(
-            """INSERT INTO farmer_profiles (id, account_id, full_name,
+        conn = await asyncpg.connect(RAW_DB_URL)
+        try:
+            # Pre-cleanup if previous test left the same email/phone
+            await conn.execute("DELETE FROM accounts WHERE email = $1 OR phone = $2", email, phone)
+
+            await conn.execute(
+                """INSERT INTO accounts (id, email, phone, password_hash, role,
+                   is_verified, is_active, created_at, updated_at)
+                   VALUES ($1::uuid, $2, $3, $4, 'farmer', true, true, now(), now())""",
+                uuid.UUID(account_id), email, phone, pwd_hash,
+            )
+            await conn.execute(
+                """INSERT INTO farmer_profiles (id, account_id, full_name,
                farming_method, primary_language, experience_years, created_at, updated_at)
                VALUES ($1::uuid, $2::uuid, 'Test Farmer', 'organic', 'en', 0, now(), now())""",
-            uuid.UUID(profile_id), uuid.UUID(account_id),
-        )
-    finally:
-        await conn.close()
+                uuid.UUID(profile_id), uuid.UUID(account_id),
+            )
+        finally:
+            await conn.close()
+    except Exception as e:
+        print(f"Error creating test account: {e}")
+        raise
 
     TestData.account_ids.append(account_id)
     TestData.profile_ids.append(profile_id)
@@ -122,23 +153,27 @@ async def cleanup():
     """Clean up test data after each test using raw asyncpg."""
     TestData.reset()
     yield
-    conn = await asyncpg.connect(RAW_DB_URL)
     try:
-        for table, ids in [
-            ("projects", TestData.project_ids),
-            ("farmer_land_details", TestData.land_ids),
-            ("farmer_livestock", TestData.livestock_ids),
-            ("farmer_locations", TestData.location_ids),
-            ("farmer_profiles", TestData.profile_ids),
-            ("accounts", TestData.account_ids),
-        ]:
-            for id_ in ids:
-                try:
-                    await conn.execute(
-                        f"DELETE FROM {table} WHERE id = $1::uuid",
-                        uuid.UUID(id_),
-                    )
-                except Exception:
-                    pass
-    finally:
-        await conn.close()
+        conn = await asyncpg.connect(RAW_DB_URL)
+        try:
+            for table, ids in [
+                ("projects", TestData.project_ids),
+                ("farmer_land_details", TestData.land_ids),
+                ("farmer_livestock", TestData.livestock_ids),
+                ("farmer_locations", TestData.location_ids),
+                ("farmer_profiles", TestData.profile_ids),
+                ("accounts", TestData.account_ids),
+            ]:
+                for id_ in ids:
+                    try:
+                        u_id = uuid.UUID(str(id_))
+                        await conn.execute(
+                            f"DELETE FROM {table} WHERE id = $1::uuid",
+                            u_id,
+                        )
+                    except Exception:
+                        pass
+        finally:
+            await conn.close()
+    except Exception:
+        pass

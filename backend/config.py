@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Optional
+from typing import Optional, List
 
 
 class Settings(BaseSettings):
@@ -22,12 +22,23 @@ class Settings(BaseSettings):
     GOOGLE_AI_STUDIO_API_KEY: Optional[str] = None
     OPENWEATHER_API_KEY: Optional[str] = None
 
-    # CORS — set to your Vercel URL in production
+    # CORS — set to your Vercel URL in production (can be comma-separated)
     FRONTEND_URL: str = "http://localhost:3000"
+
+    @property
+    def cors_origins(self) -> List[str]:
+        """Parse FRONTEND_URL and return sanitized list of allowed CORS origins."""
+        origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+        if self.FRONTEND_URL:
+            for u in self.FRONTEND_URL.split(","):
+                cleaned = u.strip().rstrip("/")
+                if cleaned and cleaned not in origins:
+                    origins.append(cleaned)
+        return origins
 
     # AI — Gemini Model & Backend
     GEMINI_MODEL: str = "gemini-2.5-flash"
-    GEMINI_MAX_OUTPUT_TOKENS: int = 2048
+    GEMINI_MAX_OUTPUT_TOKENS: int = 4096
     GEMINI_TEMPERATURE: float = 0.7
     AI_BACKEND: str = "gemini"
 

@@ -45,9 +45,13 @@ class ProjectService(BaseService):
         self.plant_repo = plant_repo
         self.stage_repo = stage_repo
 
-    async def _get_farmer_profile(self, db: AsyncSession, account_id: uuid.UUID) -> FarmerProfile:
-        """Resolve account ID to farmer profile."""
-        result = await db.execute(select(FarmerProfile).where(FarmerProfile.account_id == account_id))
+    async def _get_farmer_profile(self, db: AsyncSession, id_val: uuid.UUID) -> FarmerProfile:
+        """Resolve either account ID or farmer profile ID to farmer profile."""
+        result = await db.execute(
+            select(FarmerProfile).where(
+                (FarmerProfile.account_id == id_val) | (FarmerProfile.id == id_val)
+            )
+        )
         profile = result.scalars().first()
         if not profile:
             raise AppException(ErrorCode.FARMER_PROFILE_NOT_FOUND)
