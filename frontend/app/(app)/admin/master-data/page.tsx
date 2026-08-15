@@ -722,7 +722,7 @@ export default function AdminMasterDataPage() {
         <PlantModal
           plant={editingPlant}
           onClose={() => setIsPlantModalOpen(false)}
-          onSave={(payload) => savePlantMutation.mutate(payload)}
+          onSave={(payload: any) => savePlantMutation.mutate(payload)}
           isLoading={savePlantMutation.isPending}
         />
       )}
@@ -732,7 +732,7 @@ export default function AdminMasterDataPage() {
         <StageModal
           stage={editingStage}
           onClose={() => setIsStageModalOpen(false)}
-          onSave={(payload) => saveStageMutation.mutate(payload)}
+          onSave={(payload: any) => saveStageMutation.mutate(payload)}
           isLoading={saveStageMutation.isPending}
         />
       )}
@@ -742,7 +742,7 @@ export default function AdminMasterDataPage() {
         <FertilizerModal
           stageId={targetStageIdForFertilizer}
           onClose={() => setIsFertilizerModalOpen(false)}
-          onSave={(payload) =>
+          onSave={(payload: any) =>
             addFertilizerMutation.mutate({ stageId: targetStageIdForFertilizer, payload })
           }
           isLoading={addFertilizerMutation.isPending}
@@ -754,7 +754,7 @@ export default function AdminMasterDataPage() {
         <PruningModal
           stageId={targetStageIdForPruning}
           onClose={() => setIsPruningModalOpen(false)}
-          onSave={(payload) =>
+          onSave={(payload: any) =>
             addPruningMutation.mutate({ stageId: targetStageIdForPruning, payload })
           }
           isLoading={addPruningMutation.isPending}
@@ -767,7 +767,7 @@ export default function AdminMasterDataPage() {
           plants={plants}
           variety={editingVariety}
           onClose={() => setIsVarietyModalOpen(false)}
-          onSave={(payload) => saveVarietyMutation.mutate(payload)}
+          onSave={(payload: any) => saveVarietyMutation.mutate(payload)}
           isLoading={saveVarietyMutation.isPending}
         />
       )}
@@ -777,7 +777,7 @@ export default function AdminMasterDataPage() {
 
 // ─── MODAL SUB-COMPONENTS ───────────────────────────────────
 
-function PlantModal({ plant, onClose, onSave, isLoading }: any) {
+function PlantModal({ plant, onClose, onSave, isLoading }: { plant?: any; onClose: () => void; onSave: (payload: any) => void; isLoading?: boolean }) {
   const [commonName, setCommonName] = useState(plant?.common_name || "");
   const [localName, setLocalName] = useState(plant?.local_name || "");
   const [category, setCategory] = useState(plant?.category || "Vegetables");
@@ -890,7 +890,7 @@ function PlantModal({ plant, onClose, onSave, isLoading }: any) {
   );
 }
 
-function StageModal({ stage, onClose, onSave, isLoading }: any) {
+function StageModal({ stage, onClose, onSave, isLoading }: { stage?: any; onClose: () => void; onSave: (payload: any) => void; isLoading?: boolean }) {
   const [stageName, setStageName] = useState(stage?.stage_name || "");
   const [stageOrder, setStageOrder] = useState(stage?.stage_order || 1);
   const [startDay, setStartDay] = useState(stage?.start_day || 1);
@@ -1118,7 +1118,7 @@ function StageModal({ stage, onClose, onSave, isLoading }: any) {
   );
 }
 
-function FertilizerModal({ stageId, onClose, onSave, isLoading }: any) {
+function FertilizerModal({ stageId, onClose, onSave, isLoading }: { stageId: string; onClose: () => void; onSave: (payload: any) => void; isLoading?: boolean }) {
   const [farmingMethod, setFarmingMethod] = useState("organic");
   const [fertilizerName, setFertilizerName] = useState("");
   const [rate, setRate] = useState(15);
@@ -1216,7 +1216,7 @@ function FertilizerModal({ stageId, onClose, onSave, isLoading }: any) {
   );
 }
 
-function PruningModal({ stageId, onClose, onSave, isLoading }: any) {
+function PruningModal({ stageId, onClose, onSave, isLoading }: { stageId: string; onClose: () => void; onSave: (payload: any) => void; isLoading?: boolean }) {
   const [pruningType, setPruningType] = useState("desuckering");
   const [pruningMethod, setPruningMethod] = useState("");
   const [triggerDay, setTriggerDay] = useState(0);
@@ -1344,7 +1344,7 @@ function PruningModal({ stageId, onClose, onSave, isLoading }: any) {
   );
 }
 
-function VarietyModal({ plants, variety, onClose, onSave, isLoading }: any) {
+function VarietyModal({ plants, variety, onClose, onSave, isLoading }: { plants: any[]; variety?: any; onClose: () => void; onSave: (payload: any) => void; isLoading?: boolean }) {
   const [plantId, setPlantId] = useState(variety?.plant_id || plants[0]?.id || "");
   const [varietyName, setVarietyName] = useState(variety?.variety_name || "");
   const [scientificName, setScientificName] = useState(variety?.scientific_name || "");

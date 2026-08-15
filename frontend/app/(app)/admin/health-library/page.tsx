@@ -703,7 +703,7 @@ export default function AdminHealthLibraryPage() {
           plants={plants}
           disease={editingDisease}
           onClose={() => setIsDiseaseModalOpen(false)}
-          onSave={(payload) => saveDiseaseMutation.mutate(payload)}
+          onSave={(payload: any) => saveDiseaseMutation.mutate(payload)}
           isLoading={saveDiseaseMutation.isPending}
         />
       )}
@@ -714,7 +714,7 @@ export default function AdminHealthLibraryPage() {
           plants={plants}
           pest={editingPest}
           onClose={() => setIsPestModalOpen(false)}
-          onSave={(payload) => savePestMutation.mutate(payload)}
+          onSave={(payload: any) => savePestMutation.mutate(payload)}
           isLoading={savePestMutation.isPending}
         />
       )}
@@ -724,7 +724,7 @@ export default function AdminHealthLibraryPage() {
 
 // ─── MODAL: DISEASE ─────────────────────────────────────────
 
-function DiseaseModal({ plants, disease, onClose, onSave, isLoading }: any) {
+function DiseaseModal({ plants, disease, onClose, onSave, isLoading }: { plants: any[]; disease?: any; onClose: () => void; onSave: (payload: any) => void; isLoading?: boolean }) {
   const [plantId, setPlantId] = useState(disease?.plant_id || plants[0]?.id || "");
   const [name, setName] = useState(disease?.name || "");
   const [scientificName, setScientificName] = useState(disease?.scientific_name || "");
@@ -992,7 +992,7 @@ function DiseaseModal({ plants, disease, onClose, onSave, isLoading }: any) {
 
 // ─── MODAL: PEST ────────────────────────────────────────────
 
-function PestModal({ plants, pest, onClose, onSave, isLoading }: any) {
+function PestModal({ plants, pest, onClose, onSave, isLoading }: { plants: any[]; pest?: any; onClose: () => void; onSave: (payload: any) => void; isLoading?: boolean }) {
   const [plantId, setPlantId] = useState(pest?.plant_id || plants[0]?.id || "");
   const [name, setName] = useState(pest?.name || "");
   const [scientificName, setScientificName] = useState(pest?.scientific_name || "");

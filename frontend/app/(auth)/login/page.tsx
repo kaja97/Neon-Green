@@ -51,7 +51,11 @@ export default function LoginPage() {
       );
 
       // 4. Redirect
-      router.push("/dashboard");
+      if (userData.role === "admin") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       if (err.response?.data?.error) {
         setError(err.response.data.error.message || "Invalid credentials");
