@@ -90,40 +90,40 @@ export default function LiveTelemetryCard() {
   return (
     <div className="w-full max-w-4xl mx-auto">
       {/* Outer Glow Container */}
-      <div className="relative rounded-[28px] p-1 bg-gradient-to-b from-emerald-500/30 via-teal-500/10 to-transparent shadow-[0_0_50px_rgba(16,185,129,0.2)]">
-        <div className="relative rounded-[26px] bg-surface-primary/90 border border-emerald-500/30 backdrop-blur-2xl p-5 sm:p-7 space-y-6 overflow-hidden">
+      <div className="relative rounded-[28px] p-1 bg-gradient-to-b from-emerald-500/30 via-teal-500/15 to-transparent shadow-[0_8px_40px_rgba(16,185,129,0.18)]">
+        <div className="relative rounded-[26px] bg-surface-secondary/95 border border-border backdrop-blur-2xl p-5 sm:p-7 space-y-6 overflow-hidden">
           {/* Header & Crop Switcher */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/80">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/70">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <Cpu className="w-5 h-5 animate-pulse" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">
+                  <span className="text-xs font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
                     Live Telemetry Simulation
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                     AUTONOMOUS
                   </span>
                 </div>
-                <h3 className="text-lg sm:text-xl font-black text-white">
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-900 dark:text-white">
                   Stage-by-Stage Precision Telemetry
                 </h3>
               </div>
             </div>
 
             {/* Quick Switcher Tabs */}
-            <div className="flex items-center gap-1.5 bg-surface-secondary/80 p-1 rounded-2xl border border-border/80">
+            <div className="flex items-center gap-1.5 bg-surface-tertiary/70 p-1 rounded-2xl border border-border">
               {SAMPLE_CROPS.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setSelectedId(item.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 ${
                     selectedId === item.id
-                      ? "bg-emerald-500 text-slate-950 shadow-[0_0_15px_rgba(34,197,94,0.4)]"
-                      : "text-text-secondary hover:text-white hover:bg-white/5"
+                      ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(34,197,94,0.4)]"
+                      : "text-text-secondary hover:text-text-primary hover:bg-surface-secondary"
                   }`}
                 >
                   {item.name.split(" ")[0]}
@@ -143,14 +143,14 @@ export default function LiveTelemetryCard() {
               className="space-y-5"
             >
               {/* Crop Hero Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-surface-secondary/60 border border-border/60">
+              <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-surface-tertiary/50 border border-border/80">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <h4 className="text-base font-bold text-white">{crop.name}</h4>
-                    <span className="text-xs text-text-muted">· {crop.category}</span>
+                    <h4 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white">{crop.name}</h4>
+                    <span className="text-xs text-text-muted font-medium">· {crop.category}</span>
                   </div>
-                  <p className="text-xs text-emerald-400 font-mono font-medium">
-                    Current Stage: <span className="text-white font-bold">{crop.stage}</span> (Day {crop.daysActive} of {crop.totalDays})
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-medium">
+                    Current Stage: <span className="text-slate-900 dark:text-slate-900 dark:text-white font-bold">{crop.stage}</span> (Day {crop.daysActive} of {crop.totalDays})
                   </p>
                 </div>
 
@@ -164,7 +164,7 @@ export default function LiveTelemetryCard() {
                           ? "w-7 bg-emerald-500"
                           : idx + 1 === crop.stageNum
                           ? "w-9 bg-emerald-400 shadow-[0_0_10px_rgba(0,255,135,0.6)] animate-pulse"
-                          : "w-5 bg-surface-tertiary"
+                          : "w-5 bg-border"
                       }`}
                     />
                   ))}
@@ -174,20 +174,20 @@ export default function LiveTelemetryCard() {
               {/* 4 Telemetry Metrics Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
                 {/* Metric 1: Soil Moisture */}
-                <div className="p-3.5 rounded-2xl bg-surface-secondary/50 border border-border/60 space-y-1.5">
+                <div className="p-3.5 rounded-2xl bg-surface-primary/70 border border-border space-y-1.5">
                   <div className="flex items-center justify-between text-xs text-text-muted">
-                    <span className="flex items-center gap-1">
-                      <Droplets className="w-3.5 h-3.5 text-blue-400" />
+                    <span className="flex items-center gap-1 font-semibold">
+                      <Droplets className="w-3.5 h-3.5 text-blue-500" />
                       Moisture
                     </span>
-                    <span className="text-[10px] font-mono text-emerald-400 font-bold">OPTIMAL</span>
+                    <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">OPTIMAL</span>
                   </div>
-                  <div className="text-2xl font-black text-white font-mono">
+                  <div className="text-2xl font-black text-slate-900 dark:text-slate-900 dark:text-white font-mono">
                     {crop.moisture}%
                   </div>
                   <div className="w-full bg-surface-tertiary h-1.5 rounded-full overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-blue-400 to-emerald-400 h-full rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-blue-500 to-emerald-500 h-full rounded-full transition-all duration-500"
                       style={{ width: `${crop.moisture}%` }}
                     />
                   </div>
@@ -195,59 +195,59 @@ export default function LiveTelemetryCard() {
                 </div>
 
                 {/* Metric 2: N-P-K Synced Ratios */}
-                <div className="p-3.5 rounded-2xl bg-surface-secondary/50 border border-border/60 space-y-1.5">
+                <div className="p-3.5 rounded-2xl bg-surface-primary/70 border border-border space-y-1.5">
                   <div className="flex items-center justify-between text-xs text-text-muted">
-                    <span className="flex items-center gap-1">
-                      <Gauge className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="flex items-center gap-1 font-semibold">
+                      <Gauge className="w-3.5 h-3.5 text-emerald-500" />
                       NPK Balance
                     </span>
-                    <span className="text-[10px] font-mono text-emerald-400 font-bold">100% SYNC</span>
+                    <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">100% SYNC</span>
                   </div>
-                  <div className="text-xl font-black text-white font-mono">
+                  <div className="text-xl font-black text-slate-900 dark:text-slate-900 dark:text-white font-mono">
                     {crop.npk.n} · {crop.npk.p} · {crop.npk.k}
                   </div>
-                  <div className="flex items-center gap-1 text-[10px] font-mono text-text-secondary pt-0.5">
-                    <span className="text-emerald-400">N: {crop.npk.n}</span>
-                    <span>·</span>
-                    <span className="text-cyan-400">P: {crop.npk.p}</span>
-                    <span>·</span>
-                    <span className="text-amber-400">K: {crop.npk.k}</span>
+                  <div className="flex items-center gap-1 text-[10px] font-mono font-semibold pt-0.5">
+                    <span className="text-emerald-600 dark:text-emerald-400">N:{crop.npk.n}</span>
+                    <span className="text-text-muted">·</span>
+                    <span className="text-cyan-600 dark:text-cyan-400">P:{crop.npk.p}</span>
+                    <span className="text-text-muted">·</span>
+                    <span className="text-amber-600 dark:text-amber-400">K:{crop.npk.k}</span>
                   </div>
                   <p className="text-[10px] text-text-muted">PPM in root zone</p>
                 </div>
 
                 {/* Metric 3: AI Health Index */}
-                <div className="p-3.5 rounded-2xl bg-surface-secondary/50 border border-border/60 space-y-1.5">
+                <div className="p-3.5 rounded-2xl bg-surface-primary/70 border border-border space-y-1.5">
                   <div className="flex items-center justify-between text-xs text-text-muted">
-                    <span className="flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="flex items-center gap-1 font-semibold">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                       AI Health
                     </span>
-                    <span className="text-[10px] font-mono text-emerald-400 font-bold">PRISTINE</span>
+                    <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">PRISTINE</span>
                   </div>
-                  <div className="text-2xl font-black text-emerald-400 text-glow-green font-mono">
+                  <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                     {crop.healthScore}%
                   </div>
-                  <div className="flex items-center gap-1 text-[10px] text-emerald-300 font-semibold">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <div className="flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-300 font-bold">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                     <span>Zero Pests Detected</span>
                   </div>
                   <p className="text-[10px] text-text-muted">Gemini Vision verified</p>
                 </div>
 
                 {/* Metric 4: Next Irrigation Trigger */}
-                <div className="p-3.5 rounded-2xl bg-surface-secondary/50 border border-border/60 space-y-1.5">
+                <div className="p-3.5 rounded-2xl bg-surface-primary/70 border border-border space-y-1.5">
                   <div className="flex items-center justify-between text-xs text-text-muted">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="flex items-center gap-1 font-semibold">
+                      <Clock className="w-3.5 h-3.5 text-cyan-500" />
                       Next Cycle
                     </span>
-                    <span className="text-[10px] font-mono text-cyan-400 font-bold">AUTO</span>
+                    <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">AUTO</span>
                   </div>
-                  <div className="text-xl font-black text-white font-mono">
+                  <div className="text-xl font-black text-slate-900 dark:text-slate-900 dark:text-white font-mono">
                     {crop.nextWater}
                   </div>
-                  <div className="text-[10px] font-mono text-cyan-300 truncate">
+                  <div className="text-[10px] font-mono text-cyan-700 dark:text-cyan-300 font-semibold truncate">
                     {crop.waterDose}
                   </div>
                   <p className="text-[10px] text-text-muted">Solar & ET₀ calculated</p>
@@ -255,18 +255,18 @@ export default function LiveTelemetryCard() {
               </div>
 
               {/* AI Real-Time Agronomist Prescription Box */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 shrink-0">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div className="space-y-0.5 min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+                    <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                       Gemini Agronomy Intelligence
                     </span>
                     <span className="text-[10px] text-text-muted">Just now</span>
                   </div>
-                  <p className="text-xs sm:text-sm text-text-primary leading-relaxed font-medium">
+                  <p className="text-xs sm:text-sm text-text-primary leading-relaxed font-semibold">
                     {crop.aiInsight}
                   </p>
                 </div>

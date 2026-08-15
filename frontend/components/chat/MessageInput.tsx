@@ -102,7 +102,7 @@ export default function MessageInput() {
     <div className="bg-surface-secondary/80 backdrop-blur-xl border-t border-border p-3 md:p-4 shrink-0 space-y-2">
       {/* File Attachment Preview Banner */}
       {attachedFile && (
-        <div className="flex items-center justify-between px-3 py-2 bg-surface-tertiary border border-border rounded-xl text-xs text-white animate-fade-in">
+        <div className="flex items-center justify-between px-3 py-2 bg-surface-tertiary border border-border rounded-xl text-xs text-slate-900 dark:text-white animate-fade-in">
           <div className="flex items-center gap-2 truncate">
             {attachedFile.type === "image" ? (
               <ImageIcon className="w-4 h-4 text-primary shrink-0" />

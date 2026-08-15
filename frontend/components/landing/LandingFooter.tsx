@@ -30,7 +30,7 @@ export default function LandingFooter() {
               <div className="p-2 rounded-2xl bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 shadow-[0_0_20px_rgba(0,255,135,0.4)] group-hover:scale-105 transition-all">
                 <Sprout className="w-5 h-5 text-slate-950 stroke-[2.5]" />
               </div>
-              <span className="text-xl font-black text-white">
+              <span className="text-xl font-black text-slate-900 dark:text-white">
                 AgriFarm <span className="text-emerald-400 text-glow-green">AI</span>
               </span>
             </Link>
@@ -45,7 +45,7 @@ export default function LandingFooter() {
 
           {/* Quick Nav */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white">Navigation</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Navigation</h4>
             <ul className="space-y-2 text-xs text-text-secondary">
               <li>
                 <a
@@ -88,7 +88,7 @@ export default function LandingFooter() {
 
           {/* App Portals */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white">Platform Apps</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Platform Apps</h4>
             <ul className="space-y-2 text-xs text-text-secondary">
               <li><Link href="/dashboard" className="hover:text-emerald-400 transition-colors">Farmer Dashboard</Link></li>
               <li><Link href="/projects" className="hover:text-emerald-400 transition-colors">Project Planner</Link></li>
@@ -100,7 +100,7 @@ export default function LandingFooter() {
 
           {/* Languages & Access */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white">Localization</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Localization</h4>
             <ul className="space-y-2 text-xs text-text-secondary">
               <li className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-emerald-400" /> English (Global)</li>
               <li className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-emerald-400" /> සිංහල (Sinhala)</li>

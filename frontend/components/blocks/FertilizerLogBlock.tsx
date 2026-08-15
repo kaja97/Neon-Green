@@ -39,7 +39,7 @@ export default function FertilizerLogBlock({ projectId }: { projectId: string })
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <FlaskConical className="w-5 h-5 text-emerald-400" />
-          <h3 className="font-bold text-base text-white">Fertilizer Log</h3>
+          <h3 className="font-bold text-base text-slate-900 dark:text-white">Fertilizer Log</h3>
         </div>
         <Link
           href={`/projects/${projectId}/fertilizer`}
@@ -58,7 +58,7 @@ export default function FertilizerLogBlock({ projectId }: { projectId: string })
         <div className="space-y-3">
           <div className="flex items-start justify-between p-3 bg-slate-800/60 rounded-xl border border-slate-700/50">
             <div>
-              <p className="text-sm font-medium text-white">{lastApplied.title}</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-white">{lastApplied.title}</p>
               <p className="text-xs text-text-muted mt-0.5">
                 Applied: {new Date(lastApplied.completed_at || lastApplied.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
               </p>

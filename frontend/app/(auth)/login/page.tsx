@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, LogIn, Loader2 } from "lucide-react";
+import { Eye, EyeOff, LogIn, Loader2, Sprout } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/authStore";
 import api from "@/lib/api";
 
@@ -23,23 +23,17 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // 1. Authenticate
       const loginRes = await api.post("/auth/login", {
         email_or_phone: identifier,
         password: password,
       });
 
       const { access_token } = loginRes.data.data;
-      
-      // Update store immediately with token so interceptor uses it
       useAuthStore.setState({ accessToken: access_token });
 
-      // 2. Fetch User Profile
       const meRes = await api.get("/auth/me");
-
       const userData = meRes.data.data;
 
-      // 3. Finalize Store
       login(
         {
           id: userData.id || userData.account_id,
@@ -50,7 +44,6 @@ export default function LoginPage() {
         access_token
       );
 
-      // 4. Redirect
       if (userData.role === "admin") {
         router.push("/admin/dashboard");
       } else {
@@ -68,18 +61,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="glass-card p-8 space-y-6">
+    <div className="glass-card p-8 sm:p-10 space-y-6 max-w-md w-full mx-auto">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-white">Welcome Back</h2>
-        <p className="text-sm text-text-secondary">
+        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-900 dark:text-white">Welcome Back</h2>
+        <p className="text-sm text-text-secondary font-medium">
           Sign in to your AgriFarm AI account
         </p>
       </div>
 
       {/* Error Banner */}
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400 animate-slide-down">
+        <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-500 font-semibold animate-slide-down">
           {error}
         </div>
       )}
@@ -87,10 +80,10 @@ export default function LoginPage() {
       {/* Form */}
       <form onSubmit={handleLogin} className="space-y-5">
         {/* Email/Phone */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <label
             htmlFor="identifier"
-            className="text-sm font-medium text-text-secondary"
+            className="text-xs font-bold uppercase tracking-wider text-text-secondary"
           >
             Email or Phone Number
           </label>
@@ -104,22 +97,22 @@ export default function LoginPage() {
             onChange={(e) => setIdentifier(e.target.value)}
             required
             disabled={isLoading}
-            className="w-full h-12 px-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
+            className="w-full h-12 px-4 rounded-xl bg-surface-tertiary/70 border border-border text-text-primary placeholder:text-text-muted text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
           />
         </div>
 
         {/* Password */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <label
               htmlFor="password"
-              className="text-sm font-medium text-text-secondary"
+              className="text-xs font-bold uppercase tracking-wider text-text-secondary"
             >
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline transition-colors"
             >
               Forgot password?
             </Link>
@@ -135,17 +128,17 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
-              className="w-full h-12 px-4 pr-12 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
+              className="w-full h-12 px-4 pr-12 rounded-xl bg-surface-tertiary/70 border border-border text-text-primary placeholder:text-text-muted text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-text-secondary transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-text-muted hover:text-text-primary transition-colors"
             >
               {showPassword ? (
-                <EyeOff className="w-5 h-5" />
+                <EyeOff className="w-4 h-4" />
               ) : (
-                <Eye className="w-5 h-5" />
+                <Eye className="w-4 h-4" />
               )}
             </button>
           </div>
@@ -155,30 +148,30 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full h-12 btn-primary flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-12 btn-primary flex items-center justify-center gap-2 text-sm font-extrabold disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(34,197,94,0.3)]"
         >
           {isLoading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Signing in...
+              <span>Signing in...</span>
             </>
           ) : (
             <>
               <LogIn className="w-4 h-4" />
-              Sign In Securely
+              <span>Sign In Securely</span>
             </>
           )}
         </button>
       </form>
 
       {/* Footer */}
-      <div className="text-center text-sm text-text-secondary">
+      <div className="text-center text-xs sm:text-sm text-text-secondary font-medium">
         Don&apos;t have an account?{" "}
         <Link
           href="/register"
-          className="font-semibold text-primary hover:text-primary/80 transition-colors"
+          className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline transition-colors"
         >
-          Create Account
+          Create Free Account
         </Link>
       </div>
     </div>

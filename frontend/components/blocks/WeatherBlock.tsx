@@ -78,7 +78,7 @@ export default function WeatherBlock({ projectId }: { projectId: string }) {
         {icon}
       </div>
       <p className="text-xs text-text-muted mb-0.5">Weather</p>
-      <p className="text-base font-bold text-white">{Math.round(weather.current.temp_celsius)}°C</p>
+      <p className="text-base font-bold text-slate-900 dark:text-white">{Math.round(weather.current.temp_celsius)}°C</p>
       <p className="text-xs text-text-muted capitalize truncate">
         {weather.current.description}
       </p>

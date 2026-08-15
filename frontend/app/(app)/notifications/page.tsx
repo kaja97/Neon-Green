@@ -70,7 +70,7 @@ export default function NotificationsPage() {
         </Link>
         <div className="flex-1 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
               Notifications<span className="text-green-400 text-glow-green">.</span>
             </h1>
             <p className="text-text-muted text-sm mt-0.5">{unreadCount} unread</p>
@@ -134,7 +134,7 @@ export default function NotificationsPage() {
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 animate-float glow-green">
               <Bell className="w-8 h-8 text-primary" />
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">All caught up!</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">All caught up!</h3>
             <p className="text-text-secondary text-sm">You don&apos;t have any notifications right now.</p>
           </div>
         )}

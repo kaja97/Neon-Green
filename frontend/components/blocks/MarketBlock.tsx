@@ -40,7 +40,7 @@ export default function MarketBlock({
         <TrendingUp className="w-5 h-5 text-emerald-400" />
       </div>
       <p className="text-xs text-text-muted mb-0.5">Market</p>
-      <p className="text-base font-bold text-white">
+      <p className="text-base font-bold text-slate-900 dark:text-white">
         {price ? `${formatCurrency(price)}/kg` : "N/A"}
       </p>
       {trend && (

@@ -65,7 +65,7 @@ export default function CommunityCard({ item, index = 0 }: CommunityCardProps) {
         <div className="flex-1 min-w-0">
           {/* Title Link */}
           <Link href={`/community/${item.id}`} className="block">
-            <h3 className="text-sm font-bold text-white truncate group-hover:text-primary transition-colors">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">
               {item.title}
             </h3>
           </Link>

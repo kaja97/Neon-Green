@@ -78,7 +78,7 @@ export default function MarketPage({ params }: { params: { id: string } }) {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Market Prices<span className="text-emerald-400">.</span>
           </h1>
           <p className="text-text-muted text-sm mt-0.5">{trend.plant_name} · {trend.region} Market</p>
@@ -90,7 +90,7 @@ export default function MarketPage({ params }: { params: { id: string } }) {
         <div className="glass-card-hover rounded-2xl p-5">
           <p className="text-sm text-text-muted mb-2">Current Retail Price (1kg)</p>
           <div className="flex items-end gap-3">
-            <span className="text-2xl font-bold text-white">LKR {trend.current_price}</span>
+            <span className="text-2xl font-bold text-slate-900 dark:text-white">LKR {trend.current_price}</span>
             <span className={clsx(
               "flex items-center gap-1 text-sm font-semibold pb-0.5",
               trend.direction === "up" ? "text-green-400" : trend.direction === "down" ? "text-red-400" : "text-text-muted"
@@ -112,7 +112,7 @@ export default function MarketPage({ params }: { params: { id: string } }) {
             ].map((row) => (
               <div key={row.label} className={clsx("flex justify-between text-sm", row.border && "pt-2 border-t border-border")}>
                 <span className="text-text-muted">{row.label}</span>
-                <span className="font-bold text-white">LKR {row.value}</span>
+                <span className="font-bold text-slate-900 dark:text-white">LKR {row.value}</span>
               </div>
             ))}
           </div>
@@ -122,7 +122,7 @@ export default function MarketPage({ params }: { params: { id: string } }) {
       {/* Price Trend Chart */}
       {chartData.length > 0 && (
         <section className="glass-card rounded-3xl p-6 animate-slide-up" style={{ animationDelay: "80ms" }}>
-          <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-green-400" />
             Recent Price Trend
           </h2>
@@ -149,18 +149,18 @@ export default function MarketPage({ params }: { params: { id: string } }) {
       {/* Revenue Calculator */}
       <section className="glass-card rounded-3xl p-6 relative overflow-hidden animate-slide-up" style={{ animationDelay: "150ms" }}>
         <div className="absolute top-0 right-0 w-48 h-48 bg-green-500/10 blur-3xl rounded-full -mr-10 -mt-10 pointer-events-none" />
-        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2 relative z-10">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 relative z-10">
           <DollarSign className="w-5 h-5 text-green-400" />
           Revenue Estimate
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
           <div>
             <p className="text-xs text-text-muted">Expected Yield</p>
-            <p className="text-xl font-bold text-white">{Math.round(estimate.expected_yield_kg).toLocaleString()} kg</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-white">{Math.round(estimate.expected_yield_kg).toLocaleString()} kg</p>
           </div>
           <div>
             <p className="text-xs text-text-muted">Current Price</p>
-            <p className="text-xl font-bold text-white">LKR {estimate.current_price_per_kg.toFixed(2)}</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-white">LKR {estimate.current_price_per_kg.toFixed(2)}</p>
           </div>
           <div>
             <p className="text-xs text-text-muted">Est. Costs (Mock)</p>

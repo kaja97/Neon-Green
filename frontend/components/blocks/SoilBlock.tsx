@@ -43,7 +43,7 @@ export default function SoilBlock({ projectId }: { projectId: string }) {
         <FlaskConical className="w-5 h-5 text-amber-400" />
       </div>
       <p className="text-xs text-text-muted mb-0.5">Soil</p>
-      <p className="text-base font-bold text-white">{value}</p>
+      <p className="text-base font-bold text-slate-900 dark:text-white">{value}</p>
       <p className={clsx("text-xs", isLow ? "text-red-400" : "text-text-muted")}>{sub}</p>
     </Link>
   );

@@ -64,7 +64,7 @@ export function InlineAddLocation({
 
   return (
     <div className="p-5 rounded-2xl border-2 border-blue-500/30 bg-blue-500/5 space-y-4 animate-fade-in">
-      <h4 className="font-semibold text-white text-sm flex items-center gap-2">
+      <h4 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2">
         <Plus className="w-4 h-4 text-blue-400" />
         Add New Farm Location
       </h4>

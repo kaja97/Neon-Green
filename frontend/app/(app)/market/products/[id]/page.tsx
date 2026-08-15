@@ -63,7 +63,7 @@ export default function ProductDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Store className="w-16 h-16 text-text-muted opacity-20" />
-        <h2 className="text-xl font-semibold text-white">Product not found</h2>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Product not found</h2>
         <button onClick={() => router.back()} className="text-neon-gold hover:underline">
           Go back to marketplace
         </button>
@@ -124,7 +124,7 @@ export default function ProductDetailPage() {
 
                 {/* Image counter */}
                 {product.images.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 backdrop-blur-sm text-xs text-white font-medium">
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/60 backdrop-blur-sm text-xs text-slate-900 dark:text-white font-medium">
                     {activeImage + 1} / {product.images.length}
                   </div>
                 )}
@@ -167,7 +167,7 @@ export default function ProductDetailPage() {
                 <Tag className="w-4 h-4" />
                 {product.category?.name} {product.sub_category ? `• ${product.sub_category.name}` : ""}
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4 leading-tight">
+              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4 leading-tight">
                 {product.title}
               </h1>
               
@@ -187,7 +187,7 @@ export default function ProductDetailPage() {
 
             {/* Description */}
             <div>
-              <h3 className="text-lg font-semibold text-white mb-3">Product Description</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">Product Description</h3>
               <p className="text-text-secondary leading-relaxed whitespace-pre-wrap">
                 {product.description || "No description provided by the seller."}
               </p>
@@ -197,7 +197,7 @@ export default function ProductDetailPage() {
 
             {/* Seller Info */}
             <div className="glass-card p-6 bg-gradient-to-br from-surface-elevated to-surface-primary">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <Store className="w-5 h-5 text-neon-blue" />
                 Seller Information
               </h3>
@@ -208,7 +208,7 @@ export default function ProductDetailPage() {
                     {product.seller_info?.name?.charAt(0) || "U"}
                   </div>
                   <div>
-                    <div className="font-bold text-white text-lg">{product.seller_info?.name || "Unknown Seller"}</div>
+                    <div className="font-bold text-slate-900 dark:text-white text-lg">{product.seller_info?.name || "Unknown Seller"}</div>
                     <div className="text-sm text-text-muted flex items-center gap-1 mt-0.5">
                       <ShieldCheck className="w-3.5 h-3.5 text-neon-green" /> Verified Partner
                     </div>
@@ -221,7 +221,7 @@ export default function ProductDetailPage() {
                       <div className="w-8 h-8 rounded-full bg-neon-green/10 flex items-center justify-center group-hover:bg-neon-green/20 transition-colors">
                         <Phone className="w-4 h-4 text-neon-green" />
                       </div>
-                      <span className="text-sm text-text-secondary group-hover:text-white transition-colors">{product.seller_info.phone}</span>
+                      <span className="text-sm text-text-secondary group-hover:text-slate-900 dark:text-white transition-colors">{product.seller_info.phone}</span>
                     </a>
                   )}
                   {product.seller_info?.email && (
@@ -229,7 +229,7 @@ export default function ProductDetailPage() {
                       <div className="w-8 h-8 rounded-full bg-neon-blue/10 flex items-center justify-center group-hover:bg-neon-blue/20 transition-colors">
                         <Mail className="w-4 h-4 text-neon-blue" />
                       </div>
-                      <span className="text-sm text-text-secondary group-hover:text-white transition-colors truncate">{product.seller_info.email}</span>
+                      <span className="text-sm text-text-secondary group-hover:text-slate-900 dark:text-white transition-colors truncate">{product.seller_info.email}</span>
                     </a>
                   )}
                 </div>

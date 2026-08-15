@@ -78,7 +78,7 @@ export default function AdminProjectsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Global Production Monitor<span className="text-primary text-glow-green">.</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">
@@ -150,13 +150,13 @@ export default function AdminProjectsPage() {
                 {filteredProjects.map((p: any) => (
                   <tr key={p.id} className="hover:bg-surface-tertiary/40 transition-colors">
                     <td className="p-4">
-                      <div className="font-bold text-white">{p.name}</div>
+                      <div className="font-bold text-slate-900 dark:text-white">{p.name}</div>
                       <div className="text-xs text-text-muted">ID: {p.id.slice(0, 8)}...</div>
                     </td>
                     <td className="p-4 font-medium text-text-secondary">{p.farmer_name}</td>
                     <td className="p-4 font-semibold text-primary">{p.crop_name}</td>
                     <td className="p-4 text-xs text-text-secondary">
-                      <span className="capitalize font-semibold text-white">{p.farming_method}</span>
+                      <span className="capitalize font-semibold text-slate-900 dark:text-white">{p.farming_method}</span>
                       <span className="block text-text-muted">
                         {p.area} {p.area_unit || "acres"}
                       </span>
@@ -219,7 +219,7 @@ export default function AdminProjectsPage() {
                   <FolderGit2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">{projectDetail?.name || "Project"}</h2>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">{projectDetail?.name || "Project"}</h2>
                   <p className="text-xs text-text-muted">
                     Farmer: {projectDetail?.farmer_name} • Status: {projectDetail?.status}
                   </p>
@@ -274,7 +274,7 @@ export default function AdminProjectsPage() {
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div>
                         <span className="text-text-muted block">Farm Location</span>
-                        <div className="flex items-center gap-1.5 font-semibold text-white mt-1">
+                        <div className="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white mt-1">
                           <MapPin className="w-3.5 h-3.5 text-primary" />
                           {projectDetail?.location?.name || "Field Plot"} ({projectDetail?.location?.district || "General"})
                         </div>
@@ -311,7 +311,7 @@ export default function AdminProjectsPage() {
                           Active Growth Stage
                         </h3>
                       </div>
-                      <h4 className="text-base font-bold text-white">
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">
                         {projectDetail.current_stage.stage_name} (Stage #{projectDetail.current_stage.stage_order})
                       </h4>
                     </div>

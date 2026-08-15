@@ -58,7 +58,7 @@ export default function TransactionsPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-3xl font-black text-white tracking-tight drop-shadow-md">
+              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight drop-shadow-md">
                 Transaction History<span className="text-emerald-400 text-glow-green">.</span>
               </h1>
               <p className="text-text-muted text-sm flex items-center gap-2">
@@ -71,7 +71,7 @@ export default function TransactionsPage() {
             className="p-2.5 glass-card-hover rounded-xl text-text-secondary hover:text-white transition-all duration-300 flex items-center gap-2"
           >
             <Store className="w-5 h-5 text-emerald-400" />
-            <span className="hidden md:inline text-sm font-semibold text-white">Marketplace</span>
+            <span className="hidden md:inline text-sm font-semibold text-slate-900 dark:text-white">Marketplace</span>
           </Link>
         </header>
 
@@ -82,27 +82,27 @@ export default function TransactionsPage() {
               <ArrowUpRight className="w-5 h-5" />
               <h3 className="font-bold text-sm">Total Sales</h3>
             </div>
-            <p className="text-3xl font-black text-white">{formatCurrency(totalSales)}</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">{formatCurrency(totalSales)}</p>
           </div>
           <div className="glass-card p-6 flex flex-col justify-between">
             <div className="flex items-center gap-2 text-red-400 mb-2">
               <ArrowDownRight className="w-5 h-5" />
               <h3 className="font-bold text-sm">Total Purchases</h3>
             </div>
-            <p className="text-3xl font-black text-white">{formatCurrency(totalPurchases)}</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">{formatCurrency(totalPurchases)}</p>
           </div>
           <div className="glass-card p-6 flex flex-col justify-between">
             <div className="flex items-center gap-2 text-blue-400 mb-2">
               <TrendingUp className="w-5 h-5" />
               <h3 className="font-bold text-sm">Net Balance</h3>
             </div>
-            <p className="text-3xl font-black text-white">{formatCurrency(totalSales - totalPurchases)}</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">{formatCurrency(totalSales - totalPurchases)}</p>
           </div>
         </div>
 
         {/* Charts */}
         <section className="glass-card p-6 animate-slide-up" style={{ animationDelay: "100ms" }}>
-          <h2 className="text-xl font-bold text-white mb-6">Financial Overview</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Financial Overview</h2>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={mockChartData}>
@@ -124,7 +124,7 @@ export default function TransactionsPage() {
         {/* Transaction Table */}
         <section className="glass-card p-6 overflow-hidden animate-slide-up" style={{ animationDelay: "200ms" }}>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <h2 className="text-xl font-bold text-white">Recent Transactions</h2>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Recent Transactions</h2>
             <div className="flex bg-slate-800/50 p-1 rounded-xl">
               {(["all", "sales", "purchases"] as const).map(tab => (
                 <button
@@ -166,7 +166,7 @@ export default function TransactionsPage() {
                         {tx.type}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-white font-medium">{tx.product}</td>
+                    <td className="py-4 px-4 text-slate-900 dark:text-white font-medium">{tx.product}</td>
                     <td className="py-4 px-4 text-slate-300">{tx.partner}</td>
                     <td className={`py-4 px-4 font-bold ${tx.type === 'sale' ? 'text-emerald-400' : 'text-red-400'}`}>
                       {tx.type === 'sale' ? '+' : '-'}{formatCurrency(tx.amount)}

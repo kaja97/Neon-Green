@@ -66,7 +66,7 @@ export default function AdminDashboardPage() {
             </span>
             <span className="text-xs text-text-muted">Live Platform State</span>
           </div>
-          <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white mt-1">
+          <h1 className="text-2xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white mt-1">
             Platform Command & Control<span className="text-neon-purple">.</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">
@@ -104,7 +104,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-3xl font-black text-white">
+            <div className="text-3xl font-black text-slate-900 dark:text-white">
               {stats.master_data?.plants || 0}
               <span className="text-sm font-medium text-text-muted ml-2">Crops</span>
             </div>
@@ -134,7 +134,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-3xl font-black text-white">
+            <div className="text-3xl font-black text-slate-900 dark:text-white">
               {stats.users?.total || 0}
               <span className="text-sm font-medium text-text-muted ml-2">Total</span>
             </div>
@@ -164,7 +164,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-3xl font-black text-white">
+            <div className="text-3xl font-black text-slate-900 dark:text-white">
               {stats.projects?.total || 0}
               <span className="text-sm font-medium text-text-muted ml-2">Projects</span>
             </div>
@@ -192,7 +192,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-3xl font-black text-white">
+            <div className="text-3xl font-black text-slate-900 dark:text-white">
               {stats.issues?.open || 0}
               <span className="text-sm font-medium text-red-400 ml-2">Open Issues</span>
             </div>
@@ -217,7 +217,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-neon-purple" />
-            <h2 className="text-lg font-bold text-white">Admin Management Portals</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Admin Management Portals</h2>
           </div>
           <span className="text-xs text-text-muted">Direct Shortcuts</span>
         </div>
@@ -233,7 +233,7 @@ export default function AdminDashboardPage() {
               </div>
               <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-base font-bold text-white mt-4">Crops, Stages & Varieties</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mt-4">Crops, Stages & Varieties</h3>
             <p className="text-xs text-text-muted mt-1">
               Add new crops, configure growth stage timelines, water & nutrient curves, fertilizer recommendations, and pruning guides.
             </p>
@@ -249,7 +249,7 @@ export default function AdminDashboardPage() {
               </div>
               <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-neon-gold group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-base font-bold text-white mt-4">Health & Issues Knowledge Base</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mt-4">Health & Issues Knowledge Base</h3>
             <p className="text-xs text-text-muted mt-1">
               Maintain diseases, pests, symptom checklists, and dual treatment plans (Organic & Conventional with precise dosages).
             </p>
@@ -265,7 +265,7 @@ export default function AdminDashboardPage() {
               </div>
               <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-red-400 group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-base font-bold text-white mt-4">Field Issue Triage & Support</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mt-4">Field Issue Triage & Support</h3>
             <p className="text-xs text-text-muted mt-1">
               Review live crop diagnoses reported by farmers, inspect AI diagnostic conclusions, and map issues to master solutions.
             </p>
@@ -277,7 +277,7 @@ export default function AdminDashboardPage() {
       <div className="glass-card rounded-2xl p-6 border border-border space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-white">Recent Open Field Issues</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Recent Open Field Issues</h2>
             <p className="text-xs text-text-muted">Farmer issues requiring verification or advisory</p>
           </div>
           <Link href="/admin/issues" className="text-xs font-semibold text-neon-purple hover:underline flex items-center gap-1">
@@ -307,7 +307,7 @@ export default function AdminDashboardPage() {
               <tbody className="divide-y divide-border/50">
                 {recentIssues.map((issue: any) => (
                   <tr key={issue.id} className="hover:bg-surface-tertiary/40 transition-colors">
-                    <td className="py-3 font-semibold text-white">
+                    <td className="py-3 font-semibold text-slate-900 dark:text-white">
                       {issue.crop_name}
                       <span className="block text-xs font-normal text-text-muted">{issue.project_name}</span>
                     </td>

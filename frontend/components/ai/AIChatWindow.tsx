@@ -293,7 +293,7 @@ export default function AIChatWindow({ projectId }: { projectId: string }) {
               <div className="w-16 h-16 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(34,197,94,0.15)]">
                 <Sparkles className="w-8 h-8 text-green-400 animate-pulse" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
                 Your AI Farming Advisor
               </h3>
               <p className="text-slate-400 text-sm max-w-md mb-6 leading-relaxed">

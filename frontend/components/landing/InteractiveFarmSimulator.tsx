@@ -151,7 +151,7 @@ export default function InteractiveFarmSimulator() {
           <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
           Interactive Simulator Engine
         </span>
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
           Experience Autonomous Farm Intelligence
         </h2>
         <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -197,11 +197,11 @@ export default function InteractiveFarmSimulator() {
                 <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
                   {activeCrop.category} · {activeCrop.localName}
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-black text-white mt-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
                   {activeCrop.name}
                 </h3>
                 <p className="text-sm text-text-secondary mt-0.5 font-mono">
-                  Cultivar: <span className="text-white font-semibold">{activeCrop.variety}</span>
+                  Cultivar: <span className="text-slate-900 dark:text-white font-semibold">{activeCrop.variety}</span>
                 </p>
               </div>
 
@@ -245,7 +245,7 @@ export default function InteractiveFarmSimulator() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Bug className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-bold text-white uppercase tracking-wider">AI Doctor Vision Scanner</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">AI Doctor Vision Scanner</span>
                 </div>
                 <span className="text-[10px] font-mono text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                   Ready
@@ -301,7 +301,7 @@ export default function InteractiveFarmSimulator() {
                 <Droplets className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase tracking-wider">Water Prescription</span>
               </div>
-              <div className="text-xl font-black text-white">{activeCrop.waterNeed}</div>
+              <div className="text-xl font-black text-slate-900 dark:text-white">{activeCrop.waterNeed}</div>
               <p className="text-xs text-text-secondary font-mono">
                 Volume: <span className="text-emerald-300">{activeCrop.waterLiters}</span>
               </p>
@@ -316,7 +316,7 @@ export default function InteractiveFarmSimulator() {
                 <Leaf className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase tracking-wider">Nutrient Dosage</span>
               </div>
-              <div className="text-sm font-bold text-white line-clamp-2">{activeCrop.fertilizer}</div>
+              <div className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2">{activeCrop.fertilizer}</div>
               <p className="text-[11px] text-text-muted leading-relaxed mt-2">
                 Ring application 15cm from base to prevent root scorch.
               </p>
@@ -352,7 +352,7 @@ export default function InteractiveFarmSimulator() {
                   {activeCrop.safetyInterval}d Safety
                 </span>
               </div>
-              <div className="text-xs font-bold text-white">{activeCrop.diseaseTarget}</div>
+              <div className="text-xs font-bold text-slate-900 dark:text-white">{activeCrop.diseaseTarget}</div>
               <p className="text-xs text-rose-200/90 leading-relaxed">
                 {activeCrop.treatment} ({activeCrop.dosage})
               </p>

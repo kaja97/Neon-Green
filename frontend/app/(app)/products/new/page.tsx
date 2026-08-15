@@ -133,7 +133,7 @@ export default function NewProductPage() {
               Seller Hub
             </span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mt-2">
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-2">
             List a Product<span className="text-primary text-glow-green">.</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">

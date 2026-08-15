@@ -40,7 +40,7 @@ export default function AuthLayout({
           <Sprout className="w-8 h-8 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             AgriFarm AI
           </h1>
           <p className="text-xs font-medium text-text-secondary tracking-widest uppercase">

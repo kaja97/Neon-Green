@@ -218,7 +218,7 @@ export default function AdminMasterDataPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Crops, Stages & Varieties<span className="text-primary text-glow-green">.</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">
@@ -331,7 +331,7 @@ export default function AdminMasterDataPage() {
                         <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                           {plant.category}
                         </span>
-                        <h3 className="text-lg font-bold text-white mt-2 flex items-center gap-1.5">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-2 flex items-center gap-1.5">
                           {plant.common_name}
                         </h3>
                         {plant.local_name && (
@@ -369,11 +369,11 @@ export default function AdminMasterDataPage() {
                     </p>
 
                     <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border text-xs text-text-muted">
-                      <span className="flex items-center gap-1 font-medium text-white">
+                      <span className="flex items-center gap-1 font-medium text-slate-900 dark:text-white">
                         <Calendar className="w-3.5 h-3.5 text-primary" />
                         {plant.stages_count} Stages
                       </span>
-                      <span className="flex items-center gap-1 font-medium text-white">
+                      <span className="flex items-center gap-1 font-medium text-slate-900 dark:text-white">
                         <Layers className="w-3.5 h-3.5 text-neon-gold" />
                         {plant.varieties_count} Varieties
                       </span>
@@ -438,7 +438,7 @@ export default function AdminMasterDataPage() {
                   {varieties.map((v: any) => (
                     <tr key={v.id} className="hover:bg-surface-tertiary/40 transition-colors">
                       <td className="p-4">
-                        <div className="font-bold text-white">{v.variety_name}</div>
+                        <div className="font-bold text-slate-900 dark:text-white">{v.variety_name}</div>
                         {v.scientific_name && (
                           <div className="text-xs text-text-muted italic">{v.scientific_name}</div>
                         )}
@@ -454,7 +454,7 @@ export default function AdminMasterDataPage() {
                         <div>Rainfall: {v.optimal_rainfall_mm ?? "?"} mm</div>
                         <div>pH: {v.optimal_ph_min ?? "?"} - {v.optimal_ph_max ?? "?"}</div>
                       </td>
-                      <td className="p-4 font-semibold text-white">
+                      <td className="p-4 font-semibold text-slate-900 dark:text-white">
                         {v.expected_yield_per_acre_kg ? `${v.expected_yield_per_acre_kg} kg/acre` : "N/A"}
                       </td>
                       <td className="p-4 text-xs text-text-muted">
@@ -504,7 +504,7 @@ export default function AdminMasterDataPage() {
                   <Sprout className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                     {plantDetail?.common_name || "Crop"} Stages & Agronomic Requirements
                   </h2>
                   <p className="text-xs text-text-muted">
@@ -557,7 +557,7 @@ export default function AdminMasterDataPage() {
                             {stage.stage_order || idx + 1}
                           </span>
                           <div>
-                            <h3 className="text-base font-bold text-white">{stage.stage_name}</h3>
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white">{stage.stage_name}</h3>
                             <span className="text-xs text-text-muted">
                               Day {stage.start_day} to Day {stage.end_day} (Duration: {stage.end_day - stage.start_day + 1} days)
                             </span>
@@ -646,7 +646,7 @@ export default function AdminMasterDataPage() {
                                 className="p-2.5 rounded-xl bg-surface-tertiary/40 border border-border flex items-center justify-between text-xs"
                               >
                                 <div>
-                                  <span className="font-bold text-white">{rec.fertilizer_name}</span>
+                                  <span className="font-bold text-slate-900 dark:text-white">{rec.fertilizer_name}</span>
                                   <span className="ml-2 text-text-muted">({rec.farming_method})</span>
                                   <div className="text-[11px] text-text-secondary mt-0.5">
                                     Rate: {rec.application_rate_per_acre_kg} kg/acre
@@ -800,7 +800,7 @@ function PlantModal({ plant, onClose, onSave, isLoading }: { plant?: any; onClos
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="glass-card max-w-lg w-full p-6 rounded-2xl border border-border animate-scale-up space-y-4">
         <div className="flex items-center justify-between border-b border-border pb-3">
-          <h2 className="text-lg font-bold text-white">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
             {plant ? "Edit Crop / Plant" : "Add New Crop / Plant"}
           </h2>
           <button onClick={onClose} className="text-text-muted hover:text-white">
@@ -938,7 +938,7 @@ function StageModal({ stage, onClose, onSave, isLoading }: { stage?: any; onClos
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="glass-card max-w-xl w-full p-6 rounded-2xl border border-border animate-scale-up space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-border pb-3">
-          <h2 className="text-lg font-bold text-white">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
             {stage ? "Edit Growth Stage" : "Add Growth Stage"}
           </h2>
           <button onClick={onClose} className="text-text-muted hover:text-white">
@@ -1138,7 +1138,7 @@ function FertilizerModal({ stageId, onClose, onSave, isLoading }: { stageId: str
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="glass-card max-w-md w-full p-6 rounded-2xl border border-border animate-scale-up space-y-4">
         <div className="flex items-center justify-between border-b border-border pb-3">
-          <h2 className="text-lg font-bold text-white">Add Fertilizer Recommendation</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Add Fertilizer Recommendation</h2>
           <button onClick={onClose} className="text-text-muted hover:text-white">
             <X className="w-5 h-5" />
           </button>
@@ -1240,7 +1240,7 @@ function PruningModal({ stageId, onClose, onSave, isLoading }: { stageId: string
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="glass-card max-w-md w-full p-6 rounded-2xl border border-border animate-scale-up space-y-4">
         <div className="flex items-center justify-between border-b border-border pb-3">
-          <h2 className="text-lg font-bold text-white">Add Pruning Guide</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Add Pruning Guide</h2>
           <button onClick={onClose} className="text-text-muted hover:text-white">
             <X className="w-5 h-5" />
           </button>
@@ -1384,7 +1384,7 @@ function VarietyModal({ plants, variety, onClose, onSave, isLoading }: { plants:
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="glass-card max-w-2xl w-full p-6 rounded-2xl border border-border animate-scale-up space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-border pb-3">
-          <h2 className="text-lg font-bold text-white">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
             {variety ? "Edit Crop Variety" : "Add Crop Variety"}
           </h2>
           <button onClick={onClose} className="text-text-muted hover:text-white">

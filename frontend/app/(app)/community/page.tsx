@@ -35,7 +35,7 @@ export default function CommunityPage() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Community<span className="text-green-400 text-glow-green">.</span>
           </h1>
           <p className="text-text-muted text-sm mt-0.5">
@@ -82,7 +82,7 @@ export default function CommunityPage() {
           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
             <MessagesSquare className="w-6 h-6 text-primary" />
           </div>
-          <p className="text-white font-semibold">No discussions yet</p>
+          <p className="text-slate-900 dark:text-white font-semibold">No discussions yet</p>
           <p className="text-text-muted text-sm mt-1">
             When farmers share their issues, they&apos;ll appear here for community advice.
           </p>

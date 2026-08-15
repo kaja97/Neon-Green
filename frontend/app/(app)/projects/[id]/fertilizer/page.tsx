@@ -98,14 +98,14 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 min-h-screen text-white">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 min-h-screen text-slate-900 dark:text-white">
       {/* Header */}
       <header className="flex items-center gap-4">
         <Link href={`/projects/${params.id}`} className="p-2.5 glass-card-hover rounded-xl text-text-secondary hover:text-white transition-all duration-300">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight text-white">Fertilizer Log<span className="text-green-400 text-glow-green">.</span></h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Fertilizer Log<span className="text-green-400 text-glow-green">.</span></h1>
           <p className="text-text-muted text-sm">Track crop nutrition and recommendations</p>
         </div>
       </header>
@@ -114,7 +114,7 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass-card p-5 bg-slate-950/20 relative overflow-hidden">
           <p className="text-xs text-text-secondary font-semibold uppercase tracking-wider">Total Applied</p>
-          <p className="text-2xl font-black text-white mt-1">{totalAppliedKg.toFixed(1)} kg</p>
+          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{totalAppliedKg.toFixed(1)} kg</p>
           <p className="text-[11px] text-text-muted mt-0.5">Across all stages</p>
         </div>
         <div className="glass-card p-5 bg-slate-950/20 relative overflow-hidden">
@@ -142,7 +142,7 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
           {/* Stage Rec */}
           <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
-            <h4 className="font-bold text-white text-sm">Stage: {dashboard?.current_stage?.stage_name || "Active"}</h4>
+            <h4 className="font-bold text-slate-900 dark:text-white text-sm">Stage: {dashboard?.current_stage?.stage_name || "Active"}</h4>
             <p className="text-sm text-slate-300 mt-1 leading-relaxed">
               For conventional crops, apply split NPK doses. For organic projects, integrate high-quality compost or fish emulsion around the root zone.
             </p>
@@ -155,7 +155,7 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
 
           {/* Soil Status & Required Amount */}
           <div className="p-4 bg-slate-900/50 border border-slate-700/50 rounded-xl">
-            <h4 className="font-bold text-white text-sm mb-3">Soil Deficiencies & Required Application</h4>
+            <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-3">Soil Deficiencies & Required Application</h4>
             {dashboard?.soil_status ? (
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-sm">
@@ -184,7 +184,7 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
                       {pendingTasks.map((pt: any) => (
                         <li key={pt.id} className="text-sm text-slate-300 flex justify-between">
                            <span className="truncate max-w-[150px]">{pt.title}</span>
-                           <span className="font-bold text-white">{pt.required_fertilizer_kg ? `${pt.required_fertilizer_kg} kg` : "Variable"}</span>
+                           <span className="font-bold text-slate-900 dark:text-white">{pt.required_fertilizer_kg ? `${pt.required_fertilizer_kg} kg` : "Variable"}</span>
                         </li>
                       ))}
                     </ul>
@@ -200,7 +200,7 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
 
       {/* Pending logs section */}
       <section className="space-y-4">
-        <h2 className="text-lg font-bold text-white">Pending Applications</h2>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Pending Applications</h2>
         {isLoading ? (
           <div className="text-center py-6"><Loader2 className="w-6 h-6 animate-spin text-green-400 mx-auto" /></div>
         ) : pendingTasks.length === 0 ? (
@@ -218,7 +218,7 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg">🧪</span>
-                    <h3 className="font-semibold text-white group-hover:text-green-400 transition-colors">{task.title}</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-green-400 transition-colors">{task.title}</h3>
                   </div>
                   <p className="text-xs text-text-muted mt-1 flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5" />
@@ -239,7 +239,7 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
 
       {/* Application History section */}
       <section className="space-y-4">
-        <h2 className="text-lg font-bold text-white">Application History Logs</h2>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Application History Logs</h2>
         {isLoading ? (
           <div className="text-center py-6"><Loader2 className="w-6 h-6 animate-spin text-green-400 mx-auto" /></div>
         ) : completedTasks.length === 0 ? (
@@ -257,7 +257,7 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg">✅</span>
-                    <h3 className="font-semibold text-white line-through decoration-slate-600">{task.title}</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-white line-through decoration-slate-600">{task.title}</h3>
                   </div>
                   <p className="text-xs text-text-muted mt-1">
                     Applied: {new Date(task.completed_at || task.due_date).toLocaleDateString()}
@@ -323,7 +323,7 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
           <div className="space-y-4">
             <div>
               <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Title</h4>
-              <p className="text-base text-white mt-0.5">{detailTask.title}</p>
+              <p className="text-base text-slate-900 dark:text-white mt-0.5">{detailTask.title}</p>
             </div>
             {detailTask.description && (
               <div>
@@ -334,7 +334,7 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Scheduled Date</h4>
-                <p className="text-sm text-white mt-0.5">{new Date(detailTask.due_date).toLocaleDateString()}</p>
+                <p className="text-sm text-slate-900 dark:text-white mt-0.5">{new Date(detailTask.due_date).toLocaleDateString()}</p>
               </div>
               <div>
                 <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Status</h4>
@@ -358,11 +358,11 @@ export default function FertilizerLogPage({ params }: { params: { id: string } }
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Actual Quantity</h4>
-                    <p className="text-sm text-white mt-0.5">{detailTask.actual_fertilizer_kg || "N/A"} kg</p>
+                    <p className="text-sm text-slate-900 dark:text-white mt-0.5">{detailTask.actual_fertilizer_kg || "N/A"} kg</p>
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Completed At</h4>
-                    <p className="text-sm text-white mt-0.5">{detailTask.completed_at ? new Date(detailTask.completed_at).toLocaleString() : "N/A"}</p>
+                    <p className="text-sm text-slate-900 dark:text-white mt-0.5">{detailTask.completed_at ? new Date(detailTask.completed_at).toLocaleString() : "N/A"}</p>
                   </div>
                 </div>
                 {detailTask.notes && (

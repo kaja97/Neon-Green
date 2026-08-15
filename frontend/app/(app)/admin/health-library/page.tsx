@@ -186,7 +186,7 @@ export default function AdminHealthLibraryPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Health & Issues Knowledge Base<span className="text-neon-gold text-glow-gold">.</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">
@@ -323,7 +323,7 @@ export default function AdminHealthLibraryPage() {
                             {d.severity}
                           </span>
                         </div>
-                        <h3 className="text-lg font-bold text-white mt-2">{d.name}</h3>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-2">{d.name}</h3>
                         {d.scientific_name && (
                           <p className="text-xs text-text-muted italic">{d.scientific_name}</p>
                         )}
@@ -419,7 +419,7 @@ export default function AdminHealthLibraryPage() {
                         <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                           {p.crop_name}
                         </span>
-                        <h3 className="text-lg font-bold text-white mt-2">{p.name}</h3>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-2">{p.name}</h3>
                         {p.scientific_name && (
                           <p className="text-xs text-text-muted italic">{p.scientific_name}</p>
                         )}
@@ -493,7 +493,7 @@ export default function AdminHealthLibraryPage() {
                   <ShieldAlert className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">{diseaseDetail?.name}</h2>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">{diseaseDetail?.name}</h2>
                   <p className="text-xs text-text-muted">
                     Crop: {diseaseDetail?.crop_name} • Severity: {diseaseDetail?.severity}
                   </p>
@@ -543,7 +543,7 @@ export default function AdminHealthLibraryPage() {
 
                   {/* Solutions Section */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                       <Pill className="w-4 h-4 text-primary" />
                       Treatment Protocols ({diseaseDetail?.solutions?.length || 0})
                     </h3>
@@ -577,7 +577,7 @@ export default function AdminHealthLibraryPage() {
                               </div>
                             </div>
 
-                            <h4 className="text-base font-bold text-white mt-1">{sol.treatment_name}</h4>
+                            <h4 className="text-base font-bold text-slate-900 dark:text-white mt-1">{sol.treatment_name}</h4>
                             <div className="text-xs text-primary font-semibold">Dosage: {sol.dosage}</div>
                             <p className="text-xs text-text-secondary leading-relaxed mt-2 pt-2 border-t border-border/50">
                               {sol.instructions}
@@ -604,7 +604,7 @@ export default function AdminHealthLibraryPage() {
                   <Bug className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">{pestDetail?.name}</h2>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">{pestDetail?.name}</h2>
                   <p className="text-xs text-text-muted">Crop: {pestDetail?.crop_name}</p>
                 </div>
               </div>
@@ -651,7 +651,7 @@ export default function AdminHealthLibraryPage() {
 
                   {/* Solutions Section */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                       <Droplet className="w-4 h-4 text-neon-blue" />
                       Pest Control Treatments ({pestDetail?.solutions?.length || 0})
                     </h3>
@@ -680,7 +680,7 @@ export default function AdminHealthLibraryPage() {
                               </span>
                             </div>
 
-                            <h4 className="text-base font-bold text-white mt-1">{sol.treatment_name}</h4>
+                            <h4 className="text-base font-bold text-slate-900 dark:text-white mt-1">{sol.treatment_name}</h4>
                             <div className="text-xs text-neon-blue font-semibold">Dosage: {sol.dosage}</div>
                             <p className="text-xs text-text-secondary leading-relaxed mt-2 pt-2 border-t border-border/50">
                               {sol.instructions}
@@ -790,7 +790,7 @@ function DiseaseModal({ plants, disease, onClose, onSave, isLoading }: { plants:
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="glass-card max-w-2xl w-full p-6 rounded-2xl border border-border animate-scale-up space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-border pb-3">
-          <h2 className="text-lg font-bold text-white">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
             {disease ? "Edit Plant Disease" : "Add Plant Disease & Treatment Solutions"}
           </h2>
           <button onClick={onClose} className="text-text-muted hover:text-white">
@@ -1055,7 +1055,7 @@ function PestModal({ plants, pest, onClose, onSave, isLoading }: { plants: any[]
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="glass-card max-w-2xl w-full p-6 rounded-2xl border border-border animate-scale-up space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-border pb-3">
-          <h2 className="text-lg font-bold text-white">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
             {pest ? "Edit Pest Profile" : "Add Plant Pest & Control Measures"}
           </h2>
           <button onClick={onClose} className="text-text-muted hover:text-white">

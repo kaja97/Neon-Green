@@ -86,7 +86,7 @@ export default function CommunityIssuePage({
           <ArrowLeft className="w-4 h-4" /> Community
         </Link>
 
-        <h1 className="text-xl md:text-2xl font-black tracking-tight text-white">
+        <h1 className="text-xl md:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
           {issue.title}
         </h1>
 
@@ -124,7 +124,7 @@ export default function CommunityIssuePage({
             avatarUrl={issue.author_avatar_url}
           />
           <div>
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">
               {issue.author_name || "Unknown farmer"}
             </p>
             <p className="text-[11px] text-text-muted">{timeAgo}</p>
@@ -172,7 +172,7 @@ export default function CommunityIssuePage({
       <section className="space-y-4 animate-slide-up" style={{ animationDelay: "100ms" }}>
         <div className="flex items-center gap-2">
           <MessageCircle className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold text-white">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
             Discussion
             {issue.comment_count > 0 && (
               <span className="text-text-muted font-normal text-sm ml-2">

@@ -252,7 +252,7 @@ export default function SoilPage({ params }: { params: { id: string } }) {
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
                 Soil Intelligence<span className="text-emerald-400 text-glow-green">.</span>
               </h1>
               {project && (
@@ -289,7 +289,7 @@ export default function SoilPage({ params }: { params: { id: string } }) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                   Soil Test History ({tests.length} {tests.length === 1 ? "Record" : "Records"})
                 </h3>
               </div>
@@ -375,7 +375,7 @@ export default function SoilPage({ params }: { params: { id: string } }) {
             <div className="glass-card rounded-3xl p-6 md:p-8 space-y-6">
               <div className="flex items-center justify-between border-b border-border/80 pb-4">
                 <div>
-                  <h3 className="text-lg font-bold text-white">Soil Chemistry & Nutrient Telemetry</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Soil Chemistry & Nutrient Telemetry</h3>
                   <p className="text-xs text-text-muted">
                     Quantitative test values benchmarked against optimal crop thresholds
                   </p>
@@ -422,7 +422,7 @@ export default function SoilPage({ params }: { params: { id: string } }) {
               <div>
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-emerald-400" />
-                  <h3 className="text-xl font-black text-white">Fertilizer & Amendment Recommendations</h3>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">Fertilizer & Amendment Recommendations</h3>
                 </div>
                 <p className="text-xs sm:text-sm text-text-secondary mt-0.5">
                   AI-calculated crop nutrition prescriptions tailored for {project?.crop_name || "your crop"} ({areaNumber} {areaUnit})
@@ -531,7 +531,7 @@ export default function SoilPage({ params }: { params: { id: string } }) {
             ) : (
               <div className="p-6 rounded-2xl bg-surface-secondary text-center space-y-2">
                 <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
-                <h4 className="text-base font-bold text-white">Soil Nutrients In Balanced State</h4>
+                <h4 className="text-base font-bold text-slate-900 dark:text-white">Soil Nutrients In Balanced State</h4>
                 <p className="text-xs text-text-muted max-w-md mx-auto">
                   All primary and secondary macronutrients are currently in optimal agronomic ranges for this growth cycle.
                 </p>
@@ -545,7 +545,7 @@ export default function SoilPage({ params }: { params: { id: string } }) {
           <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto animate-float text-emerald-400">
             <FlaskConical className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-bold text-white">No Soil Tests Recorded Yet</h3>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white">No Soil Tests Recorded Yet</h3>
           <p className="text-text-secondary text-xs sm:text-sm leading-relaxed">
             Log your soil test laboratory results to calculate tailored fertilizer quantities, pH corrections, and receive automated email reports.
           </p>

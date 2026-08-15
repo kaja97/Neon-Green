@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             User Directory & Access Control<span className="text-neon-blue text-glow-blue">.</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">
@@ -190,7 +190,7 @@ export default function AdminUsersPage() {
                 {users.map((u: any) => (
                   <tr key={u.id} className="hover:bg-surface-tertiary/40 transition-colors">
                     <td className="p-4">
-                      <div className="font-bold text-white">{u.display_name}</div>
+                      <div className="font-bold text-slate-900 dark:text-white">{u.display_name}</div>
                       <div className="text-xs text-text-muted">{u.email}</div>
                     </td>
                     <td className="p-4 text-text-secondary text-xs">{u.phone || "No phone"}</td>
@@ -291,7 +291,7 @@ export default function AdminUsersPage() {
                   {userDetail?.email?.slice(0, 2).toUpperCase() || "US"}
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                     {userDetail?.farmer_profile?.full_name ||
                       userDetail?.vendor_profile?.business_name ||
                       userDetail?.buyer_profile?.full_name ||
@@ -321,7 +321,7 @@ export default function AdminUsersPage() {
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div>
                         <span className="text-text-muted block">Phone</span>
-                        <span className="font-semibold text-white mt-0.5 block">{userDetail?.phone || "N/A"}</span>
+                        <span className="font-semibold text-slate-900 dark:text-white mt-0.5 block">{userDetail?.phone || "N/A"}</span>
                       </div>
                       <div>
                         <span className="text-text-muted block">Current Role</span>
@@ -359,7 +359,7 @@ export default function AdminUsersPage() {
                         </div>
                         <div>
                           <span className="text-text-muted block">Experience</span>
-                          <span className="text-white mt-0.5 block">{userDetail.farmer_profile.experience_years} Years</span>
+                          <span className="text-slate-900 dark:text-white mt-0.5 block">{userDetail.farmer_profile.experience_years} Years</span>
                         </div>
                         <div>
                           <span className="text-text-muted block">Active Projects</span>
@@ -374,7 +374,7 @@ export default function AdminUsersPage() {
                             {userDetail.farmer_profile.locations.map((loc: any) => (
                               <div key={loc.id} className="text-xs p-2 rounded-lg bg-surface-tertiary flex items-center gap-2">
                                 <MapPin className="w-3.5 h-3.5 text-primary" />
-                                <span className="font-medium text-white">{loc.name}</span>
+                                <span className="font-medium text-slate-900 dark:text-white">{loc.name}</span>
                                 <span className="text-text-muted">({loc.district})</span>
                                 {loc.is_primary && (
                                   <span className="ml-auto text-[10px] font-bold text-primary uppercase bg-primary/10 px-1.5 py-0.5 rounded">
@@ -402,7 +402,7 @@ export default function AdminUsersPage() {
                         </div>
                         <div>
                           <span className="text-text-muted block">Tax / Business ID</span>
-                          <span className="text-white mt-0.5 block">{userDetail.vendor_profile.tax_id || "N/A"}</span>
+                          <span className="text-slate-900 dark:text-white mt-0.5 block">{userDetail.vendor_profile.tax_id || "N/A"}</span>
                         </div>
                         <div>
                           <span className="text-text-muted block">Vendor Rating</span>
@@ -410,7 +410,7 @@ export default function AdminUsersPage() {
                         </div>
                         <div>
                           <span className="text-text-muted block">Verified Vendor</span>
-                          <span className="text-white mt-0.5 block">{userDetail.vendor_profile.is_verified ? "Yes" : "No"}</span>
+                          <span className="text-slate-900 dark:text-white mt-0.5 block">{userDetail.vendor_profile.is_verified ? "Yes" : "No"}</span>
                         </div>
                       </div>
                     </div>
@@ -443,7 +443,7 @@ export default function AdminUsersPage() {
 
                   {/* Role Assignment Action */}
                   <div className="glass-card rounded-2xl p-5 border border-border space-y-3">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-white">Role & Access Management</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Role & Access Management</h3>
                     <div className="flex items-center gap-2">
                       {["farmer", "vendor", "buyer", "admin"].map((r) => (
                         <button

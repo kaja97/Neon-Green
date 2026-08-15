@@ -60,7 +60,7 @@ export default function ProjectCard({
             <Sprout className={clsx("w-7 h-7 drop-shadow-md", textVariants[color])} />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white tracking-tight drop-shadow-md group-hover:text-green-400 transition-colors duration-300">{name}</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight drop-shadow-md group-hover:text-green-400 transition-colors duration-300">{name}</h3>
             <p className="text-sm font-medium text-slate-400">{area}</p>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function ProjectCard({
 
       <div className="mt-8 relative z-10">
         <div className="flex items-center justify-between text-sm font-medium mb-3">
-          <span className="text-slate-300 group-hover:text-white transition-colors">{progress}% Complete</span>
+          <span className="text-slate-300 group-hover:text-slate-900 dark:text-white transition-colors">{progress}% Complete</span>
           <span className="text-slate-400">Day {day} of {totalDays}</span>
         </div>
         <div className="w-full h-2.5 bg-black/40 border border-white/5 rounded-full overflow-hidden shadow-inner">

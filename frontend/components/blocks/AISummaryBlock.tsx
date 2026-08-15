@@ -21,7 +21,7 @@ export default function AISummaryBlock({ projectId }: AISummaryBlockProps) {
           <div className="p-1.5 rounded-lg bg-primary/10">
             <Sparkles className="w-4 h-4 text-primary" />
           </div>
-          <h3 className="text-sm font-bold text-white">AI Summary</h3>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">AI Summary</h3>
         </div>
 
         <div className="flex items-center gap-2">

@@ -204,7 +204,7 @@ export default function MarketPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Store className="w-6 h-6 text-neon-gold" />
             Marketplace
           </h1>
@@ -300,7 +300,7 @@ export default function MarketPage() {
         {showFilters && (activeTab === "products" || activeTab === "my_products") && (
           <div className="glass-card p-5 space-y-4 animate-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Filter className="w-4 h-4 text-neon-gold" />
                 Filter Products
               </h3>
@@ -366,7 +366,7 @@ export default function MarketPage() {
         {showFilters && activeTab === "farmers" && (
           <div className="glass-card p-5 space-y-4 animate-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Filter className="w-4 h-4 text-neon-gold" />
                 Filter Farmers
               </h3>
@@ -423,7 +423,7 @@ export default function MarketPage() {
       {/* Results count */}
       {!isLoading && (searchQuery || activeFiltersCount > 0) && (
         <div className="text-sm text-text-muted">
-          Showing <span className="text-white font-semibold">
+          Showing <span className="text-slate-900 dark:text-white font-semibold">
             {(activeTab === "products" || activeTab === "my_products") ? filteredProducts.length : filteredFarmers.length}
           </span> of {(activeTab === "products" || activeTab === "my_products") ? products.length : farmers.length} items
           {searchQuery && <span> matching &quot;<span className="text-neon-gold">{searchQuery}</span>&quot;</span>}
@@ -514,7 +514,7 @@ export default function MarketPage() {
                 </div>
                 
                 <div className="p-4 flex flex-col flex-1">
-                  <h3 className="font-semibold text-white mb-1 group-hover:text-neon-gold transition-colors">
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-neon-gold transition-colors">
                     {product.title}
                   </h3>
                   <p className="text-sm text-text-secondary line-clamp-2 mb-4 flex-1">
@@ -570,7 +570,7 @@ export default function MarketPage() {
                       {farmer.full_name?.charAt(0) || "F"}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white text-lg truncate group-hover:text-neon-blue transition-colors">{farmer.full_name}</h3>
+                      <h3 className="font-semibold text-slate-900 dark:text-white text-lg truncate group-hover:text-neon-blue transition-colors">{farmer.full_name}</h3>
                       <div className="flex flex-wrap items-center gap-2 mt-1">
                         <span className="px-2 py-0.5 rounded-full bg-surface-tertiary text-[10px] text-text-secondary capitalize">
                           {farmer.farming_method}
@@ -613,7 +613,7 @@ export default function MarketPage() {
                               <Sprout className="w-4 h-4 text-neon-green" />
                             </div>
                             <div className="min-w-0">
-                              <div className="text-sm font-medium text-white truncate">
+                              <div className="text-sm font-medium text-slate-900 dark:text-white truncate">
                                 {p.plant_name}
                                 {p.variety_name && <span className="text-text-muted font-normal"> • {p.variety_name}</span>}
                               </div>

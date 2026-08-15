@@ -68,7 +68,7 @@ export function EditProductModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-surface-elevated border border-border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up">
         <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-border bg-surface-elevated/95 backdrop-blur">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Store className="w-5 h-5 text-neon-gold" />
             Edit Product
           </h2>

@@ -64,7 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="text-[10px] font-bold tracking-widest text-neon-purple uppercase bg-neon-purple/10 px-2 py-0.5 rounded border border-neon-purple/20">
                 System Control
               </span>
-              <h1 className="text-xl font-black text-white tracking-tight mt-1">
+              <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
                 Admin Portal<span className="text-neon-purple">.</span>
               </h1>
             </div>
@@ -111,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="text-xs font-bold text-neon-purple uppercase bg-neon-purple/10 px-2 py-0.5 rounded">
               Admin
             </span>
-            <h1 className="text-base font-bold text-white">Admin Portal</h1>
+            <h1 className="text-base font-bold text-slate-900 dark:text-white">Admin Portal</h1>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />

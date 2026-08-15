@@ -13,7 +13,6 @@ export default function TopBar() {
   const isOffline = useOffline();
   const { user } = useAuthStore();
 
-  // Fetch unread notification count
   const { data: countData } = useQuery({
     queryKey: ["notification_count"],
     queryFn: async () => {
@@ -23,103 +22,102 @@ export default function TopBar() {
       return { count: res.data.data?.length || 0 };
     },
     enabled: !isOffline && !!user,
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 60 * 1000,
     refetchInterval: 60 * 1000,
   });
 
   const unreadCount = countData?.count || 0;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-surface-primary/80 backdrop-blur-xl">
-      <div className="flex h-16 items-center justify-between px-4 max-w-7xl mx-auto">
-        {/* Brand */}
-        <Link href="/dashboard" className="flex items-center gap-2.5 group">
-          <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 group-hover:glow-green transition-all">
-            <Sprout className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-lg font-extrabold tracking-tight text-white">
-            AgriFarm
-            <span className="text-primary"> AI</span>
-          </span>
-        </Link>
+    <header className="sticky top-0 z-40 bg-surface-primary/85 backdrop-blur-xl border-b border-border transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Left: Brand Logo & Navigation */}
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard" className="flex items-center gap-2.5 group select-none">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 shadow-[0_0_15px_rgba(0,255,135,0.4)] group-hover:scale-105 transition-transform">
+              <Sprout className="w-5 h-5 text-slate-950 stroke-[2.5]" />
+            </div>
+            <span className="font-black text-lg text-slate-900 dark:text-slate-900 dark:text-white tracking-tight flex items-center gap-1">
+              AgriFarm <span className="text-emerald-600 dark:text-emerald-400">AI</span>
+            </span>
+          </Link>
 
-        {/* Desktop Nav Links */}
-        <nav className="hidden md:flex items-center gap-1">
-          <Link
-            href="/dashboard"
-            className="px-3 py-1.5 text-sm font-semibold text-text-secondary hover:text-white transition-colors rounded-lg hover:bg-surface-tertiary"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/market"
-            className="px-3 py-1.5 text-sm font-semibold text-text-secondary hover:text-white transition-colors rounded-lg hover:bg-surface-tertiary flex items-center gap-1.5"
-          >
-            <Store className="w-3.5 h-3.5" />
-            Market
-          </Link>
-          <Link
-            href="/projects"
-            className="px-3 py-1.5 text-sm font-semibold text-text-secondary hover:text-white transition-colors rounded-lg hover:bg-surface-tertiary flex items-center gap-1.5"
-          >
-            <FolderOpen className="w-3.5 h-3.5" />
-            Projects
-          </Link>
-          <Link
-            href="/community"
-            className="px-3 py-1.5 text-sm font-semibold text-text-secondary hover:text-white transition-colors rounded-lg hover:bg-surface-tertiary flex items-center gap-1.5"
-          >
-            <MessagesSquare className="w-3.5 h-3.5" />
-            Community
-          </Link>
-          <Link
-            href="/chat"
-            className="px-3 py-1.5 text-sm font-semibold text-text-secondary hover:text-white transition-colors rounded-lg hover:bg-surface-tertiary flex items-center gap-1.5"
-          >
-            <MessageCircle className="w-3.5 h-3.5 text-primary" />
-            Chat
-          </Link>
-        </nav>
+          {/* Desktop Nav Links */}
+          <nav className="hidden md:flex items-center gap-1 bg-surface-secondary/70 border border-border p-1 rounded-full text-xs font-bold">
+            <Link
+              href="/dashboard"
+              className="px-3.5 py-1.5 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-tertiary transition-colors"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/projects"
+              className="px-3.5 py-1.5 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-tertiary transition-colors"
+            >
+              Projects
+            </Link>
+            <Link
+              href="/market"
+              className="px-3.5 py-1.5 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-tertiary transition-colors"
+            >
+              Marketplace
+            </Link>
+            <Link
+              href="/community"
+              className="px-3.5 py-1.5 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-tertiary transition-colors"
+            >
+              Community
+            </Link>
+            <Link
+              href="/chat"
+              className="px-3.5 py-1.5 rounded-full text-emerald-600 dark:text-emerald-400 hover:bg-surface-tertiary transition-colors flex items-center gap-1"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              AI Assistant
+            </Link>
+          </nav>
+        </div>
 
-        <div className="flex items-center gap-3">
-          {/* Offline Indicator */}
+        {/* Right: Actions, Theme, Alerts, Profile */}
+        <div className="flex items-center gap-2.5">
+          {/* Offline Banner Indicator */}
           {isOffline && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-neon-gold/10 border border-neon-gold/20 rounded-full text-neon-gold text-xs font-semibold animate-pulse-glow">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-mono font-bold">
               <WifiOff className="w-3.5 h-3.5" />
-              Offline
+              <span className="hidden sm:inline">Offline Mode</span>
             </div>
           )}
 
-          {/* Admin Link */}
+          {/* Admin Indicator */}
           {user?.role === "admin" && (
             <Link
               href="/admin/dashboard"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-neon-purple/10 border border-neon-purple/20 text-neon-purple rounded-xl text-xs font-bold hover:bg-neon-purple/20 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-400 text-xs font-mono font-bold hover:bg-purple-500/25 transition-colors"
             >
               <ShieldAlert className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Admin</span>
+              <span className="hidden sm:inline">Admin Console</span>
             </Link>
           )}
 
-          {/* Theme toggle */}
-          <ThemeToggle />
-
-          {/* Notifications */}
+          {/* Notifications Bell */}
           <Link
             href="/notifications"
-            className="relative p-2.5 rounded-xl text-text-secondary hover:text-white hover:bg-surface-tertiary transition-all"
+            className="relative p-2.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-secondary transition-colors"
             title="Notifications"
           >
-            <Bell className="h-5 w-5" />
+            <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 animate-pulse-glow">
+              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
           </Link>
 
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
           {/* Profile Dropdown */}
-          <ProfileDropdown variant="topbar" />
+          <ProfileDropdown variant="app" />
         </div>
       </div>
     </header>

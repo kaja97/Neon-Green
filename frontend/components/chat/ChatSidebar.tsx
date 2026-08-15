@@ -74,7 +74,7 @@ export default function ChatSidebar() {
       {/* Header & Search */}
       <div className="p-4 border-b border-border space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-primary" />
             Messages
           </h2>
@@ -123,7 +123,7 @@ export default function ChatSidebar() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate group-hover:text-primary transition-colors">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">
                       {u.display_name}
                     </p>
                     <p className="text-xs text-text-muted truncate">
@@ -143,7 +143,7 @@ export default function ChatSidebar() {
             {conversations.length === 0 ? (
               <div className="p-6 text-center text-xs text-text-muted space-y-2">
                 <Sparkles className="w-8 h-8 text-primary/40 mx-auto" />
-                <p className="font-semibold text-white">No active chats</p>
+                <p className="font-semibold text-slate-900 dark:text-white">No active chats</p>
                 <p>Search for a farmer, vendor, or buyer above to start chatting!</p>
               </div>
             ) : (
@@ -180,7 +180,7 @@ export default function ChatSidebar() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-baseline mb-0.5">
-                        <p className="text-sm font-bold text-white truncate">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                           {conv.other_user.display_name}
                         </p>
                         {conv.last_message && (
@@ -213,7 +213,7 @@ export default function ChatSidebar() {
                           )}
                         </p>
                         {conv.unread_count > 0 && (
-                          <span className="ml-2 px-1.5 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full min-w-[18px] text-center">
+                          <span className="ml-2 px-1.5 py-0.5 bg-primary text-slate-900 dark:text-white text-[10px] font-bold rounded-full min-w-[18px] text-center">
                             {conv.unread_count}
                           </span>
                         )}

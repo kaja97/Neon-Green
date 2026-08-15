@@ -174,7 +174,7 @@ export default function NewProjectWizard() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Create New Project<span className="text-green-400 text-glow-green">.</span>
           </h1>
           <p className="text-text-muted text-sm mt-0.5">Step {Math.min(step, 4)} of 4</p>
@@ -198,7 +198,7 @@ export default function NewProjectWizard() {
       <div className="glass-card rounded-3xl p-6 md:p-8 min-h-[400px] relative animate-slide-up">
         {step === 1 && (
           <div className="animate-fade-in">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-white">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-slate-900 dark:text-white">
               <Sprout className="w-6 h-6 text-green-400" />
               What are you planting?
             </h2>
@@ -271,7 +271,7 @@ export default function NewProjectWizard() {
 
         {step === 2 && (
           <div className="animate-fade-in">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-white">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-slate-900 dark:text-white">
               <MapPin className="w-6 h-6 text-blue-400" />
               Where is this field?
             </h2>
@@ -293,7 +293,7 @@ export default function NewProjectWizard() {
                     )}
                   >
                     <div>
-                      <h3 className="font-semibold text-white">{loc.name}</h3>
+                      <h3 className="font-semibold text-slate-900 dark:text-white">{loc.name}</h3>
                       <p className="text-sm text-text-muted mt-1">{loc.district}</p>
                     </div>
                     {formData.location_id === loc.id && <CheckCircle2 className="w-6 h-6 text-blue-400" />}
@@ -317,7 +317,7 @@ export default function NewProjectWizard() {
 
         {step === 3 && (
           <div className="animate-fade-in">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-white">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-slate-900 dark:text-white">
               <LayoutTemplate className="w-6 h-6 text-amber-400" />
               Land Details &amp; Method
             </h2>
@@ -377,7 +377,7 @@ export default function NewProjectWizard() {
 
         {step === 4 && (
           <div className="animate-fade-in">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-white">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-slate-900 dark:text-white">
               <Calendar className="w-6 h-6 text-neon-purple" />
               When did you plant?
             </h2>
@@ -399,7 +399,7 @@ export default function NewProjectWizard() {
           <div className="animate-fade-in text-center py-12">
             {createProject.isError ? (
               <>
-                <h2 className="text-2xl font-bold text-white mb-3">Something went wrong</h2>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Something went wrong</h2>
                 <p className="text-text-secondary mb-8 max-w-sm mx-auto">
                   Failed to create your farming project. Please check your input and try again.
                 </p>
@@ -409,7 +409,7 @@ export default function NewProjectWizard() {
               </>
             ) : (
               <>
-                <h2 className="text-2xl font-bold text-white mb-3">Generating Farm Plan...</h2>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Generating Farm Plan...</h2>
                 <p className="text-text-secondary mb-8 max-w-sm mx-auto">
                   Our AI is analyzing the weather forecast, soil data, and optimal growth stages to create your personalized daily activity plan.
                 </p>

@@ -105,7 +105,7 @@ export default function LivestockSection() {
   return (
     <div className="glass-card rounded-3xl overflow-hidden p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white">Livestock</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Livestock</h2>
         <button
           onClick={() => handleOpenModal()}
           className="flex items-center gap-2 bg-green-500/10 text-green-400 border border-green-500/20 px-4 py-2 rounded-xl font-semibold hover:bg-green-500/20 transition-colors"
@@ -124,7 +124,7 @@ export default function LivestockSection() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Bird className="w-5 h-5 text-indigo-400" />
-                  <h3 className="font-bold text-white capitalize">{ls.animal_type}</h3>
+                  <h3 className="font-bold text-slate-900 dark:text-white capitalize">{ls.animal_type}</h3>
                 </div>
                 <div className="flex gap-2 items-center mb-1">
                   <span className="text-sm font-semibold text-text-secondary bg-surface-tertiary px-2 py-1 rounded-lg">Count: {ls.count}</span>

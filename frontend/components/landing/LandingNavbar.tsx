@@ -65,7 +65,7 @@ export default function LandingNavbar() {
             <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-black tracking-tight text-white flex items-center gap-1">
+            <span className="text-xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
               AgriFarm
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-300 text-glow-green">
                 AI

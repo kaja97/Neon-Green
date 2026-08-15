@@ -61,7 +61,7 @@ export default function NutrientGuideBlock({ projectId }: { projectId: string })
         <div className="p-2 bg-green-500/10 rounded-lg">
           <Sprout className="w-4 h-4 text-green-400" />
         </div>
-        <h3 className="font-bold text-white text-sm">Nutrient Guide</h3>
+        <h3 className="font-bold text-slate-900 dark:text-white text-sm">Nutrient Guide</h3>
       </div>
 
       <div className="space-y-4 relative z-10 flex-1">

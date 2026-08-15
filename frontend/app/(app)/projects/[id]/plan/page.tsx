@@ -210,13 +210,13 @@ export default function PlanPage({ params }: { params: { id: string } }) {
   const groupOrder = ["Past", "This Week", ...Object.keys(groupedActivities).filter(k => k !== "Past" && k !== "This Week").sort()];
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 min-h-screen text-white">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 min-h-screen text-slate-900 dark:text-white">
       <header className="flex items-center gap-4">
         <Link href={`/projects/${params.id}`} className="p-2.5 glass-card-hover rounded-xl text-text-secondary hover:text-white transition-all duration-300">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight text-white">Activity Plan<span className="text-green-400 text-glow-green">.</span></h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Activity Plan<span className="text-green-400 text-glow-green">.</span></h1>
           <p className="text-text-muted text-sm">Full timeline {dashboard?.project?.plant?.common_name ? `· ${dashboard.project.plant.common_name}` : ""}</p>
         </div>
         <button
@@ -239,7 +239,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                 <Sprout className="w-6 h-6 text-green-400 text-glow-green animate-pulse" />
               </div>
               <div>
-                <h2 className="font-bold text-white text-base">
+                <h2 className="font-bold text-slate-900 dark:text-white text-base">
                   {dashboard.current_stage?.stage_name || "Active Stage"}
                 </h2>
                 <p className="text-sm text-text-secondary">
@@ -508,7 +508,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
           <div className="space-y-4">
             <div>
               <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Title</h4>
-              <p className="text-base text-white mt-0.5">{detailTask.title}</p>
+              <p className="text-base text-slate-900 dark:text-white mt-0.5">{detailTask.title}</p>
             </div>
             {detailTask.description && (
               <div>
@@ -535,7 +535,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                   {detailTask.pruning_type && (
                     <div>
                       <span className="text-slate-400">Operation:</span>{" "}
-                      <span className="text-white font-semibold capitalize">{detailTask.pruning_type.replace("_", " ")}</span>
+                      <span className="text-slate-900 dark:text-white font-semibold capitalize">{detailTask.pruning_type.replace("_", " ")}</span>
                     </div>
                   )}
                   {detailTask.pruning_level && (
@@ -547,7 +547,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                   {detailTask.tools_needed && (
                     <div className="col-span-2">
                       <span className="text-slate-400">Tools Needed:</span>{" "}
-                      <span className="text-white font-medium">{detailTask.tools_needed}</span>
+                      <span className="text-slate-900 dark:text-white font-medium">{detailTask.tools_needed}</span>
                     </div>
                   )}
                   {detailTask.pre_pruning_care && (
@@ -575,7 +575,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                   {detailTask.target_pest_disease && (
                     <div className="col-span-2">
                       <span className="text-slate-400">Target:</span>{" "}
-                      <span className="text-white font-semibold">{detailTask.target_pest_disease}</span>
+                      <span className="text-slate-900 dark:text-white font-semibold">{detailTask.target_pest_disease}</span>
                     </div>
                   )}
                   {detailTask.treatment_name && (
@@ -587,7 +587,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                   {detailTask.dosage && (
                     <div>
                       <span className="text-slate-400">Dosage:</span>{" "}
-                      <span className="text-white font-medium">{detailTask.dosage}</span>
+                      <span className="text-slate-900 dark:text-white font-medium">{detailTask.dosage}</span>
                     </div>
                   )}
                   {detailTask.safety_interval_days && (
@@ -602,7 +602,7 @@ export default function PlanPage({ params }: { params: { id: string } }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Scheduled Date</h4>
-                <p className="text-sm text-white mt-0.5">{new Date(detailTask.due_date).toLocaleDateString()}</p>
+                <p className="text-sm text-slate-900 dark:text-white mt-0.5">{new Date(detailTask.due_date).toLocaleDateString()}</p>
               </div>
               <div>
                 <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Status</h4>
@@ -629,13 +629,13 @@ export default function PlanPage({ params }: { params: { id: string } }) {
                   {detailTask.actual_water_liters && (
                     <div>
                       <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Actual Water</h4>
-                      <p className="text-sm text-white mt-0.5">{detailTask.actual_water_liters} L</p>
+                      <p className="text-sm text-slate-900 dark:text-white mt-0.5">{detailTask.actual_water_liters} L</p>
                     </div>
                   )}
                   {detailTask.actual_fertilizer_kg && (
                     <div>
                       <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Actual Fertilizer</h4>
-                      <p className="text-sm text-white mt-0.5">{detailTask.actual_fertilizer_kg} kg</p>
+                      <p className="text-sm text-slate-900 dark:text-white mt-0.5">{detailTask.actual_fertilizer_kg} kg</p>
                     </div>
                   )}
                 </div>

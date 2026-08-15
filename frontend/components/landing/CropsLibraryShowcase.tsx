@@ -138,7 +138,7 @@ export default function CropsLibraryShowcase() {
             <Sprout className="w-3.5 h-3.5 text-emerald-400" />
             70 Master Crops Knowledge Base
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight mt-3">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight mt-3">
             Botanical & Agronomic Precision
           </h2>
           <p className="text-base text-text-secondary mt-2 max-w-xl leading-relaxed">
@@ -201,7 +201,7 @@ export default function CropsLibraryShowcase() {
                     <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold">
                       {crop.category}
                     </span>
-                    <h4 className="text-lg font-bold text-white group-hover:text-emerald-300 transition-colors">
+                    <h4 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-emerald-300 transition-colors">
                       {crop.name}
                     </h4>
                   </div>

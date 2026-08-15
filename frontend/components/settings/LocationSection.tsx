@@ -126,7 +126,7 @@ export default function LocationSection() {
   return (
     <div className="glass-card rounded-3xl overflow-hidden p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white">Farm Locations</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Farm Locations</h2>
         <button
           onClick={() => handleOpenModal()}
           className="flex items-center gap-2 bg-green-500/10 text-green-400 border border-green-500/20 px-4 py-2 rounded-xl font-semibold hover:bg-green-500/20 transition-colors"
@@ -145,7 +145,7 @@ export default function LocationSection() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <MapPin className="w-5 h-5 text-green-400" />
-                  <h3 className="font-bold text-white">{loc.name}</h3>
+                  <h3 className="font-bold text-slate-900 dark:text-white">{loc.name}</h3>
                   {loc.is_primary && (
                     <span className="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full font-medium border border-green-500/20">Primary</span>
                   )}

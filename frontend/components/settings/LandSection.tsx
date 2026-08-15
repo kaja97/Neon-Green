@@ -122,7 +122,7 @@ export default function LandSection() {
   return (
     <div className="glass-card rounded-3xl overflow-hidden p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white">Land & Soil Details</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Land & Soil Details</h2>
         <button
           onClick={() => {
             if (!locations || locations.length === 0) {
@@ -149,7 +149,7 @@ export default function LandSection() {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Sprout className="w-5 h-5 text-emerald-400" />
-                    <h3 className="font-bold text-white">{land.total_area} {land.area_unit}</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white">{land.total_area} {land.area_unit}</h3>
                   </div>
                   <p className="text-sm font-medium text-text-secondary mb-2">Location: {locName}</p>
                   <div className="flex gap-2 flex-wrap">

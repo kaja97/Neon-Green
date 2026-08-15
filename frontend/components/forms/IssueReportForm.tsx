@@ -84,7 +84,7 @@ export default function IssueReportForm({
           <Bug className="w-5 h-5 text-red-400" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-white">Report Issue</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Report Issue</h3>
           <p className="text-xs text-text-muted">
             Describe the problem — AI will match possible diseases
           </p>

@@ -62,7 +62,7 @@ export default function ChatWindow() {
         <div className="w-16 h-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 text-primary glow-green-sm">
           <MessageSquare className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-white mb-1">Your P2P Chat Room</h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Your P2P Chat Room</h3>
         <p className="text-text-muted text-sm max-w-sm">
           Search for a user in the left panel to start a conversation or select an existing chat.
         </p>
@@ -94,7 +94,7 @@ export default function ChatWindow() {
         </div>
 
         <div>
-          <h2 className="font-bold text-white text-sm">
+          <h2 className="font-bold text-slate-900 dark:text-white text-sm">
             {activeConv?.other_user.display_name}
           </h2>
           <p className="text-[11px] text-text-muted">

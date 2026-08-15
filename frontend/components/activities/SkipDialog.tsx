@@ -51,7 +51,7 @@ export default function SkipDialog({
             <SkipForward className="w-5 h-5 text-neon-gold" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Skip Activity</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Skip Activity</h3>
             {activityTitle && (
               <p className="text-xs text-text-muted truncate max-w-[200px]">
                 {activityTitle}

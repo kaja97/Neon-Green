@@ -43,7 +43,7 @@ export default function DashboardPage() {
             {/* Background glowing blob */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 blur-[80px] rounded-full pointer-events-none -mr-20 -mt-20" />
             <div className="relative z-10">
-              <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow-md">
+              <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight drop-shadow-md">
                 Command Center<span className="text-green-400 text-glow-green">.</span>
               </h1>
               <p className="text-text-secondary font-medium mt-1.5 flex items-center gap-2">
@@ -79,7 +79,7 @@ export default function DashboardPage() {
                 <FolderOpen className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white group-hover:text-green-400 transition-colors">Projects</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-green-400 transition-colors">Projects</p>
                 <p className="text-xs text-text-muted">{(projects?.length || 0)} total</p>
               </div>
             </Link>
@@ -88,7 +88,7 @@ export default function DashboardPage() {
                 <User className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">Profile</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-400 transition-colors">Profile</p>
                 <p className="text-xs text-text-muted">Settings</p>
               </div>
             </Link>
@@ -97,7 +97,7 @@ export default function DashboardPage() {
                 <Bell className="w-5 h-5 text-amber-400" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">Alerts</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-amber-400 transition-colors">Alerts</p>
                 <p className="text-xs text-text-muted">Notifications</p>
               </div>
             </Link>
@@ -106,7 +106,7 @@ export default function DashboardPage() {
                 <Plus className="w-5 h-5 text-violet-400" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white group-hover:text-violet-400 transition-colors">New</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-violet-400 transition-colors">New</p>
                 <p className="text-xs text-text-muted">Start project</p>
               </div>
             </Link>
@@ -119,7 +119,7 @@ export default function DashboardPage() {
               <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 animate-float glow-green">
                 <Sprout className="w-10 h-10 text-primary" />
               </div>
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
+              <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-3">
                 No Active Projects
               </h3>
               <p className="text-text-secondary max-w-md mb-8 leading-relaxed">

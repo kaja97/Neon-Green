@@ -42,7 +42,7 @@ export default function ActivityBlock({
     <div className="glass-card rounded-3xl p-6 min-w-[320px] md:col-span-2 animate-slide-up">
       {/* Today's Tasks */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="font-semibold text-white flex items-center gap-2">
+        <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
           Today&apos;s Tasks
         </h3>
         <span className="text-xs font-medium text-green-400 bg-green-500/10 px-2 py-1 rounded-lg border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.15)]">
@@ -92,7 +92,7 @@ export default function ActivityBlock({
       {upcoming > 0 && (
         <div className="mt-6 pt-5 border-t border-border">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-white flex items-center gap-2">
+            <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-violet-400" />
               Next Up
             </h3>
@@ -113,7 +113,7 @@ export default function ActivityBlock({
               >
                 <Circle className="w-7 h-7 text-violet-400/50 flex-shrink-0" />
                 <div className="flex-1">
-                  <h4 className="font-medium text-white">{task.title}</h4>
+                  <h4 className="font-medium text-slate-900 dark:text-white">{task.title}</h4>
                   <div className="flex items-center gap-2 mt-1">
                     <CalendarDays className="w-3.5 h-3.5 text-violet-400/70" />
                     <span className="text-xs text-violet-400">

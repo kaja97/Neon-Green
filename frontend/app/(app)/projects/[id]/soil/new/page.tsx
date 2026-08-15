@@ -20,7 +20,7 @@ export default function NewSoilTestPage({ params }: { params: { id: string } }) 
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
               <span>Log Soil Diagnostic</span>
               <span className="text-amber-400">.</span>
             </h1>

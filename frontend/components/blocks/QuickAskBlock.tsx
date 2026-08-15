@@ -36,7 +36,7 @@ export default function QuickAskBlock({ projectId }: { projectId: string }) {
 
       <div className="flex items-center gap-2 mb-4 relative z-10">
         <Bot className="w-5 h-5 text-primary" />
-        <h3 className="font-bold text-base text-white">Ask About Your Farm</h3>
+        <h3 className="font-bold text-base text-slate-900 dark:text-white">Ask About Your Farm</h3>
       </div>
 
       <form onSubmit={handleSubmit} className="relative z-10">

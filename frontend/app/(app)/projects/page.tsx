@@ -58,7 +58,7 @@ export default function ProjectsListPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
               All Projects<span className="text-green-400 text-glow-green">.</span>
             </h1>
             <p className="text-text-muted text-sm mt-0.5">{statusCounts.all} total projects</p>
@@ -108,7 +108,7 @@ export default function ProjectsListPage() {
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 animate-float glow-green">
             <Sprout className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-lg font-bold text-white mb-2">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
             {filter === "all" ? "No projects yet" : `No ${filter} projects`}
           </h3>
           <p className="text-text-secondary text-sm mb-6 max-w-sm mx-auto">
@@ -137,7 +137,7 @@ export default function ProjectsListPage() {
                   <Sprout className="w-6 h-6 text-green-400" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white group-hover:text-green-400 transition-colors">
+                  <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-green-400 transition-colors">
                     {project.name}
                   </h3>
                   <p className="text-sm text-text-muted mt-0.5">

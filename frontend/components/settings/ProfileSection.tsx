@@ -89,7 +89,7 @@ export default function ProfileSection() {
 
   return (
     <div className="glass-card rounded-3xl overflow-hidden p-6">
-      <h2 className="text-xl font-bold text-white mb-6">Personal Details</h2>
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Personal Details</h2>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

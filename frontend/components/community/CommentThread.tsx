@@ -44,7 +44,7 @@ function CommentNode({ comment, issueId, depth = 0 }: CommentNodeProps) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-white">
+            <span className="text-xs font-bold text-slate-900 dark:text-white">
               {comment.author?.full_name || "Unknown"}
             </span>
             <span className="text-[10px] text-text-muted">{timeAgo}</span>

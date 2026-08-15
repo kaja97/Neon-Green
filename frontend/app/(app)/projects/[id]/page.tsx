@@ -190,7 +190,7 @@ export default function ProjectDashboard({
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tight drop-shadow-md">
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight drop-shadow-md">
               {project.plant?.common_name || "Farm Project"}<span className="text-green-400 text-glow-green">.</span>
             </h1>
             <p className="text-text-muted text-sm flex items-center gap-2">
@@ -270,7 +270,7 @@ export default function ProjectDashboard({
                   <Icon className={`w-5 h-5 ${block.color}`} />
                 </div>
                 <p className="text-xs text-text-muted mb-0.5">{block.label}</p>
-                <p className="text-base font-bold text-white group-hover:text-green-400 transition-colors duration-300">{block.value}</p>
+                <p className="text-base font-bold text-slate-900 dark:text-white group-hover:text-green-400 transition-colors duration-300">{block.value}</p>
                 <p className="text-xs text-text-muted capitalize">
                   {block.sub}
                 </p>

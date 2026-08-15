@@ -59,7 +59,7 @@ export default function FarmerProjectDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Sprout className="w-16 h-16 text-text-muted opacity-20" />
-        <h2 className="text-xl font-semibold text-white">Project not found</h2>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Project not found</h2>
         <button onClick={() => router.back()} className="text-neon-gold hover:underline">
           Go back
         </button>
@@ -94,7 +94,7 @@ export default function FarmerProjectDetailPage() {
           </div>
           <div className="flex-1 space-y-2">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
                 {project.name || project.plant_name}
               </h1>
               <span className={`px-3 py-1 rounded-full text-xs font-semibold border capitalize ${statusColor}`}>
@@ -128,25 +128,25 @@ export default function FarmerProjectDetailPage() {
             <div className="text-[10px] uppercase tracking-wider text-text-muted flex items-center gap-1">
               <Calendar className="w-3 h-3" /> Planted
             </div>
-            <div className="text-sm font-semibold text-white">{project.planting_date || "—"}</div>
+            <div className="text-sm font-semibold text-slate-900 dark:text-white">{project.planting_date || "—"}</div>
           </div>
           <div className="glass-card p-3 space-y-1 bg-surface-tertiary/50">
             <div className="text-[10px] uppercase tracking-wider text-text-muted flex items-center gap-1">
               <Ruler className="w-3 h-3" /> Area
             </div>
-            <div className="text-sm font-semibold text-white">{project.area} {project.area_unit}</div>
+            <div className="text-sm font-semibold text-slate-900 dark:text-white">{project.area} {project.area_unit}</div>
           </div>
           <div className="glass-card p-3 space-y-1 bg-surface-tertiary/50">
             <div className="text-[10px] uppercase tracking-wider text-text-muted flex items-center gap-1">
               <Sprout className="w-3 h-3" /> Method
             </div>
-            <div className="text-sm font-semibold text-white capitalize">{project.farming_method}</div>
+            <div className="text-sm font-semibold text-slate-900 dark:text-white capitalize">{project.farming_method}</div>
           </div>
           <div className="glass-card p-3 space-y-1 bg-surface-tertiary/50">
             <div className="text-[10px] uppercase tracking-wider text-text-muted flex items-center gap-1">
               <MapPin className="w-3 h-3" /> Location
             </div>
-            <div className="text-sm font-semibold text-white">
+            <div className="text-sm font-semibold text-slate-900 dark:text-white">
               {project.location_name || project.location_district || "—"}
             </div>
           </div>
@@ -157,7 +157,7 @@ export default function FarmerProjectDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Expected */}
         <div className="glass-card p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <Target className="w-5 h-5 text-neon-gold" />
             Expected Outcomes
           </h3>
@@ -166,13 +166,13 @@ export default function FarmerProjectDetailPage() {
               <span className="text-sm text-text-secondary flex items-center gap-2">
                 <Calendar className="w-4 h-4" /> Harvest Date
               </span>
-              <span className="text-sm font-medium text-white">{project.expected_harvest_date || "—"}</span>
+              <span className="text-sm font-medium text-slate-900 dark:text-white">{project.expected_harvest_date || "—"}</span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-surface-tertiary/50">
               <span className="text-sm text-text-secondary flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" /> Yield
               </span>
-              <span className="text-sm font-medium text-white">
+              <span className="text-sm font-medium text-slate-900 dark:text-white">
                 {project.expected_yield_kg ? `${project.expected_yield_kg} kg` : "—"}
               </span>
             </div>
@@ -189,7 +189,7 @@ export default function FarmerProjectDetailPage() {
 
         {/* Actual */}
         <div className="glass-card p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-neon-green" />
             Actual Results
           </h3>
@@ -198,7 +198,7 @@ export default function FarmerProjectDetailPage() {
               <span className="text-sm text-text-secondary flex items-center gap-2">
                 <Calendar className="w-4 h-4" /> Harvest Date
               </span>
-              <span className="text-sm font-medium text-white">
+              <span className="text-sm font-medium text-slate-900 dark:text-white">
                 {isActive ? (
                   <span className="flex items-center gap-1.5 text-neon-gold">
                     <Clock className="w-3.5 h-3.5" /> In Progress
@@ -210,7 +210,7 @@ export default function FarmerProjectDetailPage() {
               <span className="text-sm text-text-secondary flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" /> Yield
               </span>
-              <span className="text-sm font-medium text-white">
+              <span className="text-sm font-medium text-slate-900 dark:text-white">
                 {project.actual_yield_kg ? `${project.actual_yield_kg} kg` : (isActive ? "—" : "Not recorded")}
               </span>
             </div>
@@ -228,7 +228,7 @@ export default function FarmerProjectDetailPage() {
 
       {/* Farmer Card */}
       <div className="glass-card p-6 bg-gradient-to-br from-surface-elevated to-surface-primary">
-        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
           <Sprout className="w-5 h-5 text-neon-blue" />
           Farmer Information
         </h3>
@@ -237,7 +237,7 @@ export default function FarmerProjectDetailPage() {
             {farmer.full_name?.charAt(0) || "F"}
           </div>
           <div className="flex-1">
-            <div className="font-bold text-white text-lg">{farmer.full_name}</div>
+            <div className="font-bold text-slate-900 dark:text-white text-lg">{farmer.full_name}</div>
             <div className="flex items-center gap-3 mt-0.5">
               <span className="text-sm text-text-muted flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-neon-green" /> Verified

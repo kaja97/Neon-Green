@@ -70,7 +70,7 @@ export default function WeatherCardBlock({ projectId }: { projectId: string }) {
             {getIconForDesc(weather.current.description)}
           </div>
           <div>
-            <p className="text-2xl font-bold text-white">{Math.round(weather.current.temp_celsius)}°C</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{Math.round(weather.current.temp_celsius)}°C</p>
             <p className="text-xs text-text-muted capitalize">{weather.current.description}</p>
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function WeatherCardBlock({ projectId }: { projectId: string }) {
                 {new Date(day.forecast_date).toLocaleDateString("en-US", { weekday: "short" }).slice(0, 3)}
               </span>
               {getIconForDesc(day.condition.description)}
-              <span className="text-xs font-semibold text-white">
+              <span className="text-xs font-semibold text-slate-900 dark:text-white">
                 {Math.round(day.condition.temp_celsius)}°
               </span>
             </div>

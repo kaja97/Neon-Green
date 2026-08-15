@@ -116,7 +116,7 @@ export default function ForgotPasswordPage() {
             <ShieldCheck className="w-7 h-7 text-primary" />
           )}
         </div>
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
           {step === 1 ? "Reset Password" : "Set New Password"}
         </h2>
         <p className="text-sm text-text-secondary">

@@ -25,7 +25,7 @@ export default function AIChatPage({ params }: { params: { id: string } }) {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-green-400 text-glow-green animate-pulse" />
               AI Advisor
             </h1>

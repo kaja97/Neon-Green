@@ -138,7 +138,7 @@ export default function AdminIssuesPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Reported Field Issues<span className="text-red-400 text-glow-red">.</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">
@@ -241,12 +241,12 @@ export default function AdminIssuesPage() {
                 {filteredItems.map((issue: any) => (
                   <tr key={issue.id} className="hover:bg-surface-tertiary/40 transition-colors">
                     <td className="p-4">
-                      <div className="font-bold text-white">{issue.crop_name}</div>
+                      <div className="font-bold text-slate-900 dark:text-white">{issue.crop_name}</div>
                       <div className="text-xs text-text-muted">{issue.project_name}</div>
                     </td>
                     <td className="p-4 font-medium text-text-secondary">{issue.farmer_name}</td>
                     <td className="p-4 max-w-xs">
-                      <div className="font-semibold text-white truncate">{issue.title}</div>
+                      <div className="font-semibold text-slate-900 dark:text-white truncate">{issue.title}</div>
                       {issue.description && (
                         <div className="text-xs text-text-muted truncate">{issue.description}</div>
                       )}
@@ -318,7 +318,7 @@ export default function AdminIssuesPage() {
                   <AlertTriangle className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">{issueDetail?.title || "Field Issue"}</h2>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">{issueDetail?.title || "Field Issue"}</h2>
                   <p className="text-xs text-text-muted">
                     Project: {issueDetail?.project_name} • Farmer: {issueDetail?.farmer_name}
                   </p>
@@ -419,7 +419,7 @@ export default function AdminIssuesPage() {
 
                   {/* Triage & Status Form */}
                   <div className="glass-card rounded-2xl p-5 border border-border space-y-4">
-                    <h3 className="text-sm font-bold text-white">Status & Resolution Actions</h3>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">Status & Resolution Actions</h3>
 
                     <div className="space-y-3 text-xs">
                       <div>

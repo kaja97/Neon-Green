@@ -45,7 +45,7 @@ export default function WeatherForecast({ projectId }: WeatherProps) {
   return (
     <div className="mt-12 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white tracking-tight drop-shadow-md">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight drop-shadow-md">
           Weather Intelligence
         </h2>
         <span className="text-sm font-medium text-green-400/80 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
@@ -63,7 +63,7 @@ export default function WeatherForecast({ projectId }: WeatherProps) {
           <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-4">Current Conditions</h3>
           
           <div className="flex items-end gap-4 mb-6">
-            <span className="text-6xl font-black text-white tracking-tighter drop-shadow-lg">
+            <span className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter drop-shadow-lg">
               {Math.round(current.temp_celsius)}°
             </span>
             <span className="text-xl text-slate-300 font-medium mb-2 capitalize">
@@ -76,14 +76,14 @@ export default function WeatherForecast({ projectId }: WeatherProps) {
               <Droplets className="w-5 h-5 text-blue-400" />
               <div>
                 <p className="text-xs text-slate-400">Humidity</p>
-                <p className="text-sm font-semibold text-white">{current.humidity}%</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">{current.humidity}%</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-white/5 p-3 rounded-xl">
               <Wind className="w-5 h-5 text-teal-400" />
               <div>
                 <p className="text-xs text-slate-400">Wind</p>
-                <p className="text-sm font-semibold text-white">{current.wind_kph} km/h</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">{current.wind_kph} km/h</p>
               </div>
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function WeatherForecast({ projectId }: WeatherProps) {
                 key={index} 
                 className="flex flex-col items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-green-500/30 transition-all duration-300 group"
               >
-                <p className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
+                <p className="text-sm font-medium text-slate-300 group-hover:text-slate-900 dark:text-white transition-colors">
                   {format(new Date(day.forecast_date), 'EEE')}
                 </p>
                 
@@ -108,7 +108,7 @@ export default function WeatherForecast({ projectId }: WeatherProps) {
                 </div>
                 
                 <div className="text-center">
-                  <p className="text-xl font-bold text-white drop-shadow-md">
+                  <p className="text-xl font-bold text-slate-900 dark:text-white drop-shadow-md">
                     {Math.round(day.condition.temp_celsius)}°
                   </p>
                   <p className="text-xs text-slate-400 mt-1">

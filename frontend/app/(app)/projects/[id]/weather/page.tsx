@@ -52,7 +52,7 @@ export default function WeatherPage({ params }: { params: { id: string } }) {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             {project_name ? `${project_name} Weather` : "Weather Forecast"}<span className="text-blue-400">.</span>
           </h1>
           <p className="text-text-muted text-sm mt-0.5 flex items-center gap-1.5">
@@ -68,7 +68,7 @@ export default function WeatherPage({ params }: { params: { id: string } }) {
         <div className="flex items-center justify-between relative z-10">
           <div>
             <p className="text-blue-400 text-sm font-medium mb-1">Right Now</p>
-            <div className="text-6xl font-bold text-white tracking-tighter drop-shadow-lg">
+            <div className="text-6xl font-bold text-slate-900 dark:text-white tracking-tighter drop-shadow-lg">
               {Math.round(current.temp_celsius)}°C
             </div>
             <p className="text-text-secondary text-lg mt-2 capitalize">{current.description}</p>
@@ -87,7 +87,7 @@ export default function WeatherPage({ params }: { params: { id: string } }) {
                 <Icon className={`w-5 h-5 ${stat.color}`} />
                 <div>
                   <p className="text-xs text-text-muted">{stat.label}</p>
-                  <p className="text-white font-semibold">{stat.value}</p>
+                  <p className="text-slate-900 dark:text-white font-semibold">{stat.value}</p>
                 </div>
               </div>
             );
@@ -97,7 +97,7 @@ export default function WeatherPage({ params }: { params: { id: string } }) {
 
       {/* 5-Day Forecast */}
       <section>
-        <h2 className="text-lg font-bold text-white mb-4 animate-slide-up">5-Day Forecast</h2>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 animate-slide-up">5-Day Forecast</h2>
         <div className="space-y-3">
           {forecast?.map((day: any, i: number) => {
             const { icon: Icon, color, bg } = getIconInfo(day.condition.description);
@@ -128,7 +128,7 @@ export default function WeatherPage({ params }: { params: { id: string } }) {
                     <Droplets className="w-4 h-4 text-blue-400/60" />
                     <span className="text-sm text-text-muted">{day.condition.rain_mm}mm</span>
                   </div>
-                  <span className="text-lg font-bold text-white w-12 text-right">{Math.round(day.condition.temp_celsius)}°</span>
+                  <span className="text-lg font-bold text-slate-900 dark:text-white w-12 text-right">{Math.round(day.condition.temp_celsius)}°</span>
                 </div>
               </div>
             );
