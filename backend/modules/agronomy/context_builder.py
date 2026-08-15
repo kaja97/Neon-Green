@@ -3,7 +3,7 @@
 Assembles everything the AI layer (or a future local-LLM RAG) needs to know
 about a project into one structured dict. Three verbosity modes:
 
-  • "full"    — ~2-3k token JSON for Gemini chat (default)
+  • "full"    — Complete structured JSON for Gemini chat (includes all project table data)
   • "compact" — minimal version for rate-limited calls
   • "rag"     — chunk-friendly structure for future vector DB ingestion
 
@@ -20,12 +20,11 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 
 from models.project import Project
 from models.plant import Plant, PlantVariety, PlantStage
 from models.activity import ActivityPlan, FarmingActivity
-from models.soil import SoilTest, SoilNutrientResult
+from models.soil import SoilTest, SoilNutrientResult, SoilRecommendation
 from models.weather import WeatherAlert
 from models.issue import ProjectIssue
 from models.farmer import FarmerLocation, FarmerLandDetail
@@ -45,12 +44,10 @@ async def build_project_context(
 ) -> dict[str, Any]:
     """Top-level builder. Returns a JSON-safe dict.
 
-    When *intent* is provided (and is not ``"general"``), only the context
-    sections relevant to that intent are gathered — saving DB queries and
-    reducing the token payload sent to Gemini.
+    In "full" mode (default for AI Advisor), all core project data sections are
+    assembled so Gemini has complete ground-truth project state for every question.
     """
     import asyncio
-    from modules.ai.prompts import INTENT_CONTEXT_SECTIONS
 
     project = await db.get(Project, project_id)
     if not project:
@@ -59,68 +56,54 @@ async def build_project_context(
     plant = await db.get(Plant, project.plant_id)
     variety = await db.get(PlantVariety, project.variety_id) if project.variety_id else None
 
-    # Determine which sections are needed for this intent.
-    # None means "all sections" (general / unrecognised intent).
-    needed = INTENT_CONTEXT_SECTIONS.get(intent)
-
-    def _want(section_name: str) -> bool:
-        """Return True if this section should be included."""
-        return needed is None or section_name in needed
-
-    # Compute nutrient needs — only if the intent actually uses them.
+    # Compute nutrient needs & product recommendations
     needs = None
     needs_dict = None
-    if _want("nutrient_needs") or _want("product_recommendations"):
-        try:
-            needs = await calculate_stage_needs(db, project, include_all_stages=(mode == "full"))
-            needs_dict = needs_to_dict(needs)
-        except Exception:
-            logger.exception("nutrient_engine failed for project %s", project_id)
+    try:
+        needs = await calculate_stage_needs(db, project, include_all_stages=True)
+        needs_dict = needs_to_dict(needs)
+    except Exception:
+        logger.exception("nutrient_engine failed for project %s", project_id)
 
     products = None
-    if _want("product_recommendations") and needs:
+    if needs:
         try:
             products = await recommend_products(db, needs, project.farming_method, stage="current")
         except Exception:
             logger.exception("product_matcher failed for project %s", project_id)
 
-    # Build only the sections that this intent requires.
-    # crop & stage are always included (tiny and universally useful).
+    # Build all project data sections concurrently
     coros = [
         _build_crop_section(project, plant, variety),
         _build_stage_section(db, project),
+        _build_soil_section(db, project_id),
+        _build_activities_section(db, project_id),
+        _build_issues_section(db, project_id),
+        _build_weather_section(db, project_id, project),
+        _build_market_section(db, project),
+        _build_land_section(db, project),
     ]
-    section_keys = ["crop", "stage"]
-
-    optional_sections = [
-        ("soil",       _build_soil_section(db, project_id)),
-        ("activities", _build_activities_section(db, project_id)),
-        ("issues",     _build_issues_section(db, project_id)),
-        ("weather",    _build_weather_section(db, project_id, project)),
-        ("market",     _build_market_section(db, project)),
-        ("land",       _build_land_section(db, project)),
-    ]
-    for key, coro in optional_sections:
-        if _want(key):
-            coros.append(coro)
-            section_keys.append(key)
+    section_keys = ["crop", "stage", "soil", "activities", "issues", "weather", "market", "land"]
 
     results = await asyncio.gather(*coros, return_exceptions=True)
 
-    # Replace any section that errored with a minimal placeholder.
+    # Replace any section that errored with a minimal placeholder
     def _safe(section, name):
         if isinstance(section, Exception):
             logger.warning("context section %s failed: %s", name, section)
             return {"error": name + "_unavailable"}
         return section
 
-    context: dict[str, Any] = {"project_id": str(project_id)}
+    context: dict[str, Any] = {
+        "project_id": str(project_id),
+        "project_name": project.name,
+    }
     for key, result in zip(section_keys, results):
         context[key] = _safe(result, key)
 
-    if needs_dict is not None and _want("nutrient_needs"):
+    if needs_dict is not None:
         context["nutrient_needs"] = needs_dict
-    if products is not None and _want("product_recommendations"):
+    if products is not None:
         context["product_recommendations"] = products
 
     if mode == "compact":
@@ -133,14 +116,20 @@ async def build_project_context(
 # ── Section builders ────────────────────────────────────────────────────
 async def _build_crop_section(project: Project, plant: Plant | None, variety: PlantVariety | None) -> dict:
     return {
-        "name": plant.common_name if plant else "Unknown",
-        "scientific_name": (variety.scientific_name if variety and variety.scientific_name else None),
-        "variety": variety.variety_name if variety else None,
+        "common_name": plant.common_name if plant else "Unknown",
+        "scientific_name": (variety.scientific_name if variety and variety.scientific_name else getattr(plant, "botanical_name", None)),
+        "variety_name": variety.variety_name if variety else None,
         "category": plant.category if plant else None,
+        "water_requirement": getattr(plant, "water_requirement", None),
+        "optimal_soil_ph": f"{plant.soil_ph_min} - {plant.soil_ph_max}" if plant and getattr(plant, "soil_ph_min", None) else None,
         "farming_method": project.farming_method,
         "area": f"{float(project.area)} {project.area_unit}",
+        "area_numeric": float(project.area),
+        "area_unit": project.area_unit,
         "planting_date": project.planting_date.isoformat() if project.planting_date else None,
         "expected_harvest_date": project.expected_harvest_date.isoformat() if project.expected_harvest_date else None,
+        "expected_yield_kg": float(project.expected_yield_kg) if project.expected_yield_kg else None,
+        "expected_revenue_lkr": float(project.expected_revenue) if project.expected_revenue else None,
         "status": project.status,
     }
 
@@ -159,15 +148,27 @@ async def _build_stage_section(db: AsyncSession, project: Project) -> dict:
             current = s
             break
     total_days = (stages[-1].end_day if stages else 0)
+
+    stages_summary = [
+        {
+            "order": s.stage_order,
+            "name": s.stage_name,
+            "days": f"Day {s.start_day} - {s.end_day}",
+            "is_current": s.stage_name == (current.stage_name if current else ""),
+        }
+        for s in stages
+    ]
+
     return {
-        "current_stage": current.stage_name if current else None,
-        "current_stage_order": current.stage_order if current else None,
+        "current_stage": current.stage_name if current else (stages[0].stage_name if stages else "Growing"),
+        "current_stage_order": current.stage_order if current else 1,
         "days_since_planting": days_since_planting,
         "total_growth_days": total_days,
         "progress_pct": round((days_since_planting / total_days) * 100, 1) if total_days else 0,
         "days_to_harvest": max(0, total_days - days_since_planting) if total_days else None,
         "watch_for": current.watch_for if current else None,
         "critical_actions": current.critical_actions if current else None,
+        "all_stages": stages_summary,
     }
 
 
@@ -180,7 +181,7 @@ async def _build_soil_section(db: AsyncSession, project_id: uuid.UUID) -> dict:
     )
     test = test_res.scalars().first()
     if not test:
-        return {"has_test": False}
+        return {"has_test": False, "note": "No soil test registered for this project."}
 
     nut_res = await db.execute(
         select(SoilNutrientResult).where(SoilNutrientResult.soil_test_id == test.id)
@@ -199,11 +200,30 @@ async def _build_soil_section(db: AsyncSession, project_id: uuid.UUID) -> dict:
             if val is not None:
                 nutrients[code] = float(val)
 
+    # Fetch generated soil recommendations
+    rec_res = await db.execute(
+        select(SoilRecommendation).where(SoilRecommendation.soil_test_id == test.id)
+    )
+    recs = rec_res.scalars().all()
+    recommendations_list = [
+        {
+            "nutrient": r.nutrient,
+            "deficiency_level": r.deficiency_level,
+            "fertilizer_type": r.fertilizer_type,
+            "commercial_name": r.commercial_name,
+            "quantity_kg_per_acre": float(r.quantity_kg_per_acre) if r.quantity_kg_per_acre else None,
+            "application_method": r.application_method,
+            "organic_alternative": r.organic_alternative,
+        }
+        for r in recs
+    ]
+
     return {
         "has_test": True,
         "test_date": test.test_date.isoformat(),
         "tested_by": test.tested_by,
         "nutrients": nutrients,
+        "generated_recommendations": recommendations_list,
     }
 
 
@@ -216,10 +236,17 @@ async def _build_activities_section(db: AsyncSession, project_id: uuid.UUID) -> 
     if not plan:
         return {"has_plan": False}
 
+    overdue = await db.execute(
+        select(FarmingActivity).where(
+            FarmingActivity.plan_id == plan.id,
+            FarmingActivity.planned_date < today,
+            FarmingActivity.status == "pending",
+        ).order_by(FarmingActivity.planned_date).limit(5)
+    )
     pending_today = await db.execute(
         select(FarmingActivity).where(
             FarmingActivity.plan_id == plan.id,
-            FarmingActivity.planned_date <= today,
+            FarmingActivity.planned_date == today,
             FarmingActivity.status == "pending",
         ).order_by(FarmingActivity.due_date).limit(10)
     )
@@ -244,10 +271,12 @@ async def _build_activities_section(db: AsyncSession, project_id: uuid.UUID) -> 
             "title": a.title,
             "planned_date": a.planned_date.isoformat() if a.planned_date else None,
             "status": a.status,
+            "description": a.description,
         }
 
     return {
         "has_plan": True,
+        "overdue_activities": [_act(a) for a in overdue.scalars().all()],
         "pending_today": [_act(a) for a in pending_today.scalars().all()],
         "upcoming_7_days": [_act(a) for a in upcoming.scalars().all()],
         "recent_completed": [_act(a) for a in recent_done.scalars().all()],
@@ -272,6 +301,7 @@ async def _build_issues_section(db: AsyncSession, project_id: uuid.UUID) -> dict
                 "status": i.status,
                 "reported_date": i.reported_date.isoformat() if i.reported_date else None,
                 "description": i.description,
+                "ai_diagnosis": i.ai_diagnosis,
             }
             for i in issues
         ],
@@ -279,7 +309,6 @@ async def _build_issues_section(db: AsyncSession, project_id: uuid.UUID) -> dict
 
 
 async def _build_weather_section(db: AsyncSession, project_id: uuid.UUID, project: Project) -> dict:
-    # Weather forecast (best-effort; service may raise if location missing).
     forecast_summary = None
     try:
         from dependencies import get_weather_service
@@ -299,7 +328,6 @@ async def _build_weather_section(db: AsyncSession, project_id: uuid.UUID, projec
     except Exception as e:
         logger.warning("weather fetch failed in context builder: %s", e)
 
-    # Active alerts.
     alert_res = await db.execute(
         select(WeatherAlert).where(WeatherAlert.project_id == project_id, WeatherAlert.is_resolved == False)
     )
@@ -340,7 +368,6 @@ async def _build_land_section(db: AsyncSession, project: Project) -> dict:
 
 # ── Mode transforms ──────────────────────────────────────────────────────
 def _compact(ctx: dict[str, Any]) -> dict[str, Any]:
-    """Minimal payload — drop lists, keep only essentials for AI comprehension."""
     stage = ctx.get("stage", {}) or {}
     soil = ctx.get("soil", {}) or {}
     issues = ctx.get("issues", {}) or {}
@@ -350,8 +377,8 @@ def _compact(ctx: dict[str, Any]) -> dict[str, Any]:
     soil_ph = (soil.get("nutrients") or {}).get("ph_level") if soil.get("has_test") else None
     return {
         "project_id": ctx.get("project_id"),
-        "crop": crop.get("name"),
-        "variety": crop.get("variety"),
+        "crop": crop.get("common_name"),
+        "variety": crop.get("variety_name"),
         "farming_method": crop.get("farming_method"),
         "area": crop.get("area"),
         "current_stage": stage.get("current_stage"),
@@ -367,12 +394,6 @@ def _compact(ctx: dict[str, Any]) -> dict[str, Any]:
 
 
 def _rag_chunks(ctx: dict[str, Any]) -> dict[str, Any]:
-    """Restructure the payload as discrete, embeddable chunks.
-
-    A future RAG layer can embed each chunk independently and retrieve the
-    most relevant ones for a given user question, instead of always sending
-    the whole context.
-    """
     chunks = []
 
     def add(chunk_id: str, text: str, data: dict):
@@ -380,7 +401,7 @@ def _rag_chunks(ctx: dict[str, Any]) -> dict[str, Any]:
 
     crop = ctx.get("crop", {}) or {}
     add("crop_profile",
-        f"Crop: {crop.get('name')} (variety {crop.get('variety')}); method {crop.get('farming_method')}; area {crop.get('area')}.",
+        f"Crop: {crop.get('common_name')} (variety {crop.get('variety_name')}); method {crop.get('farming_method')}; area {crop.get('area')}.",
         crop)
 
     stage = ctx.get("stage", {}) or {}
