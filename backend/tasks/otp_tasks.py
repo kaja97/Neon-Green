@@ -3,17 +3,25 @@ Celery background tasks for OTP delivery via email/SMS.
 """
 
 import asyncio
+import concurrent.futures
 import logging
 from .celery_app import celery_app
 
 logger = logging.getLogger("agrifarm.otp_tasks")
 
 
+def _run_async_safely(coro):
+    """Run an async coroutine safely from sync Celery task even if an event loop is running."""
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(asyncio.run, coro)
+        return future.result()
+
+
 @celery_app.task(bind=True, max_retries=2, default_retry_delay=10)
 def send_otp_email_task(self, email: str, code: str, purpose: str):
     """
     Send OTP verification code via email (Celery background task).
-    Uses the dual-provider email service (Google API → SMTP fallback).
+    Uses the dual-provider email service (Google API -> SMTP fallback).
     Retries up to 2 times on failure.
     """
     try:
@@ -30,27 +38,21 @@ def send_otp_email_task(self, email: str, code: str, purpose: str):
         }
         subject = subject_map.get(purpose, "AgriFarm AI - Verification Code")
 
-        # Run async email sender in sync context
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(
-                send_email(
-                    to=email,
-                    subject=subject,
-                    html_body=html_body,
-                    plain_body=plain_body,
-                )
+        result = _run_async_safely(
+            send_email(
+                to=email,
+                subject=subject,
+                html_body=html_body,
+                plain_body=plain_body,
             )
-            if result:
-                logger.info("OTP email sent to %s for %s", email, purpose)
-            else:
-                logger.warning(
-                    "OTP email failed to dispatch to %s for %s", email, purpose
-                )
-            return result
-        finally:
-            loop.close()
+        )
+        if result:
+            logger.info("OTP email sent to %s for %s", email, purpose)
+        else:
+            logger.warning(
+                "OTP email failed to dispatch to %s for %s", email, purpose
+            )
+        return result
 
     except Exception as exc:
         logger.error(
@@ -68,24 +70,19 @@ def send_welcome_email_task(self, email: str, full_name: str):
 
         html_body, plain_body = welcome_email(full_name=full_name)
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(
-                send_email(
-                    to=email,
-                    subject="Welcome to AgriFarm AI! 🌱",
-                    html_body=html_body,
-                    plain_body=plain_body,
-                )
+        result = _run_async_safely(
+            send_email(
+                to=email,
+                subject="Welcome to AgriFarm AI! 🌱",
+                html_body=html_body,
+                plain_body=plain_body,
             )
-            if result:
-                logger.info("Welcome email sent to %s", email)
-            else:
-                logger.warning("Welcome email failed to dispatch to %s", email)
-            return result
-        finally:
-            loop.close()
+        )
+        if result:
+            logger.info("Welcome email sent to %s", email)
+        else:
+            logger.warning("Welcome email failed to dispatch to %s", email)
+        return result
 
     except Exception as exc:
         logger.error("Welcome email failed to %s: %s", email, exc)
@@ -101,24 +98,19 @@ def send_password_reset_email_task(self, email: str, full_name: str):
 
         html_body, plain_body = password_reset_success_email(full_name=full_name)
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(
-                send_email(
-                    to=email,
-                    subject="AgriFarm AI — Password Changed",
-                    html_body=html_body,
-                    plain_body=plain_body,
-                )
+        result = _run_async_safely(
+            send_email(
+                to=email,
+                subject="AgriFarm AI — Password Changed",
+                html_body=html_body,
+                plain_body=plain_body,
             )
-            if result:
-                logger.info("Password reset email sent to %s", email)
-            else:
-                logger.warning("Password reset email failed to dispatch to %s", email)
-            return result
-        finally:
-            loop.close()
+        )
+        if result:
+            logger.info("Password reset email sent to %s", email)
+        else:
+            logger.warning("Password reset email failed to dispatch to %s", email)
+        return result
 
     except Exception as exc:
         logger.error("Password reset email failed to %s: %s", email, exc)
@@ -146,26 +138,21 @@ def send_alert_email_task(
             severity=severity,
         )
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(
-                send_email(
-                    to=email,
-                    subject=f"AgriFarm AI — {alert_title}",
-                    html_body=html_body,
-                    plain_body=plain_body,
-                )
+        result = _run_async_safely(
+            send_email(
+                to=email,
+                subject=f"AgriFarm AI — {alert_title}",
+                html_body=html_body,
+                plain_body=plain_body,
             )
-            if result:
-                logger.info("Alert email sent to %s: %s", email, alert_title)
-            else:
-                logger.warning(
-                    "Alert email failed to dispatch to %s: %s", email, alert_title
-                )
-            return result
-        finally:
-            loop.close()
+        )
+        if result:
+            logger.info("Alert email sent to %s: %s", email, alert_title)
+        else:
+            logger.warning(
+                "Alert email failed to dispatch to %s: %s", email, alert_title
+            )
+        return result
 
     except Exception as exc:
         logger.error("Alert email failed to %s: %s", email, exc)

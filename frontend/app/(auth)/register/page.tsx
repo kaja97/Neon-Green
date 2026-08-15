@@ -28,7 +28,7 @@ export default function RegisterPage() {
   const [step, setStep] = useState<Step>(1);
 
   // Step 1: Basic Info
-  const [role, setRole] = useState("buyer");
+  const [role, setRole] = useState("farmer");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");

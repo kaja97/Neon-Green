@@ -45,6 +45,75 @@ class AuthService(BaseService):
         self.account_repo = account_repo
         self.profile_repo = profile_repo
 
+    # ── Direct Async Email Helpers ───────────────────────────
+
+    async def _send_otp_email(self, email: str, code: str, purpose: str) -> bool:
+        """Send OTP verification code via email directly using async email service."""
+        try:
+            from core.email_service import send_email
+            from core.email_templates import otp_email
+
+            html_body, plain_body = otp_email(code=code, purpose=purpose)
+
+            subject_map = {
+                "register": "AgriFarm AI - Verify Your Email",
+                "forgot_password": "AgriFarm AI - Reset Your Password",
+                "change_email": "AgriFarm AI - Confirm New Email",
+                "change_phone": "AgriFarm AI - Confirm Phone Change",
+            }
+            subject = subject_map.get(purpose, "AgriFarm AI - Verification Code")
+
+            result = await send_email(
+                to=email,
+                subject=subject,
+                html_body=html_body,
+                plain_body=plain_body,
+            )
+            if result:
+                self.logger.info("OTP email sent to %s for %s", email, purpose)
+            else:
+                self.logger.warning("OTP email failed to dispatch to %s for %s", email, purpose)
+            return bool(result)
+        except Exception as exc:
+            self.logger.error("Failed to send OTP email to %s for %s: %s", email, purpose, exc)
+            return False
+
+    async def _send_welcome_email(self, email: str, full_name: str) -> bool:
+        """Send welcome email after successful registration."""
+        try:
+            from core.email_service import send_email
+            from core.email_templates import welcome_email
+
+            html_body, plain_body = welcome_email(full_name=full_name)
+            result = await send_email(
+                to=email,
+                subject="Welcome to AgriFarm AI! 🌱",
+                html_body=html_body,
+                plain_body=plain_body,
+            )
+            return bool(result)
+        except Exception as exc:
+            self.logger.warning("Failed to send welcome email to %s: %s", email, exc)
+            return False
+
+    async def _send_password_reset_email(self, email: str, full_name: str) -> bool:
+        """Send password reset notification email."""
+        try:
+            from core.email_service import send_email
+            from core.email_templates import password_reset_success_email
+
+            html_body, plain_body = password_reset_success_email(full_name=full_name)
+            result = await send_email(
+                to=email,
+                subject="AgriFarm AI — Password Changed",
+                html_body=html_body,
+                plain_body=plain_body,
+            )
+            return bool(result)
+        except Exception as exc:
+            self.logger.warning("Failed to send password reset email to %s: %s", email, exc)
+            return False
+
     # ── Token Helpers ────────────────────────────────────────
 
     async def _store_refresh_token(self, user_id: str, token: str) -> None:
@@ -85,11 +154,8 @@ class AuthService(BaseService):
             context={"phone": data.phone},
         )
 
-        try:
-            from tasks.otp_tasks import send_otp_email_task
-            send_otp_email_task.delay(data.email, code, "register")
-        except Exception as exc:
-            self.logger.warning("Celery not available (or eager execution failed). Error: %s. OTP code for %s: %s", exc, data.email, code)
+        # Send OTP email directly via async email service
+        await self._send_otp_email(data.email, code, "register")
 
         return {
             "message": f"Verification code sent to {data.email}",
@@ -175,11 +241,7 @@ class AuthService(BaseService):
         access, refresh = self._generate_tokens(str(new_account.id), new_account.role)
         await self._store_refresh_token(str(new_account.id), refresh)
 
-        try:
-            from tasks.otp_tasks import send_welcome_email_task
-            send_welcome_email_task.delay(data.email, data.full_name)
-        except Exception:
-            pass
+        await self._send_welcome_email(data.email, data.full_name)
 
         return RegisterResponse(
             account_id=new_account.id,
@@ -279,16 +341,12 @@ class AuthService(BaseService):
         account = await self.account_repo.get_by_email_or_phone(db, data.email_or_phone)
 
         if account and account.email:
-            try:
-                code = await generate_otp(
-                    purpose="forgot_password",
-                    identifier=account.email,
-                    context={"user_id": str(account.id)},
-                )
-                from tasks.otp_tasks import send_otp_email_task
-                send_otp_email_task.delay(account.email, code, "forgot_password")
-            except Exception:
-                self.logger.warning("Failed to send forgot-password OTP for %s", data.email_or_phone)
+            code = await generate_otp(
+                purpose="forgot_password",
+                identifier=account.email,
+                context={"user_id": str(account.id)},
+            )
+            await self._send_otp_email(account.email, code, "forgot_password")
 
         return {
             "message": "If an account exists, a verification code has been sent.",
@@ -311,14 +369,14 @@ class AuthService(BaseService):
         access, refresh = self._generate_tokens(str(account.id), account.role)
         await self._store_refresh_token(str(account.id), refresh)
 
-        try:
-            from tasks.otp_tasks import send_password_reset_email_task
-            if account.farmer_profile:
-                send_password_reset_email_task.delay(account.email, account.farmer_profile.full_name)
-            else:
-                send_password_reset_email_task.delay(account.email, "User")
-        except Exception:
-            pass
+        full_name = "User"
+        if account.farmer_profile and account.farmer_profile.full_name:
+            full_name = account.farmer_profile.full_name
+        elif account.vendor_profile and account.vendor_profile.business_name:
+            full_name = account.vendor_profile.business_name
+        elif account.buyer_profile and account.buyer_profile.full_name:
+            full_name = account.buyer_profile.full_name
+        await self._send_password_reset_email(account.email, full_name)
 
         return TokenResponse(access_token=access, role=account.role, refresh_token=refresh)
 
@@ -335,11 +393,7 @@ class AuthService(BaseService):
             context={"user_id": str(user.id), "old_email": user.email},
         )
 
-        try:
-            from tasks.otp_tasks import send_otp_email_task
-            send_otp_email_task.delay(data.new_email, code, "change_email")
-        except Exception:
-            self.logger.warning("Celery not available. OTP for %s: %s", data.new_email, code)
+        await self._send_otp_email(data.new_email, code, "change_email")
 
         return {
             "message": f"Verification code sent to {data.new_email}",
@@ -376,11 +430,7 @@ class AuthService(BaseService):
         )
 
         if user.email:
-            try:
-                from tasks.otp_tasks import send_otp_email_task
-                send_otp_email_task.delay(user.email, code, "change_phone")
-            except Exception:
-                self.logger.warning("Celery not available. Phone change OTP: %s", code)
+            await self._send_otp_email(user.email, code, "change_phone")
 
         return {
             "message": "Verification code sent to your email.",
