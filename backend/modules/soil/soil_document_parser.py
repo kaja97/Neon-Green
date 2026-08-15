@@ -1,7 +1,7 @@
 """Soil test document parser for multi-format laboratory reports.
 
 Extracts text, numerical data, and structured tables from:
-  - PDF documents (pypdf)
+  - PDF documents (pypdf + raw PDF bytes for Gemini Multimodal)
   - Word documents (.docx) (python-docx)
   - Excel spreadsheets (.xlsx, .xls) (openpyxl)
   - Plain CSV files (.csv)
@@ -30,7 +30,7 @@ def parse_soil_document(
     Returns:
         Tuple of:
           - extracted_text: str (Structured text/markdown from the document)
-          - raw_image_bytes: Optional[bytes] (If the file is an image or scanned document)
+          - raw_multimodal_bytes: Optional[bytes] (PDF or Image bytes for Gemini Vision)
           - mime_type: str (Resolved MIME type, e.g. "image/png", "application/pdf")
     """
     ext = os.path.splitext(filename.lower())[1]
@@ -40,15 +40,10 @@ def parse_soil_document(
         resolved_mime = "image/png" if ext == ".png" else "image/webp" if ext == ".webp" else "image/jpeg"
         return "", file_bytes, resolved_mime
 
-    # 2. PDF Documents
+    # 2. PDF Documents — send raw PDF bytes to Gemini for high-fidelity multimodal visual analysis
     elif ext == ".pdf":
-        text = _extract_pdf_text(file_bytes)
-        # If the PDF has extractable text, return text; otherwise send bytes as PDF payload
-        if len(text.strip()) > 30:
-            return text, None, "application/pdf"
-        else:
-            logger.info("PDF has low extractable text (likely scanned). Passing raw PDF bytes to Gemini.")
-            return "", file_bytes, "application/pdf"
+        extracted_text = _extract_pdf_text(file_bytes)
+        return extracted_text, file_bytes, "application/pdf"
 
     # 3. Word Documents (.docx)
     elif ext in [".docx", ".doc"]:
@@ -142,7 +137,6 @@ def _extract_xlsx_text(data: bytes) -> str:
 def _extract_csv_text(data: bytes) -> str:
     """Decode and format CSV data."""
     try:
-        # Try UTF-8 first, fallback to Latin-1
         text = data.decode("utf-8")
     except UnicodeDecodeError:
         text = data.decode("latin-1", errors="ignore")

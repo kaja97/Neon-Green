@@ -141,7 +141,7 @@ def _parse_gemini_json(text: str) -> list[dict] | None:
     """
     # Try direct parse first
     try:
-        parsed = json.loads(text.strip())
+        parsed = json.loads(text.strip(), strict=False)
         if isinstance(parsed, dict) and "recommendations" in parsed:
             return parsed["recommendations"]
         if isinstance(parsed, list):
@@ -154,7 +154,7 @@ def _parse_gemini_json(text: str) -> list[dict] | None:
     code_block = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", text, re.DOTALL)
     if code_block:
         try:
-            parsed = json.loads(code_block.group(1).strip())
+            parsed = json.loads(code_block.group(1).strip(), strict=False)
             if isinstance(parsed, dict) and "recommendations" in parsed:
                 return parsed["recommendations"]
             if isinstance(parsed, list):
@@ -166,7 +166,7 @@ def _parse_gemini_json(text: str) -> list[dict] | None:
     brace_match = re.search(r"\{.*\}", text, re.DOTALL)
     if brace_match:
         try:
-            parsed = json.loads(brace_match.group())
+            parsed = json.loads(brace_match.group(), strict=False)
             if isinstance(parsed, dict) and "recommendations" in parsed:
                 return parsed["recommendations"]
         except json.JSONDecodeError:
