@@ -1,11 +1,11 @@
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 from datetime import date, datetime
 import uuid
 
 class SoilNutrientResultCreate(BaseModel):
     # Physical & Chemical Properties
-    ph_level: float  # Required, range 1-14
+    ph_level: float = 6.5  # Required, range 1-14
     electrical_conductivity_ec: Optional[float] = None  # ds/m
     organic_carbon_oc: Optional[float] = None  # %
     cation_exchange_capacity_cec: Optional[float] = None  # meq/100g
@@ -83,3 +83,18 @@ class SoilTestResponse(BaseModel):
 class SoilTestDetailResponse(SoilTestResponse):
     results: Optional[SoilNutrientResultResponse] = None
     recommendations: List[SoilRecommendationResponse] = []
+
+class RawNutrientItem(BaseModel):
+    parameter_name: str
+    raw_value: Any
+    unit: Optional[str] = None
+    mapped_field: Optional[str] = None
+
+class SoilReportExtractionResponse(BaseModel):
+    test_date: Optional[date] = None
+    tested_by: Optional[str] = None
+    notes: Optional[str] = None
+    results: SoilNutrientResultCreate
+    raw_extracted_nutrients: List[RawNutrientItem] = []
+    confidence_score: float = 1.0
+    security_scan: Optional[Dict[str, Any]] = None

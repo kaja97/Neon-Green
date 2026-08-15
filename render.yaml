@@ -43,7 +43,7 @@ services:
       - key: VAPID_PRIVATE_KEY
         sync: false
       - key: VAPID_EMAIL
-        value: mailto:admin@agrifarm.app
+        value: mailto:kajanan00097@gmail.com
 
       # ── CORS: allow frontend ──────────────────
       - key: FRONTEND_URL

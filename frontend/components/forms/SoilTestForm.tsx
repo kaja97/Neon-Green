@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { FlaskConical, Save, Loader2, Sparkles, RotateCcw } from "lucide-react";
+import {
+  FlaskConical, Save, Loader2, Sparkles, RotateCcw,
+  Upload, FileText, CheckCircle2, AlertCircle, FileSpreadsheet,
+  Image as ImageIcon, X, ShieldCheck
+} from "lucide-react";
 
 interface SoilTestFormProps {
   projectId: string;
@@ -53,12 +57,24 @@ export default function SoilTestForm({
   onCancel,
 }: SoilTestFormProps) {
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Form Fields State
   const [testDate, setTestDate] = useState(
     new Date().toISOString().split("T")[0]
   );
   const [labName, setLabName] = useState("");
   const [notes, setNotes] = useState("");
   const [results, setResults] = useState(INITIAL_RESULTS);
+
+  // File Upload & AI Extraction State
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractSuccess, setExtractSuccess] = useState<string | null>(null);
+  const [highlightFields, setHighlightFields] = useState(false);
+  const [extractedRawList, setExtractedRawList] = useState<any[]>([]);
+
+  // Submission State
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,12 +90,106 @@ export default function SoilTestForm({
 
   const clearForm = () => {
     setResults(INITIAL_RESULTS);
+    setSelectedFile(null);
+    setExtractSuccess(null);
+    setExtractedRawList([]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const parseNum = (val: string) => {
     if (!val || val.trim() === "") return null;
     const num = Number(val);
     return isNaN(num) ? null : num;
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+      setExtractSuccess(null);
+      setError(null);
+    }
+  };
+
+  const handleExtractWithAI = async () => {
+    if (!selectedFile) return;
+    setIsExtracting(true);
+    setError(null);
+    setExtractSuccess(null);
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const res = await api.post("/soil/extract-report", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const extracted = res.data?.data || res.data;
+      if (extracted) {
+        // Update Test Date if extracted
+        if (extracted.test_date) {
+          setTestDate(extracted.test_date);
+        }
+
+        // Update Lab Name
+        if (extracted.tested_by) {
+          setLabName(extracted.tested_by);
+        } else if (!labName) {
+          setLabName(`Report: ${selectedFile.name}`);
+        }
+
+        // Update Notes
+        if (extracted.notes) {
+          setNotes(extracted.notes);
+        }
+
+        // Update Nutrient Results
+        if (extracted.results) {
+          const r = extracted.results;
+          setResults({
+            ph_level: r.ph_level !== null && r.ph_level !== undefined ? String(r.ph_level) : "6.5",
+            electrical_conductivity_ec: r.electrical_conductivity_ec !== null && r.electrical_conductivity_ec !== undefined ? String(r.electrical_conductivity_ec) : "",
+            organic_carbon_oc: r.organic_carbon_oc !== null && r.organic_carbon_oc !== undefined ? String(r.organic_carbon_oc) : "",
+            cation_exchange_capacity_cec: r.cation_exchange_capacity_cec !== null && r.cation_exchange_capacity_cec !== undefined ? String(r.cation_exchange_capacity_cec) : "",
+            nitrogen_n: r.nitrogen_n !== null && r.nitrogen_n !== undefined ? String(r.nitrogen_n) : "",
+            phosphorus_p: r.phosphorus_p !== null && r.phosphorus_p !== undefined ? String(r.phosphorus_p) : "",
+            potassium_k: r.potassium_k !== null && r.potassium_k !== undefined ? String(r.potassium_k) : "",
+            calcium_ca: r.calcium_ca !== null && r.calcium_ca !== undefined ? String(r.calcium_ca) : "",
+            magnesium_mg: r.magnesium_mg !== null && r.magnesium_mg !== undefined ? String(r.magnesium_mg) : "",
+            sulfur_s: r.sulfur_s !== null && r.sulfur_s !== undefined ? String(r.sulfur_s) : "",
+            zinc_zn: r.zinc_zn !== null && r.zinc_zn !== undefined ? String(r.zinc_zn) : "",
+            boron_b: r.boron_b !== null && r.boron_b !== undefined ? String(r.boron_b) : "",
+            iron_fe: r.iron_fe !== null && r.iron_fe !== undefined ? String(r.iron_fe) : "",
+            manganese_mn: r.manganese_mn !== null && r.manganese_mn !== undefined ? String(r.manganese_mn) : "",
+            copper_cu: r.copper_cu !== null && r.copper_cu !== undefined ? String(r.copper_cu) : "",
+          });
+        }
+
+        if (extracted.raw_extracted_nutrients) {
+          setExtractedRawList(extracted.raw_extracted_nutrients);
+        }
+
+        setExtractSuccess(
+          `AI Report Extracted: Successfully auto-filled nutrient values from "${selectedFile.name}"!`
+        );
+        setHighlightFields(true);
+        setTimeout(() => setHighlightFields(false), 3000);
+      }
+    } catch (err: any) {
+      setError(
+        err.response?.data?.detail || err.response?.data?.error?.message || "Failed to extract data from soil report."
+      );
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const getFileIcon = (fname: string) => {
+    const ext = fname.split(".").pop()?.toLowerCase();
+    if (ext === "pdf") return <FileText className="w-5 h-5 text-red-400" />;
+    if (ext === "xlsx" || ext === "xls" || ext === "csv") return <FileSpreadsheet className="w-5 h-5 text-emerald-400" />;
+    if (ext === "docx" || ext === "doc") return <FileText className="w-5 h-5 text-blue-400" />;
+    return <ImageIcon className="w-5 h-5 text-purple-400" />;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,21 +237,24 @@ export default function SoilTestForm({
   const inputClasses =
     "w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50";
 
-  const smallInputClasses =
-    "w-full h-10 px-3 rounded-xl bg-surface-tertiary border border-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50";
+  const smallInputClasses = `w-full h-10 px-3 rounded-xl bg-surface-tertiary border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50 ${
+    highlightFields ? "border-emerald-400 bg-emerald-500/10 shadow-[0_0_10px_rgba(16,185,129,0.3)]" : "border-border"
+  }`;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Header & Helper Buttons */}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* ── Header & Helper Buttons ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/10">
+          <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
             <FlaskConical className="w-5 h-5 text-amber-400" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Record Soil Analysis</h3>
+            <h3 className="text-base font-bold text-text-primary">
+              Soil Test Diagnostic Entry
+            </h3>
             <p className="text-xs text-text-muted">
-              Enter laboratory test results or pre-fill standard field averages
+              Upload laboratory report or manually enter nutrient metrics
             </p>
           </div>
         </div>
@@ -149,36 +262,117 @@ export default function SoilTestForm({
         <button
           type="button"
           onClick={prefillAverages}
-          className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition-all flex items-center gap-1.5"
-          title="Fill realistic agronomic average test values"
+          className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-1.5 transition-all border border-emerald-500/30"
+          title="Fill standard optimal baseline values"
         >
-          <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Pre-fill Standard Averages</span>
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Prefill Optimal Baseline</span>
         </button>
       </div>
 
-      {/* Error */}
+      {/* ── AI Document Upload Dropzone & Extract Action ── */}
+      <div className="p-4 rounded-2xl bg-surface-secondary/70 border border-border space-y-3 shadow-inner">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />
+            AI Document Scanner & Auto-Fill
+          </span>
+          <span className="text-[11px] font-mono text-text-muted">
+            Supports PDF, PNG, JPG, DOCX, XLSX, CSV
+          </span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* File Picker Trigger */}
+          <div className="flex-1 relative">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.doc,.xlsx,.xls,.csv"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="soil-report-upload"
+            />
+            {selectedFile ? (
+              <div className="w-full h-11 px-3.5 rounded-xl bg-surface-tertiary border border-emerald-500/40 flex items-center justify-between gap-2 text-sm text-text-primary">
+                <div className="flex items-center gap-2 truncate">
+                  {getFileIcon(selectedFile.name)}
+                  <span className="truncate font-medium">{selectedFile.name}</span>
+                  <span className="text-[11px] text-text-muted">
+                    ({(selectedFile.size / 1024).toFixed(0)} KB)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="p-1 hover:bg-surface-elevated rounded-lg text-text-muted hover:text-red-400 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <label
+                htmlFor="soil-report-upload"
+                className="w-full h-11 px-4 rounded-xl bg-surface-tertiary border border-dashed border-border hover:border-emerald-400 flex items-center justify-center gap-2 text-xs font-semibold text-text-secondary cursor-pointer hover:text-emerald-400 transition-all"
+              >
+                <Upload className="w-4 h-4" />
+                <span>Choose or drop Soil Report (PDF / Image / Excel / Word)</span>
+              </label>
+            )}
+          </div>
+
+          {/* Extract Button */}
+          <button
+            type="button"
+            onClick={handleExtractWithAI}
+            disabled={!selectedFile || isExtracting || isLoading}
+            className="h-11 px-5 rounded-xl btn-primary flex items-center justify-center gap-2 text-xs font-bold whitespace-nowrap disabled:opacity-40 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+          >
+            {isExtracting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Analyzing Report...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                <span>Extract with AI</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Security & Extraction Status Notice */}
+        {extractSuccess && (
+          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-2.5 text-xs text-emerald-300">
+            <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-semibold">{extractSuccess}</p>
+              {extractedRawList.length > 0 && (
+                <p className="text-[11px] text-text-muted">
+                  Found {extractedRawList.length} parameter items. You can review and fine-tune below before saving.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Error Banner ── */}
       {error && (
-        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400 animate-slide-down">
-          {error}
+        <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-2.5 text-xs text-red-400">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Lab Name + Date */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* ── General Information ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-secondary">Lab Name</label>
-          <input
-            type="text"
-            placeholder="e.g., AgriLab Diagnostics / Field Kit"
-            value={labName}
-            onChange={(e) => setLabName(e.target.value)}
-            disabled={isLoading}
-            className={inputClasses}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-secondary">
+          <label className="text-xs font-medium text-text-secondary">
             Test Date <span className="text-red-400">*</span>
           </label>
           <input
@@ -190,14 +384,29 @@ export default function SoilTestForm({
             className={inputClasses}
           />
         </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-text-secondary">
+            Testing Laboratory / Organization
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Department of Agriculture Lab"
+            value={labName}
+            onChange={(e) => setLabName(e.target.value)}
+            disabled={isLoading}
+            className={inputClasses}
+          />
+        </div>
       </div>
 
-      {/* Notes */}
+      {/* Sample Notes */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-secondary">Notes & Crop Phase</label>
+        <label className="text-xs font-medium text-text-secondary">
+          Sample Notes / Field Location
+        </label>
         <input
           type="text"
-          placeholder="e.g., Pre-planting sample / Post-fertilizer evaluation"
+          placeholder="e.g. North Plot - 0-15cm topsoil composite sample"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           disabled={isLoading}
@@ -205,7 +414,7 @@ export default function SoilTestForm({
         />
       </div>
 
-      {/* pH + Physical Properties */}
+      {/* ── pH + Physical Properties ── */}
       <div className="space-y-2 pt-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
@@ -270,7 +479,7 @@ export default function SoilTestForm({
         </div>
       </div>
 
-      {/* Primary NPK */}
+      {/* ── Primary Macronutrients (NPK) ── */}
       <div className="space-y-2 pt-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
@@ -303,7 +512,7 @@ export default function SoilTestForm({
         </div>
       </div>
 
-      {/* Secondary */}
+      {/* ── Secondary Macronutrients (Ca, Mg, S) ── */}
       <div className="space-y-2 pt-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
@@ -336,7 +545,7 @@ export default function SoilTestForm({
         </div>
       </div>
 
-      {/* Micronutrients */}
+      {/* ── Micronutrients / Trace Elements (Zn, B, Fe, Mn, Cu) ── */}
       <div className="space-y-2 pt-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
@@ -369,7 +578,7 @@ export default function SoilTestForm({
         </div>
       </div>
 
-      {/* Actions */}
+      {/* ── Form Actions ── */}
       <div className="flex items-center gap-3 pt-4">
         {onCancel && (
           <button
@@ -391,7 +600,7 @@ export default function SoilTestForm({
         </button>
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || isExtracting}
           className={`${onCancel ? "flex-[2]" : "flex-1"} h-11 btn-primary flex items-center justify-center gap-2 text-sm disabled:opacity-50`}
         >
           {isLoading ? (
