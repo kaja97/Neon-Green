@@ -7,7 +7,7 @@ import {
   Sprout, Sun, Droplets, Leaf, Scissors, Bug, ShieldCheck,
   TrendingUp, Sparkles, ArrowRight, LayoutDashboard, CheckCircle2,
   Zap, Radar, Activity, Globe, Database, Cpu, FlaskConical,
-  Stethoscope, Store, Layers, Play
+  Stethoscope, Store, Layers
 } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/authStore";
 import LandingNavbar from "@/components/landing/LandingNavbar";
@@ -29,6 +29,16 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    if (typeof document !== "undefined") {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
 
   return (
     <div className="relative min-h-screen bg-surface-primary text-text-primary selection:bg-emerald-500/30 selection:text-white transition-colors duration-500">
@@ -98,7 +108,8 @@ export default function Home() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <a
-                  href="#synthesis"
+                  href="#cockpit"
+                  onClick={(e) => handleSmoothScroll(e, "cockpit")}
                   className="btn-secondary px-8 py-3.5 text-base sm:text-lg flex items-center gap-2"
                 >
                   <span>Explore Capabilities</span>
@@ -116,7 +127,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════════════════
             CORE ARCHITECTURAL PILLARS (BENTO GRID)
             ═══════════════════════════════════════════════════════════════ */}
-        <section className="space-y-10">
+        <section id="features" className="space-y-10 scroll-mt-28">
           <div className="text-center space-y-2 max-w-2xl mx-auto">
             <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">
               Core Platform Architecture
@@ -196,7 +207,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════════════════
             PHASE 2: INTERACTIVE CAPABILITY COCKPIT (SYNTHESIS)
             ═══════════════════════════════════════════════════════════════ */}
-        <section id="synthesis" className="scroll-mt-28">
+        <section id="cockpit" className="scroll-mt-28">
           <PlatformCockpit />
         </section>
 
@@ -207,7 +218,7 @@ export default function Home() {
           <WorkflowSection />
 
           {/* Minimalist High-Impact Bento Stats */}
-          <section id="stats" className="glass-card p-8 sm:p-12 rounded-3xl border-emerald-500/30 text-center space-y-8 scroll-mt-24 shadow-[0_0_40px_rgba(0,255,135,0.15)]">
+          <section id="stats" className="glass-card p-8 sm:p-12 rounded-3xl border-emerald-500/30 text-center space-y-8 scroll-mt-28 shadow-[0_0_40px_rgba(0,255,135,0.15)]">
             <div className="space-y-2">
               <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">
                 Platform Impact & Agronomic Scale

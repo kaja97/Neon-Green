@@ -1,12 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { Sprout, Heart, ArrowUp, Github, Shield, Globe } from "lucide-react";
+import { Sprout, ArrowUp, Globe } from "lucide-react";
 
 export default function LandingFooter() {
   const scrollToTop = () => {
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    if (typeof document !== "undefined") {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
 
@@ -25,7 +35,7 @@ export default function LandingFooter() {
               </span>
             </Link>
             <p className="text-xs sm:text-sm text-text-secondary leading-relaxed max-w-sm">
-              Empowering farmers with autonomous precision agriculture, 70-crop agronomic intelligence, stage-by-stage irrigation, precision pruning, and zero-cost AI plant protection.
+              Empowering growers with autonomous precision agriculture, 70-crop agronomic intelligence, stage-by-stage irrigation math, and zero-cost AI plant diagnostics.
             </p>
             <div className="flex items-center gap-3 text-xs font-mono text-emerald-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -37,11 +47,42 @@ export default function LandingFooter() {
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-white">Navigation</h4>
             <ul className="space-y-2 text-xs text-text-secondary">
-              <li><a href="#features" className="hover:text-emerald-400 transition-colors">Core Features</a></li>
-              <li><a href="#simulator" className="hover:text-emerald-400 transition-colors">Live Crop Simulator</a></li>
-              <li><a href="#crops" className="hover:text-emerald-400 transition-colors">70 Crops Library</a></li>
-              <li><a href="#workflow" className="hover:text-emerald-400 transition-colors">Precision Pipeline</a></li>
-              <li><a href="#stats" className="hover:text-emerald-400 transition-colors">Platform Impact</a></li>
+              <li>
+                <a
+                  href="#features"
+                  onClick={(e) => handleSmoothScroll(e, "features")}
+                  className="hover:text-emerald-400 transition-colors"
+                >
+                  Core Architecture
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#cockpit"
+                  onClick={(e) => handleSmoothScroll(e, "cockpit")}
+                  className="hover:text-emerald-400 transition-colors"
+                >
+                  Capability Cockpit
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#workflow"
+                  onClick={(e) => handleSmoothScroll(e, "workflow")}
+                  className="hover:text-emerald-400 transition-colors"
+                >
+                  Precision Pipeline
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#stats"
+                  onClick={(e) => handleSmoothScroll(e, "stats")}
+                  className="hover:text-emerald-400 transition-colors"
+                >
+                  Platform Impact
+                </a>
+              </li>
             </ul>
           </div>
 

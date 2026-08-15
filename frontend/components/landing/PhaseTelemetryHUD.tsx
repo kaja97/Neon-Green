@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion, MotionValue, useTransform } from "framer-motion";
-import { Sparkles, Sprout, TrendingUp, Layers, Zap } from "lucide-react";
+import { MotionValue } from "framer-motion";
+import { Sparkles, Sprout, TrendingUp } from "lucide-react";
 
 interface HUDProps {
   progress: MotionValue<number>;
@@ -24,6 +24,16 @@ export default function PhaseTelemetryHUD({ progress }: HUDProps) {
       }
     });
   }, [progress]);
+
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    if (typeof document !== "undefined") {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
 
   return (
     <aside
@@ -47,6 +57,7 @@ export default function PhaseTelemetryHUD({ progress }: HUDProps) {
           {/* Phase 1: Genesis */}
           <a
             href="#genesis"
+            onClick={(e) => handleSmoothScroll(e, "genesis")}
             className={`flex items-center justify-between p-2 rounded-xl text-xs font-bold transition-all ${
               activePhase === 1
                 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
@@ -62,7 +73,8 @@ export default function PhaseTelemetryHUD({ progress }: HUDProps) {
 
           {/* Phase 2: Synthesis */}
           <a
-            href="#synthesis"
+            href="#cockpit"
+            onClick={(e) => handleSmoothScroll(e, "cockpit")}
             className={`flex items-center justify-between p-2 rounded-xl text-xs font-bold transition-all ${
               activePhase === 2
                 ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
@@ -79,6 +91,7 @@ export default function PhaseTelemetryHUD({ progress }: HUDProps) {
           {/* Phase 3: Abundance */}
           <a
             href="#abundance"
+            onClick={(e) => handleSmoothScroll(e, "abundance")}
             className={`flex items-center justify-between p-2 rounded-xl text-xs font-bold transition-all ${
               activePhase === 3
                 ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
