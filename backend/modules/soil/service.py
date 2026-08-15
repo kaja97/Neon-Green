@@ -30,14 +30,24 @@ class SoilService:
         result_repo: SoilNutrientResultRepository,
         rec_repo: SoilRecommendationRepository,
         project_repo: ProjectRepository,
+        profile_repo: Optional[Any] = None,
     ):
         self.test_repo = test_repo
         self.result_repo = result_repo
         self.rec_repo = rec_repo
         self.project_repo = project_repo
+        self.profile_repo = profile_repo
 
     async def _get_farmer_id(self, db: AsyncSession, account_id: uuid.UUID) -> uuid.UUID:
         """Safely fetch FarmerProfile ID for an account without lazy loading issues."""
+        if self.profile_repo:
+            try:
+                profile = await self.profile_repo.get_by_account(db, account_id)
+                if profile:
+                    return profile.id
+            except Exception:
+                pass
+
         result = await db.execute(
             select(FarmerProfile).where(FarmerProfile.account_id == account_id)
         )
@@ -181,7 +191,6 @@ class SoilService:
         from modules.ai.gemini_client import get_gemini_client
         client = get_gemini_client()
         if not client._is_configured():
-            # Fallback if Gemini key is missing: return default structured format
             logger.warning("Gemini AI not configured. Returning baseline template.")
             return {
                 "test_date": date.today().isoformat(),
@@ -211,33 +220,33 @@ class SoilService:
 
         raw_client = client._get_client()
 
-        # Prepare Gemini content parts (multimodal or text)
-        parts = [{"text": system_prompt}]
-
-        if raw_image_bytes:
-            # Multimodal image/PDF bytes
-            try:
-                from google.genai import types
-                parts.append(types.Part.from_bytes(data=raw_image_bytes, mime_type=mime_type))
-            except Exception as e:
-                logger.warning("Could not attach binary part to GenAI client: %s", e)
-
-        if extracted_text:
-            parts.append({"text": f"\n\n=== EXTRACTED LABORATORY REPORT CONTENT ===\nFilename: {filename}\n\n{extracted_text}"})
-        else:
-            parts.append({"text": f"\n\nAnalyze the attached document/image '{filename}' and extract all laboratory soil analysis data."})
-
+        # Prepare Gemini content parts using official GenAI types
         try:
+            from google.genai import types
+            content_parts = [types.Part.from_text(text=system_prompt)]
+
+            if raw_image_bytes:
+                content_parts.append(types.Part.from_bytes(data=raw_image_bytes, mime_type=mime_type))
+
+            if extracted_text:
+                content_parts.append(types.Part.from_text(text=f"\n\n=== EXTRACTED LABORATORY REPORT CONTENT ===\nFilename: {filename}\n\n{extracted_text}"))
+            else:
+                content_parts.append(types.Part.from_text(text=f"\n\nAnalyze the attached document/image '{filename}' and extract all laboratory soil analysis data."))
+
             response = raw_client.models.generate_content(
                 model=client.model_name,
-                contents=[{"role": "user", "parts": parts}],
+                contents=content_parts,
                 config={"temperature": 0.1, "max_output_tokens": 2048},
             )
 
             response_text = response.text or "{}"
-            cleaned_json = re.sub(r"^```json\s*", "", response_text.strip())
+            cleaned_json = re.sub(r"^```json\s*", "", response_text.strip(), flags=re.IGNORECASE)
             cleaned_json = re.sub(r"^```\s*", "", cleaned_json)
             cleaned_json = re.sub(r"\s*```$", "", cleaned_json)
+
+            json_match = re.search(r"\{[\s\S]*\}", cleaned_json)
+            if json_match:
+                cleaned_json = json_match.group(0)
 
             data = json.loads(cleaned_json)
 
