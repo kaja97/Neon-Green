@@ -94,7 +94,7 @@ export default function LandingFooter() {
               <li><Link href="/projects" className="hover:text-emerald-400 transition-colors">Project Planner</Link></li>
               <li><Link href="/market" className="hover:text-emerald-400 transition-colors">Marketplace Exchange</Link></li>
               <li><Link href="/community" className="hover:text-emerald-400 transition-colors">Farmer Community</Link></li>
-              <li><Link href="/chat" className="hover:text-emerald-400 transition-colors">AI Farm Assistant</Link></li>
+              <li><Link href="/notifications" className="hover:text-emerald-400 transition-colors">Alerts & Notifications</Link></li>
             </ul>
           </div>
 

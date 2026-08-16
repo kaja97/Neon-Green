@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, WifiOff, ShieldAlert, Sprout, FolderOpen, Store, MessagesSquare, MessageCircle } from "lucide-react";
+import { Bell, WifiOff, ShieldAlert, Sprout, FolderOpen, Store, MessagesSquare } from "lucide-react";
 import Link from "next/link";
 import { useOffline } from "@/lib/hooks/useOffline";
 import { useQuery } from "@tanstack/react-query";
@@ -68,13 +68,7 @@ export default function TopBar() {
             >
               Community
             </Link>
-            <Link
-              href="/chat"
-              className="px-3.5 py-1.5 rounded-full text-emerald-600 dark:text-emerald-400 hover:bg-surface-tertiary transition-colors flex items-center gap-1"
-            >
-              <MessageCircle className="w-3.5 h-3.5" />
-              AI Assistant
-            </Link>
+
           </nav>
         </div>
 

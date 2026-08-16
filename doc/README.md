@@ -278,6 +278,5 @@ Neon Farming features a **Cybernetic Agronomy** aesthetic designed for outdoor f
 | [`14_REVENUE_HARVEST.md`](./14_REVENUE_HARVEST.md) | Harvest yield analytics, revenue forecasting, cost tracking. |
 | [`15_NOTIFICATIONS_OFFLINE.md`](./15_NOTIFICATIONS_OFFLINE.md) | Web Push VAPID notifications, service worker offline mutation queue. |
 | [`16_COMPLETED_PLANS.md`](./16_COMPLETED_PLANS.md) | Historical record of resolved systemic issues and architecture plans. |
-| [`17_CHAT_SERVICE.md`](./17_CHAT_SERVICE.md) | Multi-channel chat service, real-time messaging, AI assistant hooks. |
 | [`18_TRANSACTIONS_AND_REVIEWS.md`](./18_TRANSACTIONS_AND_REVIEWS.md) | Transaction ledger, order states, two-way mutual reviews. |
 | [`API_DESIGN_PLAN.md`](./API_DESIGN_PLAN.md) | Comprehensive API schema design and contract specifications. |
