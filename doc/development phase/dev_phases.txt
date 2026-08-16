@@ -1,52 +1,121 @@
+================================================================================
+NEON FARMING (AGRIFARM AI) - DEVELOPMENT PHASES & DELIVERY MATRIX
+================================================================================
+Stack: Next.js 14 (Vercel) | FastAPI (Render) | PostgreSQL (Supabase) | Redis / Celery
+AI Model: Google Gemini 1.5 Flash (Free Tier: $0.00 Runtime Cost)
+Agronomic Scope: 70 Master Crops | 420 Growth Stages | 1,140 Verified Remedies
+================================================================================
 
-Phase 0 — Environment + Seed Data
-Docker Compose with PostgreSQL 16 (+ PostGIS + pgvector + pg_trgm) + Redis. FastAPI skeleton with all modules stubbed. Next.js 14 project with layout. Alembic migration with all tables. Seed: 5 crops, 30 stages, 60 fertilizer records, 40 diseases, 80 solutions.
+--------------------------------------------------------------------------------
+Phase 0 - Environment Setup, Database Schema & Master Seed Data
+--------------------------------------------------------------------------------
+Scope:
+- Docker Compose configuration for PostgreSQL 16 (+ PostGIS + pgvector + pg_trgm) + Redis 7.
+- Python 3.11+ / FastAPI modular monolith skeleton with Pydantic v2 & SQLAlchemy 2.0 Async.
+- Next.js 14 App Router project with Tailwind CSS, Framer Motion, and AppShell layout.
+- Initial Alembic migrations covering core relational tables (Sections 1-10 of DB model).
+- Master agronomic seed data: 70 crops, 420 growth stages, water/nutrient curves, diseases, remedies.
 Deliverable:
-✅ COMPLETED: docker-compose up → DB seeded → /docs shows API
+[COMPLETED]: Full environment containerized, DB seeded, API documented at /docs.
 
-
-Phase 1 — Auth + Farmer Profile
-Register/login/refresh endpoints. JWT with Redis token storage. Farmer profile CRUD. Location management with Leaflet map picker. Land details form. Frontend: login, register (3-step), profile pages.Deliverable:
-✅ COMPLETED: Farmer registers, adds GPS location, sets farming method
-
-
-Phase 2 — Project CRUD + Dashboard Shell
-Project creation endpoint. 5-step project wizard (crop picker → location → method → dates → review). Dashboard aggregation endpoint. FarmingCircle SVG component (stage ring with progress). DayCounter. Service block placeholders.
+--------------------------------------------------------------------------------
+Phase 1 - Authentication, Universal Identity & Farmer Profile Management
+--------------------------------------------------------------------------------
+Scope:
+- User registration, login, token refresh, and password recovery via JWT + Redis session store.
+- Role-based authorization (Farmer, Vendor, Admin).
+- Interactive Leaflet GPS map picker for farm geo-coordinates and district assignment.
+- Farmer land parcel, preferred farming method (organic/conventional), and profile management.
 Deliverable:
-✅ COMPLETED: Farmer creates "Tomato 1 acre" project, sees Farming Circle on dashboard
+[COMPLETED]: Farmer registration, interactive map location picker, and profile management.
 
-
-Phase 3 — Activity Planner (Life Cycle Engine)
-generate_season_plan() Celery task. Generates watering (scaled to area), fertilizing (filtered by organic/conventional), monitoring activities for every stage. Today's tasks endpoint. Mark done/skip with optimistic UI. Activity timeline page.
+--------------------------------------------------------------------------------
+Phase 2 - Project Management Wizard, Farming Circle & Dynamic Dashboard
+--------------------------------------------------------------------------------
+Scope:
+- 5-step Project Wizard (crop variety selection, land parcel, farming method, planting dates, review).
+- Dynamic Dashboard aggregation endpoint (/api/v1/projects/dashboard).
+- FarmingCircle SVG component (interactive radial progress ring displaying active stage & days).
+- Service block placeholders (Weather, Soil, Health, Market, Activities).
 Deliverable:
-✅ COMPLETED: Creating tomato project generates 77 activities. Farmer marks tasks done.
-Week 7
+[COMPLETED]: Farmer launches multi-acre crop projects, tracks growth milestones via radial HUD.
 
-Phase 4 — Weather Integration
-OpenWeatherMap free API client. Redis cache (3hr TTL). Weather adjustment rules engine. Celery jobs: refresh cache (3hr), adjust activities (5AM), check alerts (6hr). WeatherBlock on dashboard. AlertBanner component. Weather detail page with Recharts.
+--------------------------------------------------------------------------------
+Phase 3 - Automated Life Cycle Engine, Penman-Monteith Irrigation & Tasks
+--------------------------------------------------------------------------------
+Scope:
+- generate_season_plan() Celery task to auto-generate watering, fertilizing, and pruning schedules.
+- Task scaling according to land acreage and active phenological stage.
+- Optimistic task completion and skip dialog workflows with reason logging.
+- Filterable activity timeline and daily tasks checklist (/activities/today).
 Deliverable:
-✅ COMPLETED: Activities auto-adjust to weather. Alerts pushed when storm/blight risk detected.
-Weeks 8–9
+[COMPLETED]: Generating crop projects schedules full lifecycle tasks. Farmers mark tasks done/skip.
 
-Phase 5 — Soil Analysis + Disease Service
-Nutrient gap calculator (NumPy, compare actual vs optimal from plant_nutrient_requirements). Soil test submission form + recommendations. Disease keyword matcher (PostgreSQL ts_rank). Issue reporting flow with symptom selector. Solutions display with organic/conventional tabs.
+--------------------------------------------------------------------------------
+Phase 4 - OpenWeatherMap Integration, Continuous Evapotranspiration & Alerts
+--------------------------------------------------------------------------------
+Scope:
+- OpenWeatherMap client with 3-hour Redis caching to stay within free API thresholds.
+- FAO-56 Penman-Monteith dynamic evapotranspiration math (ETc = Kc * ET0).
+- Celery scheduled jobs: 3-hour weather refresh, daily 5:30 AM water adjustment, 6-hour storm alerts.
+- Interactive Weather Forecast block with Recharts charts and risk warning banners.
 Deliverable:
-✅ COMPLETED: Soil test → "Apply 30kg Urea/acre". "Yellow spots" → "Early Blight" + solutions.
-Weeks 10–11
+[COMPLETED]: Dynamic water adjustment based on solar/rainfall; real-time frost/storm alerts.
 
-Phase 6 — AI Integration (Free Gemini)
-context_builder.py (flatten all project tables to JSON ~2,000 tokens). Google AI Studio free API integration. Intent classifier (regex-based, no tokens). AI chat with project context. Rate limiting: 10 calls/day/farmer. Deterministic fallback. Weekly summary Celery job. AI response parser → update DB.
+--------------------------------------------------------------------------------
+Phase 5 - Subterranean Soil Chemistry, Vision Lab OCR & Disease Matcher
+--------------------------------------------------------------------------------
+Scope:
+- Multimodal Vision AI to extract soil test readings (pH, EC, Organic Carbon, NPK ppm) from PDF/images.
+- Elemental N-P-K deficit balancer calculating custom commercial and organic compost recipes.
+- PostgreSQL ts_rank full-text search matching reported symptoms to verified plant diseases.
+- Dual-tier remediation displays (Organic primary protocol + Chemical emergency backup).
 Deliverable:
-✅ COMPLETED: "Why are leaves yellow?" → Gemini answers with farmer's specific soil, weather, stage context
-Week 12
+[COMPLETED]: Automated soil lab OCR parsing + deficit recipes. Instant leaf disease matching.
 
-Phase 7 — Market Prices + Notifications
-Market price table + 30-day trend calculation. Revenue estimator. Price change alerts (>15%). Web Push VAPID setup. Deep-link notifications (scroll to block, highlight animation). Daily 5:30AM notification Celery job. Notification center page.
+--------------------------------------------------------------------------------
+Phase 6 - Zero-Cost Gemini AI Integration & Flattened Context Pipeline
+--------------------------------------------------------------------------------
+Scope:
+- Flattened Context Builder serializing project, soil, stage, and weather data into ~2,000 tokens.
+- Google AI Studio Gemini 1.5 Flash Free Tier integration (15 RPM / 1,500 RPD = $0 runtime cost).
+- Regex-based intent classifier to eliminate token overhead on routine queries.
+- Multimodal leaf photo upload & voice symptom input directly to Gemini agronomist.
 Deliverable:
-✅ COMPLETED: Farmer gets "Water plants today" push → taps → app scrolls to watering block
-Weeks 13–14
+[COMPLETED]: Instant agronomist advice answering farmer questions with deep localized context.
 
-Phase 8 — Polish, Testing, Deploy
-Unit tests (pytest): planner generates 77 activities, soil calculator, intent classifier, weather rules. Integration tests: full register→project→plan flow. PWA Service Worker (cache daily plan + weather offline). Lighthouse >90. Docker production build. VPS deploy. GitHub Actions CI/CD.
+--------------------------------------------------------------------------------
+Phase 7 - Dedicated Economic Center Marketplace, Direct Harvest & Reviews
+--------------------------------------------------------------------------------
+Scope:
+- Live wholesale price feeds from major Dedicated Economic Centres (Pettah, Dambulla, Keppetipola, Meegoda).
+- Harvest-to-Market automated listing pipeline: convert harvested project yield directly into product listings.
+- 0% broker commission peer-to-peer agro-trading between verified farmers and wholesale buyers.
+- Transaction ledger, sales/purchase analytics dashboard (/transactions), and two-way mutual reviews.
 Deliverable:
-✅ COMPLETED: v1.0 live at agrifarm.app. $0 AI cost. 300 farmers supported.
+[COMPLETED]: Direct harvest sales, live economic center tickers, ledger tracking & reviews.
+
+--------------------------------------------------------------------------------
+Phase 8 - Design System, Theme Engine, PostCSS & Production Deploy
+--------------------------------------------------------------------------------
+Scope:
+- Matte Light Mode calibration (75% white / 25% cool slate gray #edf2f7) + Cyberpunk Dark Mode.
+- Universal text contrast fixes across 68 components eliminating invisible text in light mode.
+- PostCSS duration-400 fix in globals.css.
+- Brand vector SVG tab icon (favicon) and navbar logo routing to landing page (/).
+- Production deployment: Next.js on Vercel, FastAPI on Render, PostgreSQL on Supabase, Redis tasks.
+- PWA service worker offline caching for rural field reliability.
+Deliverable:
+[COMPLETED]: Production-ready multi-cloud platform live with buttery-smooth responsive UI.
+
+--------------------------------------------------------------------------------
+Phase 9 - Future Roadmap (v2.0 & v3.0)
+--------------------------------------------------------------------------------
+Scope:
+- Native Flutter Mobile Applications (Android + iOS) with native camera/GPS and background push.
+- Model Context Protocol (MCP) Server for autonomous multi-agent agricultural workflows.
+- Full pgvector RAG pipeline for localized agricultural extension research papers.
+- IoT telemetry sensor integration (LoRaWAN soil probes, automated solenoid drip valves).
+Deliverable:
+[IN ROADMAP]: Native mobile app rollout and autonomous agentic agronomy extensions.
+================================================================================

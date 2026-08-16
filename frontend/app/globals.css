@@ -84,11 +84,14 @@
   }
 
   * {
-    @apply border-border;
+    border-color: hsl(var(--color-border));
   }
 
   body {
-    @apply bg-surface-primary text-text-primary antialiased;
+    background-color: hsl(var(--color-surface-primary));
+    color: hsl(var(--color-text-primary));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "rlig" 1, "calt" 1;
     /* Buttery theme transition */
     transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
@@ -118,7 +121,7 @@
 }
 
 /* ════════════════════════════════════════════════════════════════
-   COMPONENT UTILITIES (theme-aware — read CSS vars above)
+   COMPONENT UTILITIES (100% Clean CSS - No Invalid @apply Chains)
    ════════════════════════════════════════════════════════════════ */
 @layer components {
   /* ── Matte Glass Card ───────────────────────────── */
@@ -127,10 +130,24 @@
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(16px) saturate(140%);
     -webkit-backdrop-filter: blur(16px) saturate(140%);
-    @apply rounded-[24px] shadow-[0_8px_32px_0_rgba(0,0,0,0.25)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+    border-radius: 24px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
   }
+  .dark .glass-card {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  }
+
   .glass-card-hover {
-    @apply glass-card transition-all duration-300 ease-out;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease-out;
+  }
+  .dark .glass-card-hover {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
   }
   .glass-card-hover:hover {
     background: var(--glass-hover);
@@ -189,26 +206,52 @@
 
   /* ── Premium Neon Buttons ───────────────────────── */
   .btn-primary {
-    @apply bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 text-slate-950 font-extrabold rounded-xl
-           shadow-[0_0_18px_rgba(34,197,94,0.35)] transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98];
+    background: linear-gradient(to right, #10b981, #22c55e, #059669);
+    color: #020617;
+    font-weight: 800;
+    border-radius: 0.75rem;
+    box-shadow: 0 0 18px rgba(34, 197, 94, 0.35);
+    transition: all 0.3s ease-out;
   }
   .btn-primary:hover {
     box-shadow:
       0 0 30px rgba(34, 197, 94, 0.55),
       0 0 10px rgba(34, 197, 94, 0.2);
+    transform: scale(1.02);
+  }
+  .btn-primary:active {
+    transform: scale(0.98);
   }
 
   .btn-secondary {
-    @apply glass-card text-text-primary font-bold rounded-xl
-           transition-all duration-300 hover:border-emerald-500/50 hover:bg-surface-secondary;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    color: hsl(var(--color-text-primary));
+    font-weight: 700;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+  }
+  .btn-secondary:hover {
+    border-color: rgba(16, 185, 129, 0.5);
+    background: hsl(var(--color-surface-secondary));
   }
 
   .btn-danger {
-    @apply bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold rounded-xl
-           shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98];
+    background: linear-gradient(to right, #ef4444, #e11d48);
+    color: #ffffff;
+    font-weight: 700;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
   }
   .btn-danger:hover {
     box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+    transform: scale(1.02);
+  }
+  .btn-danger:active {
+    transform: scale(0.98);
   }
 
   /* ── Hide scrollbar ────────────────────────────── */
