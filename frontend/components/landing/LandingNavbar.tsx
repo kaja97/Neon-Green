@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Sprout, LayoutDashboard, FolderOpen, Store, MessageCircle,
+  Sprout, LayoutDashboard, FolderOpen, Store, MessagesSquare,
   LogIn, ArrowRight, Sparkles, Menu, X, Layers, Cpu, Activity
 } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/authStore";
@@ -103,11 +103,11 @@ export default function LandingNavbar() {
                 Marketplace
               </Link>
               <Link
-                href="/chat"
+                href="/community"
                 className="px-3.5 py-1.5 text-xs font-bold text-text-secondary hover:text-emerald-400 hover:bg-surface-tertiary rounded-full transition-all flex items-center gap-1.5"
               >
-                <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                AI Assistant
+                <MessagesSquare className="w-3.5 h-3.5 text-emerald-400" />
+                Community
               </Link>
             </>
           ) : (
@@ -226,12 +226,12 @@ export default function LandingNavbar() {
                   Marketplace Exchange
                 </Link>
                 <Link
-                  href="/chat"
+                  href="/community"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-bold text-text-primary hover:bg-surface-secondary transition-all"
                 >
-                  <MessageCircle className="w-4 h-4 text-purple-400" />
-                  AI Farm Assistant
+                  <MessagesSquare className="w-4 h-4 text-purple-400" />
+                  Community Forum
                 </Link>
               </>
             ) : (

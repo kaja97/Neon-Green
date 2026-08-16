@@ -48,26 +48,3 @@ services:
       # ── CORS: allow frontend ──────────────────
       - key: FRONTEND_URL
         sync: false
-
-  # ─────────────────────────────────────────────
-  # Chat Service — NOT DEPLOYED YET
-  # Uncomment when ready to deploy
-  # ─────────────────────────────────────────────
-  # - type: web
-  #   name: neon-farming-chat
-  #   runtime: docker
-  #   dockerfilePath: ./chat-service/Dockerfile
-  #   dockerContext: ./chat-service
-  #   plan: free
-  #   healthCheckPath: /health
-  #   envVars:
-  #     - key: CHAT_DATABASE_URL
-  #       sync: false
-  #     - key: REDIS_URL
-  #       sync: false
-  #     - key: JWT_SECRET_KEY
-  #       sync: false
-  #     - key: MAIN_BACKEND_URL
-  #       sync: false
-  #     - key: FRONTEND_URL
-  #       sync: false

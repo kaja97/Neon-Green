@@ -53,8 +53,7 @@ export function useRefreshAISummary(projectId: string) {
 export function useAIChat(projectId: string) {
   return useMutation({
     mutationFn: async (message: string) => {
-      const res = await api.post("/ai/chat", {
-        project_id: projectId,
+      const res = await api.post(`/ai/${projectId}/chat`, {
         message,
       });
       return res.data.data;

@@ -40,11 +40,6 @@ Handles heavy background tasks (AI Plan generation, external weather API fetchin
 ### Celery Beat
 Cron scheduler for triggering periodic background tasks (e.g., daily weather updates, midnight activity status sweeps).
 
-### Chat Service (FastAPI)
-Standalone real-time chat API and WebSocket server.
-- **Port:** `8001`
-- **Volume:** `./chat-service:/app` for HMR and `chat_uploads` for audio files.
-
 ### Frontend (Next.js PWA)
 - **Port:** `3000`
 - **Volume:** `./frontend:/app` for HMR.
